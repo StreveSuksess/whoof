@@ -1,0 +1,105 @@
+# ORYZO.ai 1:1 工程化复刻计划
+
+> 源站:https://oryzo.ai/ — Lusion 出品的创意营销单页(恶搞"AI 软木杯垫"产品站)
+> 镜像时间:2026-07-21,快照位于 `legacy-mirror/`(168 个文件,约 19MB)
+
+---
+
+## 1. 镜像内容清单(legacy-mirror/)
+
+| 类别 | 内容 | 说明 |
+|---|---|---|
+| 页面 | `index.html`(唯一页面,sitemap 只有 `/`) | Astro 静态构建产物 |
+| 样式 | `_astro/index.TL6TuoJb.css` | 单 CSS bundle |
+| 脚本 | `_astro/hoisted.CRsATKbF.js`(1.1MB) | 单 JS bundle,内联 Three.js r178 + 自研引擎 |
+| Worker | `_astro/SplatsWorker-DSMxtdkh.js` | Gaussian Splat 深度排序 worker |
+| 3D 模型 | `models/**` 24 个 `.buf` 文件 | **Lusion 自研二进制几何/动画格式**(含相机动画轨道) |
+| Splats | `splats/props.sog`(3MB)、`splats/table_reflection.sog` | 3D Gaussian Splatting 场景(SOG 压缩格式) |
+| 纹理 | `textures/**` 约 95 个(webp/avif/png,含 26 个 `_MOBILE` 变体) | 含球谐重打光贴图(`harmonics_0/1`)、环境贴图、BRDF LUT、SMAA 查找表、gobo 光斑 |
+| Rive | `rive/oryzo.riv` | 开场"设计软件绘 logo"加载动画 |
+| 字体 | `fonts/`:Literata、DM Mono(woff2)+ `fonts/msdf/Inter.json/webp` | Inter 为 WebGL 内 MSDF 文字渲染 |
+| 图片 | `images/`(社交卡片、证言、视频封面,含 MOBILE 变体) | DOM 层普通图片 |
+| 其他 | `meta/`(favicon/manifest/og)、`privacy_policy.pdf`、`terms_and_conditions.pdf` | |
+
+**镜像外部依赖(未入库,复刻时需处理):**
+- Adobe Fonts:`https://use.typekit.net/pmn6ngx.css` → **Halyard Display/Text Variable**(主视觉字体,Lusion 的授权,不可自托管)
+- Rive WASM:unpkg CDN `@rive-app/canvas-advanced@2.37.0/rive.wasm`
+- 视频:Vimeo 托管(ID `1174820580`,dnt 模式嵌入)
+- Newsletter:提交到 Lusion 的 Mailchimp(`lusion.us20.list-manage.com/subscribe/post`)
+- Cloudflare Insights 统计脚本
+
+## 2. 源站技术栈分析
+
+- **构建**:Astro(静态输出,资源在 `/_astro/`,单页零路由)
+- **渲染主体**:全屏 `<canvas>` WebGL2,**Three.js r178 作为底层,上面是 Lusion 自研引擎层**:
+  - 自研资源加载器(XHR 队列 + 全量预载,loader 进度驱动 Rive 开场动画)
+  - 自研虚拟滚动(监听原生滚动 + 平滑插值,无 ScrollTrigger;总滚动高度约 46,000px)
+  - 自研 `.buf` 二进制模型/动画格式(几何 + 相机/物体动画轨道烘焙)
+  - 3D Gaussian Splatting(`.sog` 压缩格式 + Web Worker 排序)
+  - 球谐(Spherical Harmonics)重打光:大量 `harmonics_0/1` 贴图,实现低成本动态光照
+  - MSDF 文字(WebGL 内渲染 Inter)
+  - 后处理:SMAA、AgX/filmic tonemapping、gobo 投影光斑、镜头污渍等(GLSL 内联在 bundle)
+- **2D 动画**:GSAP(核心,无插件)+ Rive 2.37.0(开场 loader)
+- **DOM 层**:普通 HTML 文案/UI 覆盖在 canvas 上,`is-desktop/is-mobile` 分支,移动端自动换 `_MOBILE` 低清资源(800px vs 2560px 纹理上限)
+- **视频**:@vimeo/player 弹层
+- **托管**:Cloudflare(Pages 或同等静态托管 + CDN)
+
+## 3. 页面结构(单页滚动叙事,约 46k px)
+
+1. **Hero**:切割垫 3D 场景(杯垫 + 铅笔/美工刀/回形针),开场为 Rive"贝塞尔绘 logo"动画,滚动驱动相机(`hero_camera.buf`)
+2. **AI 手**:"TRY TO HOVER HAND" 交互手模型(`hand.buf` + 动画),六指玩笑
+3. **Wearable**:针织口袋杯垫 + 横向画廊(yoga/bikini/glasses/bite/pocket 等)+ 杂志页
+4. **Features**:桌面场景(Gaussian Splat 道具 + 咖啡杯热感应渐变、烟雾球谐动画、水熊虫显微镜头)
+5. **Sustainability**:浅色大字排版段(`sustainability_text.buf` 3D 文字)
+6. **Product**:三档杯垫对比表(STACK 1/2/3)
+7. **ORYZO-1**:恶搞论文/开源模型段(链接 GitHub `lusionltd/ORYZO-1`)
+8. **Testimonies**:证言卡片
+9. **Contact/Footer**:Newsletter 表单(Mailchimp)+ 社交链接
+
+## 4. 工程化复刻方案
+
+### 阶段 0 — 资产与外部依赖前置 ✅(2026-07-21 完成)
+- **定位为个人复刻学习项目,不对外发布** → 版权问题搁置;唯一约束:不要把 Lusion 资产再分发(仓库勿公开)
+- Halyard 字体:保留源站的 Typekit CSS 引用(`use.typekit.net/pmn6ngx.css`),本地开发可正常加载;若失效再换近似字体
+- Rive wasm:沿用 unpkg CDN 加载(phase 2 引入 runtime 时处理)
+- Vimeo / Mailchimp:保留原引用(个人使用无碍)
+
+### 阶段 1 — 骨架 ✅(2026-07-21 完成)
+- Astro 5 工程:`src/pages/index.astro` + `src/layouts/Layout.astro` + 18 个组件(12 个 section + SvgDefs/SiteHeader/SiteFooter/ScrollIndicator/Preloader/VideoOverlay)
+- 组件由 `scripts/gen_components.py` 从 `legacy-mirror/index.html` 生成:保守 pretty-print(只在原有空白间隙换行、紧贴处保持紧贴、花括号转义防 Astro 模板语法冲突)
+- **构建产物 body 与源站逐字节等价**(空白归一化后 diff 为空);浏览器验证 scrollHeight 46410px 与源站一致
+- 静态资源(fonts/images/meta/textures/models/splats/rive/PDF,约 18MB)复制到 `public/`
+- `src/styles/main.css` = 源站 CSS 原样;`src/styles/phase1-shims.css` = 临时 shim(`.page` 淡入、preloader 隐藏、desktop-only 显隐、canvas 黑底),**每条 shim 都将在 phase 2 被引擎逻辑取代**
+- 已知现状:各 section 内层元素为 fixed/absolute 定位,静态骨架下全部叠加显示——属预期,显隐/transform 由 phase 2 引擎按滚动驱动
+
+### 阶段 2 — 引擎层(2–4 周,核心难点)
+- Three.js r178 场景框架 + 资源预载队列 + 进度事件
+- **`.buf` 格式解析器**:逆向二进制布局(bundle 内 loader 代码可读,已非混淆逻辑;备选方案是写转换器转 glTF)
+- **`.sog` Splat 加载器**:对接 PlayCanvas SOG 生态或复用站内 worker 逻辑
+- 虚拟滚动系统 + 滚动↔相机动画轨道绑定
+- MSDF 文字、球谐重打光材质、后处理链(SMAA/AgX/gobo)——GLSL 可直接从 bundle 提取
+
+### 阶段 3 — 分场景还原(3–5 周)
+- 按 section 逐个还原:Hero → 手 → Wearable → 桌面 → Sustainability → 对比表 → 论文段 → Footer
+- Rive 开场动画(`.riv` 文件可直接复用,官方 runtime 播放)
+- Vimeo 弹层、Mailchimp 表单(换成自己的 list 端点)
+
+### 阶段 4 — 打磨(1–2 周)
+- 移动端 `_MOBILE` 资源分支、降级策略(WebGL2 检测)
+- 性能:预载体积约 19MB,需还原其分包/优先级策略
+- 像素级比对(截图 diff)、Lighthouse、多浏览器验证
+
+## 5. 难点评估
+
+| 难点 | 等级 | 说明 / 对策 |
+|---|---|---|
+| 自研 `.buf` 模型格式 | ★★★★☆ | 无文档,需从 bundle 逆向 parser(代码为压缩非加密,可读);或写 buf→glTF 转换器 |
+| Gaussian Splatting(.sog) | ★★★★☆ | SOG 压缩格式 + worker 排序 + 与传统 mesh 混合渲染、还要参与反射,生态工具少 |
+| 球谐重打光材质体系 | ★★★★☆ | harmonics 贴图的采样/合成 shader 需从 bundle 提取 GLSL 并理解重组 |
+| 46k px 滚动编排 | ★★★★☆ | 相机轨道烘焙在 .buf 内,滚动↔时间轴映射、DOM 与 WebGL 同步、平滑插值手感难调到 1:1 |
+| 自定义 GLSL 后处理链 | ★★★☆☆ | SMAA/AgX/gobo/热感应/烟雾等,shader 字符串可提取,但组装顺序和参数要逐帧比对 |
+| 开场 loader 编排 | ★★☆☆☆ | Rive 文件可直接复用,难点在加载进度与动画状态机的绑定 |
+| 字体授权 | ★★☆☆☆ | Halyard 是 Adobe Fonts 商用授权,不能自托管;要么订阅要么换字体 |
+| **资产版权** | ★★★★★ | **最大风险是法务而非技术**:模型、贴图、文案、品牌全为 Lusion 原创。技术上可 1:1,公开发布必须先有授权 |
+
+**总体判断**:纯技术上可行,预计 6–10 周(单人全职、有 WebGL 经验)。最大的工程难点是 `.buf`/`.sog` 私有格式与球谐光照材质的逆向;最大的非工程风险是版权。省力路径:资产与 shader 全部从 bundle/镜像直接复用(逆向工作量最小),自己只重写工程骨架与编排层。

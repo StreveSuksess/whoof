@@ -1,0 +1,31 @@
+/* Phase-1 only: shims that stand in for behavior the source site drives from JS.
+ * Every rule here is expected to be DELETED as the engine (phase 2+) takes over. */
+
+/* Source bundle hides #preloader after the WebGL preload completes. No engine yet. */
+#preloader {
+  display: none;
+}
+
+/* Source CSS ships .page{opacity:0}; the engine fades it in after preload. */
+html.is-ready .page {
+  opacity: 1;
+}
+
+/* .desktop-only/.mobile-only default to display:none!important in the source CSS
+ * and are revealed by the bundle. Reveal by state class for now. */
+html.is-desktop .desktop-only {
+  display: revert !important;
+}
+html.is-mobile .mobile-only {
+  display: revert !important;
+}
+
+/* The WebGL canvas renders every scene in the source site; keep it a black
+ * backdrop so the DOM layer reads until the engine exists. */
+#canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
