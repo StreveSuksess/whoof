@@ -7,7 +7,7 @@ import { loader } from './core/Loader';
 import { properties } from './core/properties';
 import { scrollManager } from './core/ScrollPane';
 import { parseBuf } from './BufLoader';
-import * as settings from './core/settings';
+import { webglApp } from './webgl';
 
 function detectMobile(): boolean {
   return matchMedia('(pointer: coarse)').matches && matchMedia('(max-width: 820px)').matches;
@@ -22,15 +22,11 @@ function setStateClasses(): void {
 
 function preInit(): void {
   loader.registerParser('buf', (buffer) => parseBuf(buffer));
-  // M2.2: queue a representative asset set to exercise the pipeline; scenes
-  // will queue their real dependencies in their own preInit (M2.3+).
-  loader.add(settings.MODEL_PATH + 'coaster.buf');
-  loader.add(settings.MODEL_PATH + 'hero_camera.buf');
-  loader.add(settings.MODEL_PATH + 'coaster_hero_animation.buf');
-  loader.add(settings.TEXTURE_PATH + 'coaster/DIFF.webp', { autoMobile: true });
+  webglApp.preInit();
 }
 
 function onReady(): void {
+  webglApp.init();
   document.documentElement.classList.add('is-ready');
   const preloader = document.getElementById('preloader');
   const page = document.getElementById('home');
@@ -75,6 +71,7 @@ export function boot(): void {
     properties.viewportWidth = window.innerWidth;
     properties.viewportHeight = window.innerHeight;
     scrollManager.resize(window.innerWidth, window.innerHeight);
+    webglApp.resize();
   };
   window.addEventListener('resize', onResize);
   onResize();
@@ -90,6 +87,7 @@ export function boot(): void {
       properties.startTime = Math.min(1, properties.startTime + dt);
     }
     scrollManager.update(dt);
+    if (properties.hasStarted) webglApp.update();
     input.postUpdate();
     requestAnimationFrame(frame);
   };

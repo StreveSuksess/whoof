@@ -80,8 +80,16 @@
   `/debug/buf` 调试页(模型下拉 + OrbitControls + 贴图验证 + 相机轨迹可视化)。
   验收:25/25 模型全部解析成功;coaster 几何/UV 完美;hand 含骨骼权重属性正常;
   CAMERA_ANIM 320 帧运镜轨迹正确(注:hero_camera 位置 delta=0 属数据本身——hero 相机只转不动)
-- ⬜ **M2.2 引擎骨架**:Three.js r178(已锁版本)场景框架 + 资源预载队列 + 虚拟滚动(ScrollPane 直译)+ 状态类接管(删 phase1-shims)
-- ⬜ **M2.3 Hero 场景端到端**(第一个竖切片):相机轨道绑定滚动,与源站截图对比
+- ✅ **M2.2 引擎骨架**(2026-07-21):`src/engine/core/`(math/settings/properties/input/Loader/ScrollPane)。
+  ScrollPane 从 bundle 1:1 直译(原生滚动条同步、滚轮缓动 wheelEaseCoeff=12、拖拽摩擦、DOM range 映射、
+  scrollTo 锚点);Loader 并发 XHR 队列 + 字节级进度 + 按扩展名解析;phase1-shims.css 已删除,
+  引擎接管状态类/preloader 关闭/页面淡入/锚点导航。浏览器验证:滚轮缓动、锚点平滑滚动到 12.8k px
+- 🟡 **M2.3 Hero 场景端到端**(进行中):已完成竖切片骨架——`src/engine/webgl.ts` 渲染器上线,
+  `FrameAnimation` 1:1 直译(帧 lerp/slerp + focal→fov,aperture 41.4214),滚动驱动链路打通
+  (AI 段 showScreenOffset → fit(0,5.5) → 相机+杯垫动画,与源站 HandScene 一致),
+  杯垫贴图渲染在 #4c3e37 背景上,俯视→推近→终点的运镜已验证。
+  **剩余**:切割垫场景(BASE.webp + 文具 sprites)、手模型与 AI_HAND 材质、真实材质(env/RGBM)、
+  各 section DOM 显隐编排(现在所有 section 叠加显示)、与源站逐位置截图比对
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
