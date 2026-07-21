@@ -111,9 +111,17 @@
   handVert/handFrag 原文(GPU 四元数蒙皮、双光源高光+次表面散射)。
   修正:HAND_FRAME_START/END 实为 71/116(此前误猜 47);coaster.isActive 溯源为
   WearableScene 的 t<=3。webgl.ts 的临时编排已替换为移植类。
-  **剩余(均为源站有、尚未移植)**:postprocessing 全链(TAA/SMAA/bloom/appleEfx/AgX)、
-  preloader canvas 动画(绘 logo)、每 section 逐元素 split-text 编排(可用 npm gsap 的 SplitText)、
-  DeviceOrientation(移动端)、wearable/features/sustainability/stack/footer 场景
+  已完成(2026-07-21 六轮,commit eafdab4):**postprocessing 主链**——Postprocessing 框架
+  (MRT 场景目标 color+velocity、乒乓 RT、队列过滤排序、PostProfile blend/sync)、
+  TAA(Catmull-Rom 历史重采样+邻域钳制)+ Halton 抖动相机 + TAAMesh(coaster/hand 已切换,
+  输出速度缓冲)、FXAA、SMAA(edges/weights/blend 三 pass + 不翻转的查找表)、
+  AppleEfx(LMS 渐变边框辉光)、Final(vignette/饱和度/对比度/tint + preloader 揭幕 pass)。
+  调试实录:①Vite 分包导致 instanceof 跨 chunk 失败(抖动矩阵恒单位阵→杯垫隐形),改鸭子类型;
+  ②coaster.isActive 必须在 preUpdate 链内 resetTransform 之后设置(源站由 WearableScene 做);
+  ③后台标签页 RAF 饥饿会让 TAA 历史帧看似"抹平画面",连续前台帧即收敛,验收时要注意。
+  **剩余(均为源站有、尚未移植)**:Bloom/Bokeh/BlurBox/ScreenPaintDistortion/cameraMotionBlur、
+  preloader canvas 动画(绘 logo)、split-text 编排、DeviceOrientation、
+  wearable/features/sustainability/stack/footer 场景
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
