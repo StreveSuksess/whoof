@@ -12,6 +12,7 @@ import {
   Vector2,
 } from 'three';
 import type { Camera, Scene, Texture, WebGLRenderTarget } from 'three';
+import { blur } from '../core/blur';
 import { browser } from '../core/browser';
 import { fboHelper } from '../core/fboHelper';
 import { loader } from '../core/Loader';
@@ -49,6 +50,8 @@ export class Postprocessing {
   sceneTexture: Texture | null = null;
   sceneVelocityTexture: Texture | null = null;
   queue: PostEffect[] = [];
+  hasSceneCache = false;
+  hasSceneCacheBlurred = false;
   hasSizeChanged = true;
   useMSAA = false;
   postProfile = new PostProfile();
@@ -279,6 +282,35 @@ export class Postprocessing {
 
   blendProfile(profile: Partial<PostProfile>, t = 0): void {
     this.postProfile.blend(profile, t);
+  }
+
+  /** Source cacheScene (pretty 17207-17211): snapshot the scene RT (and an
+   *  optionally blurred half-res copy) for materials that refract it. */
+  cacheScene(copy: boolean, blurRadius = 4): void {
+    const renderer = fboHelper.renderer;
+    const prevRT = renderer.getRenderTarget();
+    renderer.setRenderTarget(this.sceneRenderTarget);
+    fboHelper.clearMultisampleRenderTargetState();
+    if (copy) {
+      fboHelper.copy(this.sceneRenderTarget!.textures[0], this.sceneCacheRenderTarget!);
+      this.hasSceneCache = true;
+    }
+    if (blurRadius) {
+      blur.blur(
+        blurRadius,
+        0.5,
+        this.sceneRenderTarget!,
+        this.sceneCacheBlurCacheRenderTarget!,
+        this.sceneCacheBlurredRenderTarget!,
+        true,
+      );
+      this.sceneCacheBlurredTextureSize.set(
+        this.sceneCacheBlurredRenderTarget!.width,
+        this.sceneCacheBlurredRenderTarget!.height,
+      );
+      this.hasSceneCacheBlurred = true;
+    }
+    renderer.setRenderTarget(prevRT);
   }
 
   private _filterQueue(effect: PostEffect): boolean {

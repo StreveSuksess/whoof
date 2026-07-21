@@ -43,6 +43,8 @@ import { bindHeroScene, coaster } from './scenes/coaster';
 import { gobo } from './scenes/gobo';
 import { handScene } from './scenes/handScene';
 import { heroScene } from './scenes/heroScene';
+import { wearableScene } from './scenes/wearableScene';
+import { wearableSection } from './sections/wearableSection';
 
 const DEFAULT_POST_PROFILE = new PostProfile();
 
@@ -102,6 +104,8 @@ class WebGLApp {
     this.scene.add(heroScene.container);
     handScene.preInit();
     this.scene.add(handScene.container);
+    wearableScene.preInit();
+    this.scene.add(wearableScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
   }
@@ -114,7 +118,11 @@ class WebGLApp {
     bg.init();
     heroScene.init();
     handScene.init();
+    wearableScene.init();
     coaster.init();
+    wearableSection.preInit(document.documentElement);
+    wearableSection.init();
+    wearableSection.resize();
     this.aiSection = document.getElementById('ai');
     this.heroSection = document.getElementById('hero');
     this.heroInner = this.heroSection?.querySelector('.section__inner') ?? null;
@@ -160,6 +168,8 @@ class WebGLApp {
     screenPaint.resize(properties.width, properties.height);
     heroScene.resize(properties.width, properties.height);
     handScene.resize();
+    wearableScene.resize(properties.width, properties.height);
+    if (properties.hasInitialized) wearableSection.resize();
   }
 
   /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
@@ -178,12 +188,7 @@ class WebGLApp {
     bg.preUpdate();
     heroScene.preUpdate();
     handScene.preUpdate();
-    // WearableScene.preUpdate stand-in (source pretty 20296): must run inside
-    // the preUpdate chain, after coaster.resetTransform cleared isActive.
-    if (this.wearableSection) {
-      const t = scrollManager.getDomRange(this.wearableSection).showScreenOffset;
-      coaster.isActive = t <= 3;
-    }
+    wearableScene.preUpdate(dt);
     postprocessing.syncProfile();
     // Source App.update: screenPaint.update between visuals.preUpdate and
     // cameraControls.update.
@@ -193,6 +198,7 @@ class WebGLApp {
     bg.update();
     heroScene.update(dt);
     handScene.update(dt);
+    wearableScene.update(dt);
     coaster.update();
     postprocessing.render(this.scene, properties.camera, true);
     properties.tick++;
@@ -250,6 +256,7 @@ class WebGLApp {
       handScene.highlightRatio = postprocessing.appleEfx.amount =
         fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
     }
+    if (properties.hasInitialized) wearableSection.update(properties.deltaTime);
   }
 }
 

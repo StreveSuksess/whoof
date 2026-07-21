@@ -301,6 +301,27 @@ class FboHelper {
     return tex;
   }
 
+  /** Source (pretty 13267-13276): resolve an MSAA RT's samples down before sampling it. */
+  clearMultisampleRenderTargetState(rt?: WebGLRenderTarget | null): void {
+    rt = rt || (this.renderer.getRenderTarget() as WebGLRenderTarget | null);
+    if (rt && rt.samples > 0) {
+      const rtProps = this.renderer.properties.get(rt) as {
+        __webglMultisampledFramebuffer: WebGLFramebuffer;
+        __webglFramebuffer: WebGLFramebuffer;
+      };
+      const gl = this.renderer.getContext() as WebGL2RenderingContext;
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, rtProps.__webglMultisampledFramebuffer);
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, rtProps.__webglFramebuffer);
+      const w = rt.width;
+      const h = rt.height;
+      let mask = gl.COLOR_BUFFER_BIT;
+      if (rt.depthBuffer) mask |= gl.DEPTH_BUFFER_BIT;
+      if (rt.stencilBuffer) mask |= gl.STENCIL_BUFFER_BIT;
+      gl.blitFramebuffer(0, 0, w, h, 0, 0, w, h, mask, gl.NEAREST);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, rtProps.__webglMultisampledFramebuffer);
+    }
+  }
+
   createRenderTarget(
     width: number,
     height: number,

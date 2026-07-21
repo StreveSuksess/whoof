@@ -20,6 +20,8 @@ export interface LoadOptions {
   wrapS?: Wrapping;
   wrapT?: Wrapping;
   colorSpace?: string;
+  /** three.js UV channel index for the texture (source passes channel: 1). */
+  channel?: number;
   onLoad?: (content: unknown) => void;
 }
 
@@ -67,6 +69,7 @@ export class Loader {
       if (options.magFilter) tex.magFilter = options.magFilter;
       if (options.wrapS) tex.wrapS = options.wrapS;
       if (options.wrapT) tex.wrapT = options.wrapT;
+      if (options.channel !== undefined) tex.channel = options.channel;
       tex.generateMipmaps = MIPMAP_FILTERS.includes(tex.minFilter as number);
       item.content = tex;
     }

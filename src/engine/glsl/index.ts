@@ -419,3 +419,68 @@ uniform sampler2D u_bokehTexture;uniform vec2 u_bokehTexelSize;varying vec2 v_uv
 
 export const bokehCompositeFrag = `#define GLSLIFY 1
 varying vec2 v_uv;uniform sampler2D u_texture;uniform sampler2D u_blurTexture;uniform float u_amount;void main(){vec4 cs=texture2D(u_texture,v_uv);vec4 cb=texture2D(u_blurTexture,v_uv);vec3 rgb=cs.rgb*cb.a+cb.rgb;gl_FragColor=mix(cs,vec4(rgb,cs.a),u_amount);}`;
+
+export const wearableTextVert = `#define GLSLIFY 1
+attribute vec3 position;varying vec2 v_uv;uniform vec2 u_scaleFix;uniform float u_shrinkRatio;uniform vec4 u_rectFrom;uniform vec4 u_rectTo;uniform vec3 u_center;uniform vec2 u_viewportResolution;varying vec2 v_rectSize;void main(){vec2 pos=position.xy*.5+.5;v_uv=(pos-.5)*u_scaleFix+.5;vec4 rect=mix(u_rectFrom,u_rectTo,u_shrinkRatio);pos=mix(rect.xy,rect.xy+rect.zw,pos)/u_viewportResolution;pos=pos*2.-1.;gl_Position=vec4(pos,0.,1.);v_rectSize=rect.zw;}`;
+
+export const wearableTextFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform vec3 u_color;uniform vec2 u_textureSize;uniform vec2 u_scaleFix;uniform float u_pixelRange;uniform vec2 u_resolution;uniform float u_pulseRatio;uniform float u_glowRatio;uniform float u_opacity;varying vec2 v_uv;varying vec2 v_rectSize;
+#include <linearstep>
+#include <getBlueNoise>
+#include <getBgColor>
+float median(float r,float g,float b){return max(min(r,g),min(max(r,g),b));}void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);vec3 msdf=texture2D(u_texture,v_uv).rgb;float sd=median(msdf.r,msdf.g,msdf.b);float screenPxDistance=(sd-.5)*u_pixelRange/length(vec2(dFdx(v_uv.x),dFdy(v_uv.y))*u_textureSize/u_scaleFix);float opacity=clamp(screenPxDistance*2.+.5,0.,1.)*u_opacity;vec3 bgColor=pow(getBgColor(blueNoise.z),vec3(1./2.2));vec3 color=mix(bgColor,u_color,opacity);float d=-length((v_uv-.5)*vec2(1.,v_rectSize.y/v_rectSize.x))+u_pulseRatio*2.;float alpha=clamp(d,0.,1.)*opacity;gl_FragColor=vec4(color,alpha*u_glowRatio);}`;
+
+export const condomVert = `#define GLSLIFY 1
+attribute float side;attribute vec4 boneIndices;attribute vec4 boneWeights;uniform sampler2D u_animTexture;uniform vec2 u_animTexelSize;uniform vec3 u_animBlendParams;uniform float u_isBack;uniform float u_offset;uniform vec3 u_pMin;uniform vec3 u_pMax;uniform vec4 u_orientMin;uniform vec4 u_orientMax;uniform float u_boneCount;uniform float u_frameCount;uniform vec4 u_uvMap;varying vec3 v_viewPosition;varying vec3 v_viewNormal;varying vec3 v_worldPosition;varying vec2 v_uv;
+#include <taaJitteringVert>
+vec2 unpackFactors=vec2(1./256.,255./256.);vec3 qrotate(vec4 q,vec3 v){return v+2.*cross(q.xyz,cross(q.xyz,v)+q.w*v);}void computeSkin(inout vec3 p,inout vec3 n,vec2 xy,float w){vec3 p0=texture2D(u_animTexture,xy*u_animTexelSize).xyz;vec3 p1=texture2D(u_animTexture,(xy+vec2(1.,0.))*u_animTexelSize).xyz;vec4 o0=texture2D(u_animTexture,(xy+vec2(0.,1.))*u_animTexelSize);vec4 o1=texture2D(u_animTexture,(xy+1.)*u_animTexelSize);vec3 bp=mix(u_pMin,u_pMax,p0*unpackFactors.x+p1*unpackFactors.y);vec4 bo=mix(u_orientMin,u_orientMax,o0*unpackFactors.x+o1*unpackFactors.y);p+=(qrotate(bo,position)+bp)*w;n+=qrotate(bo,normal)*w;}void main(){vec3 posFrom=vec3(0.);vec3 posTo=vec3(0.);vec3 norFrom=vec3(0.);vec3 norTo=vec3(0.);vec2 xyFrom=vec2(.5,u_animBlendParams.x+.5);vec2 xyTo=vec2(.5,u_animBlendParams.y+.5);computeSkin(posFrom,norFrom,xyFrom+vec2(boneIndices.x*2.,0.),boneWeights.x);computeSkin(posFrom,norFrom,xyFrom+vec2(boneIndices.y*2.,0.),boneWeights.y);computeSkin(posFrom,norFrom,xyFrom+vec2(boneIndices.z*2.,0.),boneWeights.z);computeSkin(posFrom,norFrom,xyFrom+vec2(boneIndices.w*2.,0.),boneWeights.w);norFrom=normalize(norFrom);computeSkin(posTo,norTo,xyTo+vec2(boneIndices.x*2.,0.),boneWeights.x);computeSkin(posTo,norTo,xyTo+vec2(boneIndices.y*2.,0.),boneWeights.y);computeSkin(posTo,norTo,xyTo+vec2(boneIndices.z*2.,0.),boneWeights.z);computeSkin(posTo,norTo,xyTo+vec2(boneIndices.w*2.,0.),boneWeights.w);norTo=normalize(norTo);vec3 pos=mix(posFrom,posTo,u_animBlendParams.z);pos.x+=side*u_offset*0.5;pos.z+=u_offset*2.;vec3 nor=normalize(mix(norFrom,norTo,u_animBlendParams.z));vec4 viewPosition=modelViewMatrix*vec4(pos,1.0);v_viewPosition=-viewPosition.xyz;v_viewNormal=normalMatrix*nor;getTAAPositions(pos,gl_Position,v_currentFramePosition,v_previousFramePosition);gl_Position.z+=(u_isBack-.5)*0.2*gl_Position.w;v_uv=(position.xy-u_uvMap.xy)/u_uvMap.zw;v_worldPosition=(modelMatrix*vec4(pos,1.0)).xyz;v_viewPosition=-viewPosition.xyz;}`;
+
+export const condomFrag = `#define GLSLIFY 1
+uniform float u_isBack;uniform float u_opacity;uniform float u_harmonicsTime;uniform sampler2D u_baseTexture;uniform sampler2D u_harmonics0Texture;uniform sampler2D u_harmonics1Texture;uniform float u_harmonicsStrength;uniform float u_harmonicsFreq[5];uniform sampler2D u_normalTexture;uniform sampler2D u_envTexture;uniform sampler2D u_patternTexture;uniform sampler2D u_specEnvTexture;uniform vec3 u_lightPosition;uniform vec3 u_color;
+#ifdef IS_BACK
+#else
+uniform sampler2D u_sceneCacheTexture;uniform vec2 u_resolution;
+#endif
+varying vec2 v_uv;varying vec3 v_worldPosition;varying vec3 v_viewPosition;
+#include <hsb2rgb>
+#include <sampleHarmonics>
+#include <taaJitteringFragPars>
+#include <cart2Polar>
+varying vec3 v_viewNormal;mat3 getTangentFrame(vec3 eye_pos,vec3 surf_norm,vec2 uv){vec3 q0=dFdx(eye_pos.xyz);vec3 q1=dFdy(eye_pos.xyz);vec2 st0=dFdx(uv.st);vec2 st1=dFdy(uv.st);vec3 N=surf_norm;vec3 q1perp=cross(q1,N);vec3 q0perp=cross(N,q0);vec3 T=q1perp*st0.x+q0perp*st1.x;vec3 B=q1perp*st0.y+q0perp*st1.y;float det=max(dot(T,T),dot(B,B));float scale=(det==0.0)? 0.0 : inversesqrt(det);return mat3(T*scale,B*scale,N);}vec3 RRTAndODTFit(vec3 v){vec3 a=v*(v+0.0245786)-0.000090537;vec3 b=v*(0.983729*v+0.4329510)+0.238081;return a/b;}
+#include <aces>
+float getAO(vec2 uv){return sampleHarmonics(u_baseTexture,u_harmonics0Texture,uv,vec3(u_harmonicsFreq[0],u_harmonicsFreq[1],u_harmonicsFreq[2]),u_harmonicsTime,u_harmonicsStrength)+sampleHarmonics(u_harmonics1Texture,uv,vec2(u_harmonicsFreq[3],u_harmonicsFreq[4]),u_harmonicsTime,u_harmonicsStrength);}vec3 blendOverlay(vec3 base,vec3 blend){return mix(1.0-2.0*(1.0-base)*(1.0-blend),2.0*base*blend,step(base,vec3(0.5)));}
+#include <perturbNormalArb>
+#include <sampleBlur>
+#include <getBlueNoise>
+void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);float faceDirection=gl_FrontFacing ? 1.0 :-1.0;float normalMask=max(smoothstep(.792,0.793,2.0*abs(v_uv.x-0.5)),smoothstep(.792,0.793,2.0*abs(v_uv.y-0.5)));vec3 viewNormal=normalize(v_viewNormal)*faceDirection;vec2 normalUv=90.0*v_uv;mat3 tbn=getTangentFrame(-v_viewPosition,viewNormal,normalUv);vec3 normalTexture=texture2D(u_normalTexture,normalUv).xyz*2.0-1.0;normalTexture.xy*=-0.25*normalMask;normalTexture=normalize(normalTexture);vec3 perturbedNormal=normalize(tbn*normalTexture);float ao=getAO(v_uv);float bumpScale=1.;vec2 dSTdx=dFdx(v_uv)*2.;vec2 dSTdy=dFdy(v_uv)*2.;vec2 dHdxy=(vec2(getAO(v_uv+dSTdx),getAO(v_uv+dSTdy))-ao)*bumpScale;perturbedNormal=perturbNormalArb(-v_viewPosition,perturbedNormal,dHdxy,1.0);vec3 N=normalize((vec4(perturbedNormal,0.)*viewMatrix).xyz);vec3 V=normalize(cameraPosition-v_worldPosition);vec3 reflection=normalize(reflect(-V,N));float NdV=clamp(abs(dot(N,V)),0.001,1.0);float fresnel=pow(1.0-NdV,5.0);
+#ifdef IS_BACK
+vec3 albedo=u_color;float roughness=0.8;float metallic=1.0;
+#else
+vec2 screenUv=gl_FragCoord.xy/u_resolution;float reverseAo=pow(1.-ao,3.);float blurAmount=(1.-abs(perturbedNormal.z));vec3 sceneColor=sampleBlur(u_sceneCacheTexture,screenUv,1./u_resolution,blurAmount*u_resolution.y/300.,blueNoise.z).rgb;sceneColor=pow(sceneColor,vec3(2.2));vec3 albedo=u_color*sceneColor;float roughness=blurAmount;float metallic=0.0;
+#endif
+vec3 f0=vec3(0.04);vec3 diffuseColor=albedo*(vec3(1.0)-f0)*(1.0-metallic);vec3 specularColor=mix(f0,albedo,metallic);vec3 diffuseLight=texture2D(u_envTexture,cart2Polar(N)).rgb;
+#ifdef IS_BACK
+vec2 patternUv=mat2(1.,-2.,1.,2.)*sqrt(2.)*v_uv*0.86;float pattern=texture2D(u_patternTexture,patternUv).r;albedo=mix(albedo,vec3(1.),pattern);vec3 color=0.5*albedo;color+=diffuseColor*diffuseLight*(1.+pattern*0.5);color*=ao;
+#else
+vec3 specularLight=texture2D(u_specEnvTexture,cart2Polar(reflection)).rgb*20.;vec3 indirect=diffuseColor*diffuseLight+specularLight*specularColor;vec3 color=sceneColor;float d=clamp(dot(viewNormal,vec3(0.5773)),0.0,1.0);color+=reverseAo*d*(0.1+u_color);color+=indirect;color*=mix(1.0,0.6,blurAmount);color+=0.5*indirect*u_opacity*smoothstep(.75,0.8,d);color=mix(sceneColor,color,u_opacity);
+#endif
+color=clamp(color,0.,1.);float alpha=u_opacity;
+#ifdef IS_BACK
+color=aces(color);
+#else
+alpha=specularLight.r;
+#endif
+gl_FragColor=vec4(color,alpha);gl_FragColor.rgb=pow(gl_FragColor.rgb,vec3(1./2.2));
+#include <taaJitteringFrag>
+}`;
+
+export const wearableFrameVert = `#define GLSLIFY 1
+attribute vec3 position;uniform vec4 u_rect;uniform vec2 u_viewportResolution;uniform vec2 u_textureSize;uniform float u_zoom;uniform vec2 u_zoomCenter;uniform float u_rotation;uniform float u_scale;varying vec2 v_uv;varying vec2 v_toZoomCenter;void main(){vec2 pos=position.xy*.5+.5;v_uv=(pos-.5)*u_rect.zw;float c=cos(u_rotation);float s=sin(u_rotation);v_uv=v_uv*mat2(c,-s,s,c);v_uv=v_uv/u_scale;v_uv=v_uv/u_rect.zw+.5;pos=mix(u_rect.xy,u_rect.xy+u_rect.zw,pos)/u_viewportResolution;pos=pos*2.-1.;pos-=u_zoomCenter;v_toZoomCenter=pos*u_viewportResolution;pos=pos*u_zoom+u_zoomCenter*u_zoom;gl_Position=vec4(pos,0.,1.0);}`;
+
+export const wearableFrameFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform sampler2D u_clipTexture;uniform sampler2D u_sceneCacheTexture;uniform vec2 u_resolution;uniform vec2 u_textureSize;uniform float u_showRatio;uniform float u_opacity;uniform vec2 u_viewportResolution;uniform sampler2D u_pinTexture;uniform vec2 u_pinTextureSize;uniform vec2 u_pinScaleFix;uniform float u_pinPixelRange;uniform vec3 u_pinColor;uniform float u_pinShowRatio;uniform float u_time;uniform vec2 u_easedMouse;varying vec2 v_uv;varying vec2 v_toZoomCenter;
+#include <getBlueNoise>
+#include <sampleBlur>
+#include <sampleBlurSRGB>
+#include <linearstep>
+float median(float r,float g,float b){return max(min(r,g),min(max(r,g),b));}void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);vec2 screenUv=gl_FragCoord.xy/u_resolution;vec2 texelSize=1.0/u_textureSize;float blurRatio=linearstep(0.15,0.2+u_showRatio*0.6,length(v_toZoomCenter)/u_viewportResolution.y);blurRatio=blurRatio*blurRatio*(1.-u_showRatio);vec4 color=sampleBlur(u_texture,v_uv,texelSize,blurRatio*200.*256./u_viewportResolution.y,blueNoise.z);float clipRatio=linearstep(.5,.7,u_showRatio);vec2 clipUv=(v_uv*vec2(850.,1100.)-vec2(282.,612.))/vec2(256.,256.);vec4 clipColor=sampleBlur(u_clipTexture,clipUv,vec2(1./256.),blurRatio*200.,blueNoise.z);clipColor.rgb*=mix(1.,smoothstep(0.2,0.325,length(clipUv-vec2(.45,.45))),linearstep(.2,.5,u_showRatio));color=mix(color,clipColor,linearstep(0.5,0.4,length(clipUv-.5))*(1.-linearstep(.5,.7,u_showRatio)));vec4 sceneColor=sampleBlurSRGB(u_sceneCacheTexture,screenUv,1./u_resolution,blurRatio*200.*256./u_viewportResolution.y*u_opacity,blueNoise.z);float blendRatio=smoothstep(blurRatio*0.25,1.+blurRatio*0.25,u_opacity*1.25);gl_FragColor=mix(sceneColor,color,blendRatio);vec2 pinUv=(v_uv-.5)*mix(1.8,1.5,u_pinShowRatio)+.5;pinUv=(pinUv*u_textureSize-vec2(240.,330.+(1.-u_pinShowRatio)*40.)+gl_FragColor.rg*20.)/u_pinTextureSize;pinUv+=(1.+pow((1.-pinUv.y),2.))*u_easedMouse*-0.025;vec3 pinMsdf=texture2D(u_pinTexture,pinUv).rgb;float pinSd=median(pinMsdf.r,pinMsdf.g,pinMsdf.b);pinSd=(pinSd-.5)*u_pinPixelRange/length(vec2(dFdx(pinUv.x),dFdy(pinUv.y))*u_pinTextureSize/u_pinScaleFix);float pinOpacity=clamp(pinSd*2.+.5,0.,1.)*smoothstep(-0.05,0.05,gl_FragColor.r)*smoothstep(0.95,0.8,pinUv.y)*smoothstep(0.4,1.,pinUv.y+u_pinShowRatio);pinOpacity*=u_pinShowRatio;float d=length(pinUv-vec2(0.68,0.08));pinOpacity*=pinOpacity*max(linearstep(0.25,0.125,d)*1.5,0.5+(sin(u_time*-6.+d*8.)*.5+.5)*1.);gl_FragColor.rgb+=u_pinColor*pinOpacity;gl_FragColor.rgb=pow(min(gl_FragColor.rgb,vec3(1.)),vec3(1./2.2));gl_FragColor.a=max(sceneColor.g*(1.-blendRatio),pinOpacity);}`;
