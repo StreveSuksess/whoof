@@ -92,9 +92,16 @@
   修复了叠加显示)、**切割垫底景**(BASE.webp 按源站 screen-to-world 常数投到桌面平面,
   focal 50/aperture 41.4/view 2240×1260/桌面 y=0.7471)、fov 每帧钉在 hero 常量(同源站 HandScene)、
   hand 段结束后 3D 内容隐藏(r>9)。滚动 0 处构图已接近源站 hero。
-  **剩余**:文具 props(2D RT 视差层)、手模型与 AI_HAND 材质、真实材质(env/RGBM/SH)、
-  每 section 的逐元素编排(split-text 进出场——目前相邻段文案会提前可见)、
-  各段背景色/场景切换、与源站逐位置截图比对
+  已完成(2026-07-21 三轮,commit 8c66cba,**全部逻辑溯源 bundle,替换了此前的近似实现**):
+  34 段 GLSL 原文提取入 `src/engine/glsl/`;core 移植 fboHelper/shaderHelper/blueNoise/
+  textureHelper(GPU 通道打包 DIFF+HEIGHT、RGBM 解码)/cameraControls/Settings/properties.sharedUniforms;
+  场景移植 bg(渐变+clearColor 混合)/gobo(512 RT+文件名强度)/coaster(**真实 coasterFrag**:
+  env combine RT、局部光、zoom center)/heroScene(阶段性:常数+uniforms+固定相机位+gobo 矩阵);
+  App/Visuals 编排按源站顺序,分辨率数学照抄 _onResize;修正 activeRatio 应取 hero 段 hideScreenOffset。
+  **剩余(均为源站有、尚未移植)**:heroSceneBase RT 管线+desk pad 画布+文具 props、
+  HandScene(手模型/AI_HAND 材质/六指交互)、postprocessing 全链(TAA/SMAA/bloom/appleEfx)、
+  preloader canvas 动画(绘 logo)、每 section 逐元素 split-text 编排、DeviceOrientation(移动端)、
+  与源站逐位置截图比对
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
