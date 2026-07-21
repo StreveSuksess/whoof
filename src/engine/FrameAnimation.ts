@@ -4,6 +4,7 @@
 
 import { Object3D, Quaternion, Vector3 } from 'three';
 import type { BufferGeometry, PerspectiveCamera } from 'three';
+import { loader } from './core/Loader';
 import { clamp, mix } from './core/math';
 
 const _v0 = new Vector3();
@@ -23,6 +24,14 @@ export class FrameAnimation {
 
   setTarget(target: Object3D | PerspectiveCamera): void {
     this.target = target;
+  }
+
+  /** Source FrameAnimation.preInit: bind target and queue the buf track. */
+  preInit(target: Object3D | PerspectiveCamera, url: string): void {
+    this.setTarget(target);
+    loader.add(url, {
+      onLoad: (content) => this.setGeometry(content as BufferGeometry),
+    });
   }
 
   setGeometry(geometry: BufferGeometry): void {

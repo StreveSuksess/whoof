@@ -36,17 +36,14 @@ import {
 import { bg } from './scenes/bg';
 import { bindHeroScene, coaster } from './scenes/coaster';
 import { gobo } from './scenes/gobo';
-import { fov, heroScene } from './scenes/heroScene';
-
-// Source HandScene constants: hand appears between these hero-camera frames.
-const HAND_FRAME_START = 47;
+import { handScene } from './scenes/handScene';
+import { heroScene } from './scenes/heroScene';
 
 class WebGLApp {
   scene = new Scene();
-  cameraAnimation = new FrameAnimation();
-  coasterAnimation = new FrameAnimation();
   private aiSection: HTMLElement | null = null;
   private heroSection: HTMLElement | null = null;
+  private wearableSection: HTMLElement | null = null;
 
   /** Source App.initEngine (renderer/chunk/helpers) — needs the canvas. */
   initEngine(): void {
@@ -90,15 +87,10 @@ class WebGLApp {
     bindHeroScene(heroScene);
     heroScene.preInit();
     this.scene.add(heroScene.container);
+    handScene.preInit();
+    this.scene.add(handScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
-    // HandScene animations (source HandScene.preInit).
-    loader.add(settings.MODEL_PATH + 'hero_camera.buf', {
-      onLoad: (content) => this.cameraAnimation.setGeometry(content as BufferGeometry),
-    });
-    loader.add(settings.MODEL_PATH + 'coaster_hero_animation.buf', {
-      onLoad: (content) => this.coasterAnimation.setGeometry(content as BufferGeometry),
-    });
   }
 
   /** Source App.init + Visuals.init (ported subset, source order). */
@@ -107,10 +99,11 @@ class WebGLApp {
     gobo.init();
     bg.init();
     heroScene.init();
+    handScene.init();
     coaster.init();
-    this.coasterAnimation.setTarget(coaster.container);
     this.aiSection = document.getElementById('ai');
     this.heroSection = document.getElementById('hero');
+    this.wearableSection = document.getElementById('wearable');
   }
 
   resize(): void {
@@ -148,6 +141,7 @@ class WebGLApp {
     properties.camera.aspect = properties.width / properties.height;
     properties.camera.updateProjectionMatrix();
     heroScene.resize(properties.width, properties.height);
+    handScene.resize();
   }
 
   /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
@@ -157,68 +151,54 @@ class WebGLApp {
     properties.deltaTime = properties.sharedUniforms.u_deltaTime.value = dt;
     properties.bgColor.setStyle(properties.bgColorHex);
     blueNoise.update();
+    this.updateSectionDriving();
     cameraControls.preUpdate();
     // Visuals.preUpdate order: gobo.reset, coaster.resetTransform, bg/heroScene/…
     gobo.reset();
     coaster.resetTransform();
     bg.preUpdate();
     heroScene.preUpdate();
-    this.updateHandSceneChoreography();
+    handScene.preUpdate();
     cameraControls.update(dt);
     gobo.update(dt);
     bg.update();
     heroScene.update(dt);
+    handScene.update(dt);
     coaster.update();
     properties.renderer.render(this.scene, properties.camera);
     properties.tick++;
   }
 
   /**
-   * Source AiSection.update -> HandScene.preUpdate wiring:
-   * animationRatio = fit(aiRange.showScreenOffset, 0, 5.5, 0, 1), applied to
-   * hero camera + coaster tracks; fov pinned to the hero constant; hero/bg
-   * colors from the source HandScene.preUpdate.
+   * Stand-in for the not-yet-ported DOM section classes, feeding the scene
+   * singletons exactly as the source sections do:
+   * - HeroSection.update (pretty 21205-21206): heroScene.activeRatio from the
+   *   hero container's hideScreenOffset; isActive = activeRatio > 0
+   * - AiSection.update (pretty 21368): handScene ratios from the AI
+   *   container's showScreenOffset
+   * - WearableScene.preUpdate (pretty 20296): coaster.isActive = t <= 3
    */
-  private updateHandSceneChoreography(): void {
-    let offset = 0;
-    if (this.aiSection) {
-      offset = scrollManager.getDomRange(this.aiSection).showScreenOffset;
-    }
-    const ratio = fit(offset, 0, 5.5, 0, 1);
-    const frame = ratio * (this.cameraAnimation.frameCount - 1);
-    // Source HeroSection.update: activeRatio from the HERO container's
-    // hideScreenOffset (pretty line 21205).
+  private updateSectionDriving(): void {
     if (this.heroSection) {
-      heroScene.activeRatio = fit(
-        scrollManager.getDomRange(this.heroSection).hideScreenOffset,
-        -1,
-        -0.5,
-        1,
-        0,
-      );
+      const heroRange = scrollManager.getDomRange(this.heroSection);
+      heroScene.activeRatio = fit(heroRange.hideScreenOffset, -1, -0.5, 1, 0);
+      heroScene.isActive = heroScene.activeRatio > 0;
     }
-    // Source HeroSection.update: heroScene.isActive = activeRatio > 0.
-    heroScene.isActive = heroScene.activeRatio > 0;
-    // Source HandScene: 3D content hides once the hand phase ends (r ~9).
-    coaster.isActive = offset < 9;
-    this.coasterAnimation.applyTransformByRatio(ratio);
-    // Camera track drives cameraControls (not the camera directly).
-    this.cameraAnimation.setTarget(cameraControls as never);
-    this.cameraAnimation.applyTransformByRatio(ratio);
-    cameraControls.fov = fov;
-    bg.opacity = 1;
-    bg.clearColorRatio = fit(frame, HAND_FRAME_START * 0.5, HAND_FRAME_START, 1, 0);
-    if (ratio < 1) {
-      bg.bgColor.set('#4c3e37').convertSRGBToLinear();
+    if (this.aiSection) {
+      const r = scrollManager.getDomRange(this.aiSection).showScreenOffset;
+      const aiActive = scrollManager.getDomRange(this.aiSection).isActive;
+      handScene.animationRatio = fit(r, 0, 5.5, 0, 1);
+      handScene.fingersActiveRatio = fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
+      handScene.handOpacity = fit(r, 8, 9, 1, 0);
+      handScene.isActive =
+        aiActive || handScene.animationRatio === 0 || handScene.handOpacity > 0;
+      handScene.highlightRatio = fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
     }
-    // env blend toward the hand env over frames 47..73 (source line 19987).
-    coaster.envBlendRatio = fit(frame, 47, 73, 0, 1);
-    coaster.lightPosition.lerp(_handLightPosition, fit(frame, 47, 73, 0, 1));
-    coaster.extraBumpScale = fit(ratio, 0.45, 0.5, 1.75, 0);
+    if (this.wearableSection) {
+      const t = scrollManager.getDomRange(this.wearableSection).showScreenOffset;
+      coaster.isActive = t <= 3;
+    }
   }
 }
-
-// Source HandScene.coasterLightPosition.
-const _handLightPosition = new Vector3(0.0237565, 0.77265, 0.435661);
 
 export const webglApp = new WebGLApp();

@@ -89,3 +89,80 @@ export class SecondOrderDynamics {
     }
   }
 }
+
+/** Scalar variant — the source class's number branch (_updateNumber). */
+export class SecondOrderDynamicsScalar {
+  target0: number;
+  target: number;
+  prevTarget: number;
+  value: number;
+  valueVel = 0;
+  k1 = 0;
+  k2 = 0;
+  k3 = 0;
+  private _w = 0;
+  private _z = 0;
+  private _d = 0;
+  private _k1Stable = 0;
+  private _k2Stable = 0;
+  isRobust: boolean;
+
+  constructor(value: number, f = 1.5, z = 0.8, r = 2, isRobust = true) {
+    this.isRobust = isRobust;
+    this.setFZR(f, z, r);
+    this.target0 = value;
+    this.target = value;
+    this.prevTarget = value;
+    this.value = value;
+  }
+
+  reset(target: number = this.target0): void {
+    this.valueVel = 0;
+    this.prevTarget = target;
+    this.target = target;
+    this.value = target;
+  }
+
+  setFZR(f: number, z: number, r: number): void {
+    const w = Math.PI * 2 * f;
+    if (this.isRobust) {
+      this._w = w;
+      this._z = z;
+      this._d = this._w * Math.sqrt(Math.abs(this._z * this._z - 1));
+    }
+    this.k1 = z / (Math.PI * f);
+    this.k2 = 1 / (w * w);
+    this.k3 = (r * z) / w;
+  }
+
+  private computeStableCoefficients(dt: number): void {
+    if (!this.isRobust) {
+      this._k1Stable = this.k1;
+      this._k2Stable = Math.max(this.k2, (1.1 * dt * dt) / 4 + (dt * this.k1) / 2);
+      return;
+    }
+    if (this._w * dt < this._z) {
+      this._k1Stable = this.k1;
+      this._k2Stable = Math.max(this.k2, (dt * dt) / 2 + (dt * this.k1) / 2, dt * this.k1);
+    } else {
+      const t = Math.exp(-this._z * this._w * dt);
+      const i = 2 * t * (this._z <= 1 ? Math.cos(dt * this._d) : Math.cosh(dt * this._d));
+      const r = t * t;
+      const o = dt / (1 + r - i);
+      this._k1Stable = (1 - r) * o;
+      this._k2Stable = dt * o;
+    }
+  }
+
+  update(dt: number, target: number = this.target): void {
+    if (dt > 0) {
+      const targetVel = (target - this.prevTarget) / dt;
+      this.prevTarget = target;
+      this.computeStableCoefficients(dt);
+      this.value += this.valueVel * dt;
+      this.valueVel +=
+        (target + this.k3 * targetVel - this.value - this._k1Stable * this.valueVel)
+        * (dt / this._k2Stable);
+    }
+  }
+}

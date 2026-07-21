@@ -46,6 +46,7 @@ class Coaster {
   imgBasedMVP = new Matrix4();
   wearableBlendingRatio = 0;
   isActive = false;
+  haloRatio = 0;
   extraBumpScale = 0;
   handSectionHighlightRatio = 0;
   condomSceneRatio = 0;
