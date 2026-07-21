@@ -119,7 +119,18 @@
   调试实录:①Vite 分包导致 instanceof 跨 chunk 失败(抖动矩阵恒单位阵→杯垫隐形),改鸭子类型;
   ②coaster.isActive 必须在 preUpdate 链内 resetTransform 之后设置(源站由 WearableScene 做);
   ③后台标签页 RAF 饥饿会让 TAA 历史帧看似"抹平画面",连续前台帧即收敛,验收时要注意。
-  **剩余(均为源站有、尚未移植)**:Bloom/Bokeh/BlurBox/ScreenPaintDistortion/cameraMotionBlur、
+  已完成(2026-07-21 七轮,commit a90897b):**Bloom(非卷积路径,USE_CONVOLUTION=false)**——
+  highPass/blur/composite 三 pass 原文提取;SMAA 查找表经 loader onLoad 补 image;
+  TAAMesh 加 OES_draw_buffers_indexed 关闭速度附件混合。
+  同轮修复"整屏抹平"回归:根因是 ScrollManager 滚动条指示器子系统未移植 →
+  scrollManager.scrollBarCenter 为 undefined → AppleEfx 的 u_pulseCenter.y = NaN →
+  shader 里 wave=w0*w1*u_amount 即 NaN*0=NaN → 采样 uv 全 NaN → 恒定色。
+  已按源站(pretty 29688-29719)补齐指示器驱动(bar transform/opacity/cursor、
+  拖拽滚动、点击滚到 #open-weight、scrollBarCenter)+ input.onClicked 信号
+  + HeroSection 尾部 scrollManager.isBtn = activeRatio > .99(pretty 21257)。
+  调试实录:效果链逐阶段像素采样定位到 AppleEfx(此前逐一禁用 TAA/SMAA/FXAA/Bloom
+  均未涉及它);全新加载验收必须不做任何手动切换。
+  **剩余(均为源站有、尚未移植)**:Bokeh/BlurBox/ScreenPaintDistortion/cameraMotionBlur、
   preloader canvas 动画(绘 logo)、split-text 编排、DeviceOrientation、
   wearable/features/sustainability/stack/footer 场景
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
