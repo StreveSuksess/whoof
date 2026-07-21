@@ -149,8 +149,21 @@
   0.3s opacity tween stand-in 取代旧 CSS 淡入 hack。
   查证:cameraMotionBlurAmount 在源站仅有 PostProfile 字段、无消费点(死代码),
   无需移植——M2.3 后处理链就此闭环。
-  **剩余(均为源站有、尚未移植)**:split-text 编排、DeviceOrientation、
-  wearable/features/sustainability/stack/footer 场景
+  已完成(2026-07-21 十轮,commits 151a4aa/f5a73c3):**DeviceOrientation + Wearable 集群**——
+  DeviceOrientationControls 1:1(YXZ 欧拉四元数、iOS requestPermission 门控、
+  onFirstClicked 信号)+ cameraControls 移动端双 slerp 分支 + 手指虚拟鼠标分支;
+  WearableCondom(1024 骨 ×32 帧打包动画纹理蒙皮、前后双 TAAMesh、谐波 AO、
+  cacheScene 折射)、WearableText(MSDF 双 rect 插值辉光字)、WearableFrame
+  (杂志照片框:模糊晕影、clip 蒙版、MSDF pin、绕 u_zoom 缩放)、WearableScene
+  (杯垫旋转下落、撕膜、bloom 脉冲 profile)、WearableSectionCanvas(2D 虚线选择框)、
+  WearableSection 驱动(gallery index 数学→动画链、文字 rect 编排、gsap SplitText
+  标题逐字符,gsap 已入依赖)。基建:postprocessing.cacheScene、
+  fboHelper.clearMultisampleRenderTargetState、DomGLRect、loader channel 选项。
+  验收:包装(ORYZO 橙色印花)→撕开→杯垫自由旋转 + "it's wearable" bloom 辉光全链路。
+  **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise(依赖
+  tableCoffee)、table 集群(tableBase/Coffee/Grip/thermodynamic/水熊 Wiggle)、
+  sustainability/stack/footer 场景、sketches、全站 split-text 编排、siteHeader/
+  siteFooter、M2.4 SOG splat(tableScene 需要)
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
