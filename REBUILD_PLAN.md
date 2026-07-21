@@ -98,10 +98,17 @@
   场景移植 bg(渐变+clearColor 混合)/gobo(512 RT+文件名强度)/coaster(**真实 coasterFrag**:
   env combine RT、局部光、zoom center)/heroScene(阶段性:常数+uniforms+固定相机位+gobo 矩阵);
   App/Visuals 编排按源站顺序,分辨率数学照抄 _onResize;修正 activeRatio 应取 hero 段 hideScreenOffset。
-  **剩余(均为源站有、尚未移植)**:heroSceneBase RT 管线+desk pad 画布+文具 props、
-  HandScene(手模型/AI_HAND 材质/六指交互)、postprocessing 全链(TAA/SMAA/bloom/appleEfx)、
-  preloader canvas 动画(绘 logo)、每 section 逐元素 split-text 编排、DeviceOrientation(移动端)、
-  与源站逐位置截图比对
+  已完成(2026-07-21 四轮,commit 517a384):**hero RT 管线全量移植**——heroScene(2D 正交场景→RT,
+  两遍道具阴影:半分辨率模糊+plain,camera2D 缩放模糊)、heroSceneBase(baseVert/baseFrag 原文:
+  screen-to-world 桌面投影、杯垫椭球软阴影、gobo)、7 个文具 props 全套物理
+  (SecondOrderDynamics 鼠标缓动、摆动+angular-RGB 帧、位移钳制、startTime+hash2 入场)、
+  deskPad 画布、Blur/Ease/SecondOrderDynamics core 移植。
+  **同视口与源站比对通过**:网格 37-38px vs 源站 ~37-40px,杯垫直径/构图/旋转一致。
+  教训:目测像素会骗人,量化比对要用脚本量截图。
+  **剩余(均为源站有、尚未移植)**:HandScene(手模型/AI_HAND 材质/六指交互)、
+  postprocessing 全链(TAA/SMAA/bloom/appleEfx/AgX)、preloader canvas 动画(绘 logo)、
+  每 section 逐元素 split-text 编排(bundle 内嵌 GSAP SplitText 3.14.2,可用 npm gsap)、
+  DeviceOrientation(移动端)、wearable/features/sustainability 等后续场景
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
