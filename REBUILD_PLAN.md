@@ -105,10 +105,15 @@
   deskPad 画布、Blur/Ease/SecondOrderDynamics core 移植。
   **同视口与源站比对通过**:网格 37-38px vs 源站 ~37-40px,杯垫直径/构图/旋转一致。
   教训:目测像素会骗人,量化比对要用脚本量截图。
-  **剩余(均为源站有、尚未移植)**:HandScene(手模型/AI_HAND 材质/六指交互)、
-  postprocessing 全链(TAA/SMAA/bloom/appleEfx/AgX)、preloader canvas 动画(绘 logo)、
-  每 section 逐元素 split-text 编排(bundle 内嵌 GSAP SplitText 3.14.2,可用 npm gsap)、
-  DeviceOrientation(移动端)、wearable/features/sustainability 等后续场景
+  已完成(2026-07-21 五轮,commit 4bc05b8):**HandScene + Hand 全量移植**——骨骼纹理 GPU 蒙皮
+  (36 骨骼逐帧插值进 float DataTexture、两遍骨骼层级求解 + ROOT 变换)、六指交互
+  (标量 SecondOrderDynamics 由鼠标 Y 驱动手指骨骼)、AI_HAND 2×2 图集帧混合、
+  handVert/handFrag 原文(GPU 四元数蒙皮、双光源高光+次表面散射)。
+  修正:HAND_FRAME_START/END 实为 71/116(此前误猜 47);coaster.isActive 溯源为
+  WearableScene 的 t<=3。webgl.ts 的临时编排已替换为移植类。
+  **剩余(均为源站有、尚未移植)**:postprocessing 全链(TAA/SMAA/bloom/appleEfx/AgX)、
+  preloader canvas 动画(绘 logo)、每 section 逐元素 split-text 编排(可用 npm gsap 的 SplitText)、
+  DeviceOrientation(移动端)、wearable/features/sustainability/stack/footer 场景
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
