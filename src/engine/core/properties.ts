@@ -69,6 +69,8 @@ export const properties = {
   width: 0,
   height: 0,
   renderer: null as WebGLRenderer | null,
+  /** OES_draw_buffers_indexed — used to disable blending on the velocity MRT. */
+  drawBuffersExt: null as { disableiOES(cap: number, index: number): void } | null,
   camera: new EngineCamera(),
   resolution: new Vector2(),
   viewportResolution: new Vector2(),

@@ -35,6 +35,17 @@ function normalizeWheel(event: WheelEvent): { pixelX: number; pixelY: number } {
   return { pixelX: pX, pixelY: pY };
 }
 
+/** Minimal port of the source MinSignal (add/dispatch subset). */
+class MinSignal<T = unknown> {
+  private listeners: Array<(payload: T) => void> = [];
+  add(listener: (payload: T) => void): void {
+    this.listeners.push(listener);
+  }
+  dispatch(payload: T): void {
+    for (const listener of this.listeners) listener(payload);
+  }
+}
+
 class Input {
   isDown = false;
   wasDown = false;
@@ -53,8 +64,11 @@ class Input {
   mouseXY = new Vector2();
   /** Source: eased mouse dynamics registry (addEasedInput in preInit). */
   easedMouseDynamics: Record<string, SecondOrderDynamics> = {};
+  /** Source: dispatched on pointerup when moved < 40px and pressed < 300ms. */
+  onClicked = new MinSignal<PointerEvent>();
 
   private downTarget: EventTarget | null = null;
+  private downTime = 0;
 
   init(): void {
     window.addEventListener('wheel', this._onWheel.bind(this), { passive: true });
@@ -113,6 +127,7 @@ class Input {
   private _onDown(e: PointerEvent): void {
     this.isDown = true;
     this.downTarget = e.target;
+    this.downTime = +new Date();
     this.downPixelXY.x = this.prevMovePixelXY.x = e.clientX;
     this.downPixelXY.y = this.prevMovePixelXY.y = e.clientY;
     this.isDragScrollingX = false;
@@ -147,7 +162,15 @@ class Input {
     }
   }
 
-  private _onUp(): void {
+  private _onUp(e: PointerEvent): void {
+    // Source (pretty 12922): click = moved < 40px and pressed < 300ms.
+    if (this.isDown && e.clientX !== undefined) {
+      const dx = e.clientX - this.downPixelXY.x;
+      const dy = e.clientY - this.downPixelXY.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 40 && +new Date() - this.downTime < 300) {
+        this.onClicked.dispatch(e);
+      }
+    }
     this.isDown = false;
     this.isDragScrollingX = false;
     this.isDragScrollingY = false;

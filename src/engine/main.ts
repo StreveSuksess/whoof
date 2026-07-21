@@ -8,7 +8,7 @@ import { properties } from './core/properties';
 import { scrollManager } from './core/ScrollPane';
 import { parseBuf } from './BufLoader';
 import { initSections, updateSections } from './sections';
-import { webglApp } from './webgl';
+import { webglApp, _pp } from './webgl';
 
 function detectMobile(): boolean {
   return matchMedia('(pointer: coarse)').matches && matchMedia('(max-width: 820px)').matches;
@@ -89,6 +89,15 @@ export function boot(): void {
     if (properties.hasStarted) {
       properties.startTime = Math.min(1, properties.startTime + dt);
     }
+    // Debug probe (dev aid, keep until the engine stabilizes).
+    (window as never as Record<string, unknown>).__t = {
+      startTime: properties.startTime,
+      hasStarted: properties.hasStarted,
+      tick: properties.tick,
+    };
+    (window as never as Record<string, unknown>).__pp = _pp;
+    (window as never as Record<string, unknown>).__props = properties;
+    (window as never as Record<string, unknown>).__app = webglApp;
     input.update(dt);
     scrollManager.update(dt);
     if (properties.hasStarted) {

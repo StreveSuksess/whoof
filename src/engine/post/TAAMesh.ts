@@ -35,6 +35,9 @@ export class TAAMesh extends Mesh {
         this.updatesTAAMatricesOnBeforeRender(camera);
         this.onBeforeRenderCustom?.(renderer, scene, camera);
         const gl = renderer.getContext() as WebGL2RenderingContext;
+        // Source: disable blending on the velocity attachment so alpha-blended
+        // materials don't corrupt the packed motion vectors.
+        properties.drawBuffersExt?.disableiOES(gl.BLEND, 1);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
         postprocessing.taa.isActive = true;
       };

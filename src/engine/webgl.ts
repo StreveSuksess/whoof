@@ -53,6 +53,7 @@ class WebGLApp {
   initEngine(): void {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     const gl = canvas.getContext('webgl2', properties.webglOpts) as WebGL2RenderingContext;
+    properties.drawBuffersExt = gl.getExtension('OES_draw_buffers_indexed');
     properties.renderer = new WebGLRenderer({ canvas, context: gl });
     // Source: TAAPerspectiveCamera(20, 1, .2, 3)
     properties.camera.fov = 20;
@@ -199,6 +200,9 @@ class WebGLApp {
       const heroRange = scrollManager.getDomRange(this.heroSection);
       heroScene.activeRatio = fit(heroRange.hideScreenOffset, -1, -0.5, 1, 0);
       heroScene.isActive = heroScene.activeRatio > 0;
+      // HeroSection.update tail (pretty 21257): logo choreography also flips
+      // the scroll indicator into its button state while the hero is active.
+      scrollManager.isBtn = heroScene.activeRatio > 0.99;
     }
     if (this.aiSection) {
       const r = scrollManager.getDomRange(this.aiSection).showScreenOffset;
@@ -215,3 +219,4 @@ class WebGLApp {
 }
 
 export const webglApp = new WebGLApp();
+export { postprocessing as _pp };

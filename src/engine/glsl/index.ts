@@ -290,3 +290,66 @@ uniform sampler2D u_texture;uniform float u_padding;uniform vec2 u_resolution;un
 float sdBox(in vec2 p,in vec2 b){vec2 d=abs(p)-b;return length(max(d,0.0))+min(max(d.x,d.y),0.0);}float sdCircle(vec2 p,float r){return length(p)-r;}float opSmoothUnion(float a,float b,float k){k*=4.0;float h=max(k-abs(a-b),0.0);return min(a,b)-h*h*0.25/k;}const float PI=3.14159265359;
 #include <linearstep>
 void main(){vec3 bnoise=getBlueNoise(gl_FragCoord.xy);vec2 aspect=vec2(u_resolution.x/u_resolution.y,1.);vec2 glowUv=(v_uv-0.5)*u_coverAspect*2.;float angle=u_time*-5.;mat2 rot=mat2(cos(angle),-sin(angle),sin(angle),cos(angle));glowUv=rot*glowUv;glowUv=glowUv*.5+.5;glowUv=clamp(glowUv,vec2(0.),vec2(1.));vec3 c0=texture2D(u_lmsTexture,vec2(0.,.5)).rgb;vec3 c1=texture2D(u_lmsTexture,vec2(1./6.,.5)).rgb;vec3 c2=texture2D(u_lmsTexture,vec2(2./6.,.5)).rgb;vec3 c3=texture2D(u_lmsTexture,vec2(3./6.,.5)).rgb;vec3 colorT=mix(c0,c1,glowUv.x);vec3 colorB=mix(c3,c2,glowUv.x);vec3 glowColor=mix(colorB,colorT,glowUv.y);glowColor*=glowColor*glowColor*2.;vec2 wp=(v_uv-u_pulseCenter)*aspect;float wl=length(aspect);float wpl=wl-length(wp);float wsl=0.5*wl;float wel=0.5*wl;float wtl=wl+wsl+wel;float wt=u_pulse*wtl-wl+wpl;float w0=smoothstep(0.,wsl,wt);float w1=smoothstep(wsl+wel,wsl,wt);float wd=abs(wt-wsl);float wave=w0*w1*u_amount;vec2 waveDir=normalize(wp);vec2 borderUv=(v_uv-0.5)*u_resolution+waveDir*wave*0.01*u_resolution.x;float d=sdBox(borderUv,u_resolution*0.5-u_padding*2.)-u_padding;d=linearstep(0.0,u_padding*2.5,d);float test=d;d=pow(d,3.0);float d2=sdBox(borderUv,u_resolution*0.5-u_padding*3.)-u_padding*1.5;d2=linearstep(0.0,u_padding*5.5,d2);test+=d2;d2=pow(d2,5.);vec4 base=texture2D(u_texture,v_uv+waveDir*smoothstep(0.,0.4,abs(wd))*wave*-0.005);vec3 color=pow(base.rgb,vec3(2.2));float glow=(0.001+d+d2*0.5)*5.;color+=u_amount*glowColor*glow;color+=wave*(d*0.25+d2*0.25+glowColor*0.05);color=min(color,1.);glow=dot(glowColor,vec3(0.2126,0.7152,0.0722))*glow;gl_FragColor=vec4(pow(color,vec3(1.0/2.2))+bnoise*0.004,min(1.,base.a+glow+wave*(d+d2*0.5+0.05)));}`;
+
+export const highPassFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform float u_luminosityThreshold;uniform float u_smoothWidth;uniform float u_lumaStrength;uniform float u_selectiveStrength;
+#ifdef USE_HALO
+uniform vec2 u_texelSize;uniform vec2 u_aspect;uniform float u_haloWidth;uniform float u_haloRGBShift;uniform vec3 u_haloLeftColor;uniform vec3 u_haloMidColor;uniform vec3 u_haloRightColor;uniform float u_haloStrength;uniform float u_haloMaskInner;uniform float u_haloMaskOuter;
+#ifdef USE_LENS_DIRT
+uniform sampler2D u_dirtTexture;uniform vec2 u_dirtAspect;
+#endif
+#endif
+#ifdef USE_CONVOLUTION
+uniform float u_convolutionBuffer;
+#endif
+varying vec2 v_uv;void main(){vec2 uv=v_uv;
+#ifdef USE_CONVOLUTION
+uv=(uv-0.5)*(1.0+u_convolutionBuffer)+0.5;
+#endif
+vec4 texel=texture2D(u_texture,uv);float luma=dot(texel.xyz,vec3(0.299,0.587,0.114));float alpha=smoothstep(u_luminosityThreshold,u_luminosityThreshold+u_smoothWidth,luma);vec3 color=texel.rgb*(alpha*u_lumaStrength+texel.a*u_selectiveStrength);gl_FragColor=vec4(color,1.0);
+#ifdef USE_HALO
+vec2 toCenter=(uv-0.5)*u_aspect;vec2 ghostUv=1.0-(toCenter+0.5);vec2 ghostVec=(vec2(0.5)-ghostUv);vec2 direction=normalize(ghostVec);vec2 haloVec=direction*u_haloWidth;float weight=length(vec2(0.5)-fract(ghostUv+haloVec));weight=pow(1.0-weight,3.0);vec3 distortion=vec3(-u_texelSize.x,0.0,u_texelSize.x)*u_haloRGBShift;float zoomBlurRatio=fract(atan(toCenter.y,toCenter.x)*40.0)*0.05+0.95;ghostUv*=zoomBlurRatio;vec2 haloUv=ghostUv+haloVec;vec3 halo=(texture2D(u_texture,haloUv+direction*distortion.r).rgb*u_haloLeftColor+texture2D(u_texture,haloUv+direction*distortion.g).rgb*u_haloMidColor+texture2D(u_texture,haloUv+direction*distortion.b).rgb*u_haloRightColor)*u_haloStrength*smoothstep(u_haloMaskInner,u_haloMaskOuter,length(toCenter));
+#ifdef USE_LENS_DIRT
+vec2 dirtUv=(uv-0.5)*u_dirtAspect+0.5;vec3 dirt=texture2D(u_dirtTexture,dirtUv).rgb;gl_FragColor.rgb+=(halo+alpha+0.05*dirt)*dirt;
+#else
+gl_FragColor.rgb+=halo;
+#endif
+#endif
+#ifdef USE_CONVOLUTION
+gl_FragColor.rgb*=max(abs(uv.x-0.5),abs(uv.y-0.5))>0.5 ? 0. : 1.;
+#endif
+}`;
+
+export const bloomBlurFrag = `#define GLSLIFY 1
+varying vec2 v_uv;uniform sampler2D u_texture;uniform vec2 u_resolution;uniform vec2 u_direction;float gaussianPdf(in float x,in float sigma){return 0.39894*exp(-0.5*x*x/(sigma*sigma))/sigma;}void main(){vec2 invSize=1.0/u_resolution;float fSigma=float(SIGMA);float weightSum=gaussianPdf(0.0,fSigma);vec3 diffuseSum=texture2D(u_texture,v_uv).rgb*weightSum;for(int i=1;i<KERNEL_RADIUS;i++){float x=float(i);float w=gaussianPdf(x,fSigma);vec2 uvOffset=u_direction*invSize*x;vec3 sample1=texture2D(u_texture,v_uv+uvOffset).rgb;vec3 sample2=texture2D(u_texture,v_uv-uvOffset).rgb;diffuseSum+=(sample1+sample2)*w;weightSum+=2.0*w;}gl_FragColor=vec4(diffuseSum/weightSum,1.0);}`;
+
+export const bloomCompositeFrag = `#define GLSLIFY 1
+varying vec2 v_uv;uniform sampler2D u_texture;uniform sampler2D u_blurTexture0;
+#if ITERATION > 1
+uniform sampler2D u_blurTexture1;
+#endif
+#if ITERATION > 2
+uniform sampler2D u_blurTexture2;
+#endif
+#if ITERATION > 3
+uniform sampler2D u_blurTexture3;
+#endif
+#if ITERATION > 4
+uniform sampler2D u_blurTexture4;
+#endif
+uniform float u_bloomWeights[ITERATION];uniform float u_saturation;
+#include <common>
+vec3 dithering(vec3 color){float grid_position=rand(gl_FragCoord.xy);vec3 dither_shift_RGB=vec3(0.25/255.0,-0.25/255.0,0.25/255.0);dither_shift_RGB=mix(2.0*dither_shift_RGB,-2.0*dither_shift_RGB,grid_position);return color+dither_shift_RGB;}void main(){vec4 color=texture2D(u_texture,v_uv);vec3 bloomColor=(u_bloomWeights[0]*texture2D(u_blurTexture0,v_uv)
+#if ITERATION > 1
++u_bloomWeights[1]*texture2D(u_blurTexture1,v_uv)
+#endif
+#if ITERATION > 2
++u_bloomWeights[2]*texture2D(u_blurTexture2,v_uv)
+#endif
+#if ITERATION > 3
++u_bloomWeights[3]*texture2D(u_blurTexture3,v_uv)
+#endif
+#if ITERATION > 4
++u_bloomWeights[4]*texture2D(u_blurTexture4,v_uv)
+#endif
+).rgb;float luma=dot(bloomColor,vec3(0.299,0.587,0.114));color.rgb+=mix(vec3(luma),bloomColor,u_saturation);color.rgb=dithering(color.rgb);gl_FragColor=color;}`;

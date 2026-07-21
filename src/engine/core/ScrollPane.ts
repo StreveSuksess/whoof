@@ -4,7 +4,8 @@
 // per-frame smoothing (wheel ease + drag friction) produces scrollPixel,
 // which is written back via window.scrollTo.
 
-import { clamp, fit, mix, unClampedFit } from './math';
+import { ease } from './ease';
+import { clamp, fit, mix, saturate, unClampedFit } from './math';
 import { input } from './input';
 import { properties } from './properties';
 
@@ -367,11 +368,84 @@ export class ScrollPane {
   }
 }
 
+// Scroll indicator state (source pretty 29688-29691).
+let _domScrollIndicator: HTMLElement | null = null;
+let _domScrollIndicatorBar: HTMLElement | null = null;
+let _scrollIndicatorMoveableHeight = 1;
+let _scrollIndicatorActiveRatio = 0;
+let _lastMouseInteractiveTime = -Infinity;
+let _isIndicatorActive = false;
+let _scrollBarHeight = 0;
+
+// Source ScrollManager (pretty 29692-29719): drives the custom scroll
+// indicator bar and exposes scrollBarCenter (consumed by AppleEfx's pulse).
 export class ScrollManager extends ScrollPane {
+  isBtn = false;
+  btnRatio = 0;
+  scrollBarCenter = 0;
+
   init(): void {
     super.init({
       contentDom: document.getElementById('site-content') as HTMLElement,
     } as Partial<ScrollPane>);
+    _domScrollIndicator = document.getElementById('scroll-indicator');
+    _domScrollIndicatorBar = document.getElementById('scroll-indicator__bar');
+    input.onClicked.add(() => {
+      if (this.isBtn && input.hasThroughElem(_domScrollIndicatorBar!, 'down')) {
+        scrollManager.scrollTo('open-weight');
+      }
+    });
+  }
+
+  resize(width: number, height: number): void {
+    super.resize(width, height);
+    if (_domScrollIndicator && _domScrollIndicatorBar) {
+      _scrollBarHeight = _domScrollIndicatorBar.getBoundingClientRect().height;
+      _scrollIndicatorMoveableHeight =
+        _domScrollIndicator.getBoundingClientRect().height - _scrollBarHeight;
+    }
+  }
+
+  update(dt: number): void {
+    const useMobileLayout = properties.useMobileLayout;
+    let isDraggingBar = false;
+    this.btnRatio = saturate(this.btnRatio + (this.isBtn ? 3 : -3) * dt);
+    if (useMobileLayout) {
+      this.btnRatio = 0;
+      this.isBtn = false;
+    } else if (input.isDown && input.hasThroughElem(_domScrollIndicatorBar!, 'down')) {
+      isDraggingBar = true;
+    }
+    if (isDraggingBar) {
+      this.scrollToPixel(
+        this.scrollPixel
+          + input.deltaPixelXY.y * this.contentSize * (this.viewSizePixel / _scrollIndicatorMoveableHeight),
+        true,
+      );
+    }
+    super.update(dt);
+    if (Math.abs(this.scrollViewDelta) > 0) {
+      _lastMouseInteractiveTime = properties.time;
+      _isIndicatorActive = true;
+    } else if (properties.time > _lastMouseInteractiveTime + 0.5) {
+      _isIndicatorActive = false;
+    }
+    _scrollIndicatorActiveRatio = clamp(
+      _scrollIndicatorActiveRatio + (_isIndicatorActive ? 2 : -2) * dt,
+      0,
+      1,
+    );
+    let barX = fit(this.btnRatio, 0, 1, useMobileLayout ? 52 : 46, 0, ease.cubicInOut);
+    barX = fit(properties.startTime, 0.5, 1, 61, barX, ease.cubicInOut);
+    const barY = _scrollIndicatorMoveableHeight * (this.scrollView / this.contentSize);
+    if (_domScrollIndicatorBar) {
+      _domScrollIndicatorBar.style.transform = 'translate3d(' + barX + 'px,' + barY + 'px,0)';
+      _domScrollIndicatorBar.style.opacity = String(
+        useMobileLayout ? _scrollIndicatorActiveRatio : 1,
+      );
+      _domScrollIndicatorBar.style.cursor = this.isBtn ? 'pointer' : 'default';
+    }
+    this.scrollBarCenter = (barY + _scrollBarHeight * 0.5) / properties.height;
   }
 }
 

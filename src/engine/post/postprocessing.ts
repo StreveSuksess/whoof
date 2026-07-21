@@ -16,6 +16,7 @@ import { fboHelper } from '../core/fboHelper';
 import { loader } from '../core/Loader';
 import { properties } from '../core/properties';
 import * as settings from '../core/settings';
+import { Bloom } from './Bloom';
 import { AppleEfx, Final, Fxaa, PostLayer, Smaa, TAA } from './effects';
 import type { PostEffect } from './PostEffect';
 import { PostProfile } from './PostProfile';
@@ -53,6 +54,7 @@ export class Postprocessing {
   smaa!: Smaa;
   appleEfx!: AppleEfx;
   magazineLayer!: PostLayer;
+  bloom!: Bloom;
   final!: Final;
   sharedUniforms = {
     u_sceneTexture: { value: null as Texture | null },
@@ -124,10 +126,27 @@ export class Postprocessing {
       this.queue.push(fxaa);
       const smaa = (this.smaa = new Smaa());
       smaa.init();
-      smaa.setTextures(
-        loader.add(settings.TEXTURE_PATH + 'smaa-area.png', { weight: 32, flip: false }).content,
-        loader.add(settings.TEXTURE_PATH + 'smaa-search.png', { weight: 0.1, flip: false }).content,
-      );
+      // Source passes live <img> elements; our loader fills bitmaps async, so
+      // patch the texture images on load.
+      smaa.setTextures(null, null);
+      loader.add(settings.TEXTURE_PATH + 'smaa-area.png', {
+        weight: 32,
+        flip: false,
+        onLoad: (content) => {
+          const tex = smaa.sharedUniforms.u_areaTexture.value as import('three').Texture;
+          tex.image = content as ImageBitmap;
+          tex.needsUpdate = true;
+        },
+      });
+      loader.add(settings.TEXTURE_PATH + 'smaa-search.png', {
+        weight: 0.1,
+        flip: false,
+        onLoad: (content) => {
+          const tex = smaa.sharedUniforms.u_searchTexture.value as import('three').Texture;
+          tex.image = content as ImageBitmap;
+          tex.needsUpdate = true;
+        },
+      });
       this.queue.push(smaa);
     }
     // Bokeh (depth), Bloom, BlurBox, ScreenPaintDistortion: staged for later
@@ -138,6 +157,18 @@ export class Postprocessing {
     const magazine = (this.magazineLayer = new PostLayer());
     magazine.init();
     this.queue.push(magazine);
+    // Source: bloom.USE_CONVOLUTION = false; USE_HD off without float-linear.
+    const bloom = (this.bloom = new Bloom());
+    bloom.USE_CONVOLUTION = false;
+    if (
+      !properties.renderer!.extensions.get('OES_texture_float_linear')
+      && !properties.renderer!.extensions.get('OES_texture_half_float_linear')
+    ) {
+      bloom.USE_HD = false;
+    }
+    bloom.init();
+    this.queue.push(bloom);
+    // BlurBox, ScreenPaintDistortion: staged for later milestones.
     const final = (this.final = new Final());
     final.init();
     this.queue.push(final);
@@ -159,6 +190,22 @@ export class Postprocessing {
   syncProfile(): void {
     const profile = this.postProfile;
     const final = this.final;
+    const bloom = this.bloom;
+    bloom.amount = profile.bloomAmount;
+    bloom.radius = profile.bloomRadius;
+    bloom.threshold = profile.bloomThreshold;
+    bloom.smoothWidth = profile.bloomSmoothWidth;
+    bloom.lumaStrength = profile.bloomLumaStrength;
+    bloom.selectiveStrength = profile.bloomSelectiveStrength;
+    bloom.saturation = profile.bloomSaturation;
+    bloom.haloWidth = profile.haloWidth;
+    bloom.haloRGBShift = profile.haloRGBShift;
+    bloom.haloLeftColorHex = profile.haloLeftColorHex;
+    bloom.haloMidColorHex = profile.haloMidColorHex;
+    bloom.haloRightColorHex = profile.haloRightColorHex;
+    bloom.haloStrength = profile.haloStrength;
+    bloom.haloMaskInner = profile.haloMaskInner;
+    bloom.haloMaskOuter = profile.haloMaskOuter;
     if (this.smaa) this.smaa.threshold = profile.smaaThreshold;
     final.vignetteFrom = profile.vignetteFrom;
     final.vignetteTo = profile.vignetteTo;
