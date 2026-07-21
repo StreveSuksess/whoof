@@ -89,6 +89,7 @@ export function boot(): void {
     if (properties.hasStarted) {
       properties.startTime = Math.min(1, properties.startTime + dt);
     }
+    input.update(dt);
     scrollManager.update(dt);
     if (properties.hasStarted) {
       updateSections();

@@ -89,6 +89,7 @@ class WebGLApp {
     this.scene.add(bg.container);
     bindHeroScene(heroScene);
     heroScene.preInit();
+    this.scene.add(heroScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
     // HandScene animations (source HandScene.preInit).
@@ -105,6 +106,7 @@ class WebGLApp {
     cameraControls.init();
     gobo.init();
     bg.init();
+    heroScene.init();
     coaster.init();
     this.coasterAnimation.setTarget(coaster.container);
     this.aiSection = document.getElementById('ai');
@@ -145,6 +147,7 @@ class WebGLApp {
     canvas.style.height = `${properties.viewportHeight}px`;
     properties.camera.aspect = properties.width / properties.height;
     properties.camera.updateProjectionMatrix();
+    heroScene.resize(properties.width, properties.height);
   }
 
   /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
@@ -164,7 +167,7 @@ class WebGLApp {
     cameraControls.update(dt);
     gobo.update(dt);
     bg.update();
-    heroScene.update();
+    heroScene.update(dt);
     coaster.update();
     properties.renderer.render(this.scene, properties.camera);
     properties.tick++;
@@ -194,8 +197,10 @@ class WebGLApp {
         0,
       );
     }
-    heroScene.isActive = offset < 9;
-    coaster.isActive = true;
+    // Source HeroSection.update: heroScene.isActive = activeRatio > 0.
+    heroScene.isActive = heroScene.activeRatio > 0;
+    // Source HandScene: 3D content hides once the hand phase ends (r ~9).
+    coaster.isActive = offset < 9;
     this.coasterAnimation.applyTransformByRatio(ratio);
     // Camera track drives cameraControls (not the camera directly).
     this.cameraAnimation.setTarget(cameraControls as never);

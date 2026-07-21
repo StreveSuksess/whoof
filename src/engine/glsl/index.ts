@@ -154,3 +154,56 @@ float calcHarmonic(float amp,float pha,float freq,float t){return cos(t*freq+(ph
 
 export const sdCappedCone = `#define GLSLIFY 1
 float sdCappedCone(vec3 p,vec3 a,vec3 b,float ra,float rb){float rba=rb-ra;float baba=dot(b-a,b-a);float papa=dot(p-a,p-a);float paba=dot(p-a,b-a)/baba;float x=sqrt(papa-paba*paba*baba);float cax=max(0.0,x-((paba<0.5)?ra:rb));float cay=abs(paba-0.5)-0.5;float k=rba*rba+baba;float f=clamp((rba*(x-ra)+paba*baba)/k,0.0,1.0);float cbx=x-ra-f*rba;float cby=paba-f;float s=(cbx<0.0&&cay<0.0)?-1.0 : 1.0;return s*sqrt(min(cax*cax+cay*cay*baba,cbx*cbx+cby*cby*baba));}`;
+
+export const propsBlurFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform vec2 u_texelSize;uniform float u_blurRadius;varying vec2 v_uv;
+#include <getBlueNoise>
+#include <sampleBlur>
+void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);gl_FragColor=sampleBlur(u_texture,v_uv,u_texelSize,u_blurRadius,blueNoise.z);}`;
+
+export const propVert = `#define GLSLIFY 1
+uniform vec2 u_uvScale;uniform float u_uvHeightBias;uniform mat4 u_goboProjectionMatrix;uniform vec2 u_planeResolution;uniform float u_height;uniform sampler2D u_texture;uniform mat4 u_goboMatrix;uniform mat4 u_screenToWorld;uniform mat4 u_cameraMVP;uniform float u_zoom;varying vec4 v_goboNdc;varying vec2 v_uv;
+#ifdef NEEDS_ANGULAR_RGB
+uniform vec3 u_angleInfo;varying vec2 v_uv2;
+#endif
+void main(){v_uv=uv*u_uvScale;vec2 uvHeight=uv;uvHeight.x+=u_uvHeightBias;uvHeight*=u_uvScale;float height=texture2D(u_texture,uvHeight).r;
+#ifdef NEEDS_ANGULAR_RGB
+v_uv.x+=u_angleInfo.x*u_uvScale.x;v_uv2=uv*u_uvScale;v_uv2.x+=u_angleInfo.y*u_uvScale.x;
+#endif
+gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(position,1.0);vec4 tableNDC=u_cameraMVP*vec4(-0.0105761,0.7471+height*u_height,-0.0485146,1);tableNDC.xyz/=tableNDC.w;v_goboNdc=(u_goboMatrix*u_screenToWorld*vec4(gl_Position.xy/gl_Position.w/u_zoom,tableNDC.z,1.0));}`;
+
+export const propFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;varying vec2 v_uv;
+#ifdef IS_SHADOW
+uniform float u_shadowOpacity;
+#else
+#include <linearstep>
+uniform float u_activeRatio;uniform vec2 u_resolution;uniform vec2 u_2DlightPos;uniform sampler2D u_goboTexture;uniform mat4 u_goboProjectionMatrix;uniform float u_goboOpacity;uniform vec4 u_goboParams;
+#include <getGoboBlurRatio>
+varying vec4 v_goboNdc;
+#include <getBlueNoise>
+#include <getBgColor>
+#include <sampleBlur>
+#ifdef NEEDS_ANGULAR_RGB
+uniform vec3 u_angleInfo;varying vec2 v_uv2;
+#endif
+#endif
+void main(){vec4 color=pow(texture2D(u_texture,v_uv),vec4(2.2));
+#ifdef IS_SHADOW
+gl_FragColor=vec4(color.a*u_shadowOpacity);
+#else
+#ifdef NEEDS_ANGULAR_RGB
+vec4 color2=pow(texture2D(u_texture,v_uv2),vec4(2.2));color=mix(color,color2,u_angleInfo.z);
+#endif
+vec2 texelSize=1.0/u_resolution;vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);vec2 screenUv=gl_FragCoord.xy/u_resolution;vec2 lightPos=u_2DlightPos/u_resolution;float lightDist=length(lightPos-screenUv);float falloff=1.0/(1.0+0.3*lightDist*lightDist);float gobo=1.0;vec2 goboUv=v_goboNdc.xy/v_goboNdc.w*0.5+0.5;if(u_goboOpacity>0.&&goboUv.x>=0.0&&goboUv.x<=1.0&&goboUv.y>=0.0&&goboUv.y<=1.0){gobo=sampleBlur(u_goboTexture,goboUv,vec2(1./512.),getGoboBlurRatio(v_goboNdc.z,u_goboParams)*2.,blueNoise.z).r;gobo=mix(1.0,gobo,u_goboOpacity);}gl_FragColor=color;gl_FragColor.rgb*=0.5+0.5*gobo;gl_FragColor.rgb=mix(getBgColor(blueNoise.z),gl_FragColor.rgb,u_activeRatio);gl_FragColor.rgb=pow(gl_FragColor.rgb,vec3(1.0/2.2));
+#endif
+}`;
+
+export const blur9VaryingVertexShader = `#define GLSLIFY 1
+attribute vec3 position;uniform vec2 u_delta;varying vec2 v_uv[9];void main(){vec2 uv=position.xy*0.5+0.5;v_uv[0]=uv;vec2 delta=u_delta;v_uv[1]=uv-delta;v_uv[2]=uv+delta;delta+=u_delta;v_uv[3]=uv-delta;v_uv[4]=uv+delta;delta+=u_delta;v_uv[5]=uv-delta;v_uv[6]=uv+delta;delta+=u_delta;v_uv[7]=uv-delta;v_uv[8]=uv+delta;gl_Position=vec4(position,1.0);}`;
+
+export const blur9VaryingFragmentShader = `#define GLSLIFY 1
+uniform sampler2D u_texture;varying vec2 v_uv[9];void main(){vec4 color=texture2D(u_texture,v_uv[0])*0.1633;color+=texture2D(u_texture,v_uv[1])*0.1531;color+=texture2D(u_texture,v_uv[2])*0.1531;color+=texture2D(u_texture,v_uv[3])*0.12245;color+=texture2D(u_texture,v_uv[4])*0.12245;color+=texture2D(u_texture,v_uv[5])*0.0918;color+=texture2D(u_texture,v_uv[6])*0.0918;color+=texture2D(u_texture,v_uv[7])*0.051;color+=texture2D(u_texture,v_uv[8])*0.051;gl_FragColor=color;}`;
+
+export const blur9FragmentShader = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform vec2 u_delta;varying vec2 v_uv;void main(){vec4 color=texture2D(u_texture,v_uv)*0.1633;vec2 delta=u_delta;color+=texture2D(u_texture,v_uv-delta)*0.1531;color+=texture2D(u_texture,v_uv+delta)*0.1531;delta+=u_delta;color+=texture2D(u_texture,v_uv-delta)*0.12245;color+=texture2D(u_texture,v_uv+delta)*0.12245;delta+=u_delta;color+=texture2D(u_texture,v_uv-delta)*0.0918;color+=texture2D(u_texture,v_uv+delta)*0.0918;delta+=u_delta;color+=texture2D(u_texture,v_uv-delta)*0.051;color+=texture2D(u_texture,v_uv+delta)*0.051;gl_FragColor=color;}`;

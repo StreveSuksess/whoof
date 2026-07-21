@@ -37,6 +37,7 @@ interface ColorState {
 
 class FboHelper {
   isWebGL2 = false;
+  MAX_VARYING_VECTORS = 8;
   renderer!: WebGLRenderer;
   quadGeom!: PlaneGeometry;
   triGeom!: BufferGeometry;
@@ -60,6 +61,8 @@ class FboHelper {
     this.renderer = renderer;
     this.floatType = floatType;
     this.isWebGL2 = this.renderer.capabilities.isWebGL2;
+    const gl = this.renderer.getContext();
+    this.MAX_VARYING_VECTORS = gl.getParameter(gl.MAX_VARYING_VECTORS) as number;
     this._scene = new Scene();
     this._camera = new Camera();
     this._camera.position.z = 1;
@@ -182,7 +185,7 @@ class FboHelper {
     }
   }
 
-  renderMesh(mesh: Mesh, rt?: WebGLRenderTarget, camera: Camera = this._camera): void {
+  renderMesh(mesh: import('three').Object3D, rt?: WebGLRenderTarget, camera: Camera = this._camera): void {
     if (this._tri && this.renderer && this._scene && camera) {
       this._tri.visible = false;
       this._scene.add(mesh);

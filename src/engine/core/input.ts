@@ -2,7 +2,9 @@
 // Covers what ScrollPane consumes: normalized wheel deltas accumulated per
 // frame, pointer drag state, and per-frame reset.
 
+import { Vector2 } from 'three';
 import { clamp } from './math';
+import { SecondOrderDynamics } from './SecondOrderDynamics';
 
 const PIXEL_STEP = 10;
 const LINE_HEIGHT = 40;
@@ -48,7 +50,9 @@ class Input {
   downPixelXY = { x: 0, y: 0 };
   prevMovePixelXY = { x: 0, y: 0 };
   /** Normalized mouse position, -1..1, +y up (source input.mouseXY). */
-  mouseXY = { x: 0, y: 0 };
+  mouseXY = new Vector2();
+  /** Source: eased mouse dynamics registry (addEasedInput in preInit). */
+  easedMouseDynamics: Record<string, SecondOrderDynamics> = {};
 
   private downTarget: EventTarget | null = null;
 
@@ -58,6 +62,24 @@ class Input {
     window.addEventListener('pointermove', this._onMove.bind(this));
     window.addEventListener('pointerup', this._onUp.bind(this));
     window.addEventListener('pointercancel', this._onUp.bind(this));
+    // Source preInit: addEasedInput("default", 1.35, .5, 1.25), "dragScroll", "gobo".
+    this.addEasedInput('default', 1.35, 0.5, 1.25);
+    this.addEasedInput('dragScroll', 2, 1, 1);
+    this.addEasedInput('gobo', 1, 0.3, 2);
+  }
+
+  addEasedInput(name: string, f = 1.5, z = 0.8, r = 2): SecondOrderDynamics {
+    this.easedMouseDynamics[name] = new SecondOrderDynamics(new Vector2(), f, z, r);
+    return this.easedMouseDynamics[name];
+  }
+
+  /** Source input.update: eased dynamics follow mouseXY each frame. */
+  update(dt: number): void {
+    for (const name in this.easedMouseDynamics) {
+      const dynamics = this.easedMouseDynamics[name];
+      dynamics.target.copy(this.mouseXY);
+      dynamics.update(dt);
+    }
   }
 
   /** Called at the END of each engine frame, as the source does. */

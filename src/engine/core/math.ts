@@ -27,6 +27,15 @@ export function fit(
   return mix(toMin, toMax, t);
 }
 
+export function fract(v: number): number {
+  return v - Math.floor(v);
+}
+
+/** Source math.hash2: fract(sin(x*12.9898 + y*4.1414) * 43758.5453). */
+export function hash2(x: number, y: number): number {
+  return fract(Math.sin(x * 12.9898 + y * 4.1414) * 43758.5453);
+}
+
 /** Same as fit but without clamping. */
 export function unClampedFit(
   v: number,
