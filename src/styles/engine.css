@@ -1,0 +1,15 @@
+/* Engine-owned UI rules. The source drives these from its bundle; we keep the
+ * minimum as CSS where inline styles cannot override the stylesheet's
+ * !important display:none. */
+
+html.is-desktop .desktop-only {
+  display: revert !important;
+}
+html.is-mobile .mobile-only {
+  display: revert !important;
+}
+
+/* WebGL backdrop until the renderer lands (M2.3). */
+#canvas {
+  background: #000;
+}
