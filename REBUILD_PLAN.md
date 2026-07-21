@@ -73,11 +73,17 @@
 - 已知现状:各 section 内层元素为 fixed/absolute 定位,静态骨架下全部叠加显示——属预期,显隐/transform 由 phase 2 引擎按滚动驱动
 
 ### 阶段 2 — 引擎层(2–4 周,核心难点)
-- Three.js r178 场景框架 + 资源预载队列 + 进度事件
-- **`.buf` 格式解析器**:逆向二进制布局(bundle 内 loader 代码可读,已非混淆逻辑;备选方案是写转换器转 glTF)
-- **`.sog` Splat 加载器**:对接 PlayCanvas SOG 生态或复用站内 worker 逻辑
-- 虚拟滚动系统 + 滚动↔相机动画轨道绑定
-- MSDF 文字、球谐重打光材质、后处理链(SMAA/AgX/gobo)——GLSL 可直接从 bundle 提取
+- ✅ **M2.0 引擎逆向文档**(2026-07-21):`docs/engine-notes.md`——.buf/.sog 二进制布局、
+  滚动系统机制、材质与后处理清单全部厘清。两个私有格式远比预期简单:
+  `.buf` = uint32 头长 + JSON 头 + 顺序排列的量化属性;`.sog` = PlayCanvas SOG(无压缩 ZIP + webp + codebook)
+- ✅ **M2.1 `.buf` 解析器**(2026-07-21):`src/engine/BufLoader.ts`(1:1 移植源站 BufItem 解码),
+  `/debug/buf` 调试页(模型下拉 + OrbitControls + 贴图验证 + 相机轨迹可视化)。
+  验收:25/25 模型全部解析成功;coaster 几何/UV 完美;hand 含骨骼权重属性正常;
+  CAMERA_ANIM 320 帧运镜轨迹正确(注:hero_camera 位置 delta=0 属数据本身——hero 相机只转不动)
+- ⬜ **M2.2 引擎骨架**:Three.js r178(已锁版本)场景框架 + 资源预载队列 + 虚拟滚动(ScrollPane 直译)+ 状态类接管(删 phase1-shims)
+- ⬜ **M2.3 Hero 场景端到端**(第一个竖切片):相机轨道绑定滚动,与源站截图对比
+- ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
+- ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
 ### 阶段 3 — 分场景还原(3–5 周)
 - 按 section 逐个还原:Hero → 手 → Wearable → 桌面 → Sustainability → 对比表 → 论文段 → Footer

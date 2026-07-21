@@ -1,0 +1,184 @@
+---
+// M2.1 debug page: load and inspect any .buf model from public/models/.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>buf debug</title>
+    <style>
+      body { margin: 0; background: #1a1a1a; color: #ddd; font: 12px/1.4 monospace; }
+      #bar { position: fixed; top: 0; left: 0; right: 0; padding: 8px; background: #000a; z-index: 2; display: flex; gap: 12px; align-items: center; }
+      #info { position: fixed; top: 40px; left: 8px; z-index: 2; white-space: pre; max-height: 80vh; overflow: auto; background: #000a; padding: 8px; max-width: 420px; }
+      canvas { display: block; }
+      select { font: inherit; }
+    </style>
+  </head>
+  <body>
+    <div id="bar">
+      <select id="model"></select>
+      <label><input type="checkbox" id="textured" /> textured</label>
+      <span id="status"></span>
+    </div>
+    <div id="info"></div>
+    <script>
+      import {
+        AmbientLight,
+        AxesHelper,
+        BufferGeometry,
+        DirectionalLight,
+        DoubleSide,
+        Line,
+        LineBasicMaterial,
+        Mesh,
+        MeshBasicMaterial,
+        MeshNormalMaterial,
+        PerspectiveCamera,
+        Points,
+        PointsMaterial,
+        Scene,
+        SRGBColorSpace,
+        TextureLoader,
+        Vector3,
+        WebGLRenderer,
+      } from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      import { loadBuf } from '../../engine/BufLoader';
+
+      const MODELS = [
+        'coaster.buf', 'BARK.buf', 'COFFEE_BEAN.buf', 'COASTER_FLIP_ANIM.buf',
+        'coaster_hero_animation.buf', 'hand.buf', 'hand_animation.buf',
+        'hero_camera.buf', 'stack_camera.buf', 'sustainability_text.buf',
+        'sustainability_text_outline.buf',
+        'featuresAnimations/CAMERA_ANIM.buf', 'featuresAnimations/COASTER_ANIM.buf',
+        'featuresAnimations/COFFEE_ANIM.buf',
+        'table/DESK.buf', 'table/PINBOARD.buf', 'table/WALL.buf', 'table/TRAY_COVERS.buf',
+        'table/water_bear.buf', 'table/COFFEE/COVER.buf', 'table/COFFEE/CUP.buf',
+        'table/COFFEE/LABEL.buf',
+        'wearable/coaster_first.buf', 'wearable/condom_front.buf', 'wearable/condom_back.buf',
+      ];
+      // Known diffuse textures to validate UVs on a few meshes.
+      const TEXTURES = {
+        'coaster.buf': '/textures/coaster/DIFF.webp',
+        'COFFEE_BEAN.buf': '/textures/coffeeBean/DIFF.webp',
+        'table/DESK.buf': '/textures/table/DESK.webp',
+        'table/PINBOARD.buf': '/textures/table/PINBOARD.webp',
+        'table/WALL.buf': '/textures/table/WALL.webp',
+      };
+
+      const select = document.getElementById('model');
+      const texturedBox = document.getElementById('textured');
+      const status = document.getElementById('status');
+      const info = document.getElementById('info');
+      for (const m of MODELS) {
+        const o = document.createElement('option');
+        o.value = o.textContent = m;
+        select.appendChild(o);
+      }
+
+      const renderer = new WebGLRenderer({ antialias: true });
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+      const scene = new Scene();
+      const camera = new PerspectiveCamera(45, innerWidth / innerHeight, 0.001, 100);
+      camera.position.set(0.15, 0.12, 0.15);
+      const controls = new OrbitControls(camera, renderer.domElement);
+      scene.add(new AmbientLight(0xffffff, 0.6));
+      const dir = new DirectionalLight(0xffffff, 1.2);
+      dir.position.set(1, 2, 1.5);
+      scene.add(dir);
+      scene.add(new AxesHelper(0.05));
+
+      let current = null;
+      const texLoader = new TextureLoader();
+
+      async function show(name) {
+        status.textContent = 'loading…';
+        info.textContent = '';
+        if (current) scene.remove(current);
+        try {
+          const geometry = await loadBuf('/models/' + name);
+          const header = geometry.userData.bufHeader;
+          const isCameraTrack = !!(header.attributes.find((a) => a.id === 'orient')
+            && header.attributes.find((a) => a.id === 'focal'));
+
+          if (geometry.userData.sceneObject) {
+            current = geometry.userData.sceneObject;
+          } else if (isCameraTrack || header.meshType === 'Points') {
+            // Camera/animation tracks: draw sample points plus a path line.
+            const group = new Points(
+              geometry,
+              new PointsMaterial({ sizeAttenuation: false, size: 3, color: 0xffaa44 }),
+            );
+            if (isCameraTrack) {
+              const pos = geometry.getAttribute('position');
+              const pts = [];
+              for (let i = 0; i < pos.count; i++) pts.push(new Vector3().fromBufferAttribute(pos, i));
+              const line = new Line(
+                new BufferGeometry().setFromPoints(pts),
+                new LineBasicMaterial({ color: 0x44aaff }),
+              );
+              group.add(line);
+            }
+            current = group;
+          } else {
+            let material = new MeshNormalMaterial({
+              flatShading: !geometry.getAttribute('normal'),
+              side: DoubleSide,
+            });
+            if (texturedBox.checked && TEXTURES[name]) {
+              const tex = texLoader.load(TEXTURES[name]);
+              tex.colorSpace = SRGBColorSpace;
+              tex.flipY = false;
+              material = new MeshBasicMaterial({ map: tex, side: DoubleSide });
+            }
+            current = new Mesh(geometry, material);
+          }
+          scene.add(current);
+
+          geometry.computeBoundingSphere();
+          const bs = geometry.boundingSphere;
+          if (bs) {
+            controls.target.copy(bs.center);
+            const d = Math.max(bs.radius * 2.5, 0.01);
+            camera.position.set(bs.center.x + d, bs.center.y + d * 0.7, bs.center.z + d);
+            camera.near = d / 100;
+            camera.far = d * 100;
+            camera.updateProjectionMatrix();
+          }
+
+          status.textContent = 'ok';
+          const summary = {
+            vertexCount: header.vertexCount,
+            indexCount: header.indexCount,
+            meshType: header.meshType || 'Mesh(default)',
+            attributes: header.attributes.map((a) =>
+              `${a.id}[${a.componentSize}] ${a.storageType}${a.needsPack ? ' packed' : ''}`),
+            sceneNodes: header.sceneData ? header.sceneData.length : 0,
+            isCameraTrack,
+          };
+          info.textContent = JSON.stringify(summary, null, 1);
+        } catch (err) {
+          status.textContent = 'ERROR: ' + err.message;
+          console.error(err);
+        }
+      }
+
+      select.addEventListener('change', () => show(select.value));
+      texturedBox.addEventListener('change', () => show(select.value));
+      addEventListener('resize', () => {
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+      });
+      window.__debug = { scene, camera };
+      renderer.setAnimationLoop(() => {
+        controls.update();
+        renderer.render(scene, camera);
+      });
+      show(MODELS[0]);
+    </script>
+  </body>
+</html>
