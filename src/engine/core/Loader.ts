@@ -114,7 +114,11 @@ export class Loader {
       const buffer = await this._fetchWithProgress(item);
       const parser = this.parsers.get(ext);
       if (item.options.type === 'texture') {
+        // The source loader feeds <img> elements to THREE.Texture, which
+        // applies the default flipY=true on upload. WebGL ignores flipY for
+        // ImageBitmap sources, so bake the flip in here to match.
         const bitmap = await createImageBitmap(new Blob([buffer]), {
+          imageOrientation: 'flipY',
           premultiplyAlpha: 'none',
           colorSpaceConversion: 'none',
         });
@@ -124,7 +128,11 @@ export class Loader {
       } else if (parser) {
         item.content = await parser(buffer, url);
       } else if (['webp', 'png', 'jpg', 'avif'].includes(ext)) {
-        item.content = await createImageBitmap(new Blob([buffer]));
+        // Same flip rationale as the texture branch: these bitmaps end up in
+        // THREE.Texture.image (e.g. blueNoise), where the source used <img>.
+        item.content = await createImageBitmap(new Blob([buffer]), {
+          imageOrientation: 'flipY',
+        });
       } else {
         item.content = buffer;
       }

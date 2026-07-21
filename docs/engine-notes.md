@@ -77,6 +77,11 @@ JSON header 字段:
 webp 数据打包成 `RGBA32UI` + `RGBA8` 两张纹理;CPU 侧 `readRenderTargetPixels` 读回后按上式解出
 `centers`(Float32Array)供 worker 排序。ZIP 解析器 `parseUncompressedZip`(行 29932+)只支持 store(无压缩)条目。
 
+**纹理翻转注意**:源站普通纹理走 `<img>` → three `flipY=true`(上传时翻转);WebGL 对 ImageBitmap
+忽略 flipY,复刻 loader 用 ImageBitmap 时必须 `imageOrientation:'flipY'` 对齐(2026-07-21 已修)。
+但 **SOG 的 webp 例外**:源站 `SogItem.toImageBitmap` 就是无翻转的 `createImageBitmap`
+(premultiplyAlpha/colorSpaceConversion 均 none),移植 M2.4 时不要翻。
+
 排序:`SplatsWorker-DSMxtdkh.js`(镜像已存)按相机深度排序 splat 索引,主线程 `_onWorkerMessage` 回填。
 
 ## 虚拟滚动(ScrollPane/ScrollManager,pretty 行 29500–29720)
