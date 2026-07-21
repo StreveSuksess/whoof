@@ -8,8 +8,10 @@ import {
   Color,
   DirectionalLight,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
+  PlaneGeometry,
   Scene,
   SRGBColorSpace,
   Texture,
@@ -25,6 +27,18 @@ import * as settings from './core/settings';
 
 const BG_COLOR = '#4c3e37'; // hero bg from the source bundle
 
+// Hero view constants from the source bundle (pretty line 20737-20745).
+const HERO_FOCAL = 50;
+const HERO_APERTURE = 41.4;
+const HERO_VIEW_W = 2240;
+const HERO_VIEW_H = 1260;
+const HERO_PLANE_W = 3296; // expandedViewPixelWidth = BASE.webp size
+const HERO_PLANE_H = 1460;
+const HERO_CAM_Y = 1.22526;
+const TABLE_Y = 0.7471; // u_screenTableNDCDepth reference height
+const HERO_FOV =
+  2 * Math.atan(((HERO_VIEW_H * HERO_APERTURE) / HERO_VIEW_W) / 2 / HERO_FOCAL) * (180 / Math.PI);
+
 class WebGLApp {
   renderer!: WebGLRenderer;
   scene = new Scene();
@@ -39,6 +53,15 @@ class WebGLApp {
     loader.add(settings.MODEL_PATH + 'hero_camera.buf');
     loader.add(settings.MODEL_PATH + 'coaster_hero_animation.buf');
     loader.add(settings.TEXTURE_PATH + 'coaster/DIFF.webp', { autoMobile: true });
+    loader.add(settings.TEXTURE_PATH + 'hero/BASE.webp', { autoMobile: true });
+  }
+
+  private makeTexture(bitmap: ImageBitmap): Texture {
+    const tex = new Texture(bitmap);
+    tex.colorSpace = SRGBColorSpace;
+    tex.flipY = false;
+    tex.needsUpdate = true;
+    return tex;
   }
 
   init(): void {
@@ -60,17 +83,32 @@ class WebGLApp {
     if (cameraGeom) this.cameraAnimation.setGeometry(cameraGeom);
     if (coasterGeom) {
       const material = new MeshStandardMaterial({ roughness: 0.9, metalness: 0 });
-      if (diff) {
-        const tex = new Texture(diff);
-        tex.colorSpace = SRGBColorSpace;
-        tex.flipY = false;
-        tex.needsUpdate = true;
-        material.map = tex;
-      }
+      if (diff) material.map = this.makeTexture(diff);
       this.coaster = new Mesh(coasterGeom, material);
       this.coasterAnimation.setTarget(this.coaster);
       if (coasterAnimGeom) this.coasterAnimation.setGeometry(coasterAnimGeom);
       this.scene.add(this.coaster);
+    }
+
+    // Cutting-mat backdrop: BASE.webp projected onto the table plane, sized so
+    // 1 texture pixel matches the source's screen-to-world mapping at the
+    // hero camera height.
+    const base = loader.get(settings.TEXTURE_PATH + 'hero/BASE.webp', {
+      autoMobile: true,
+    }) as ImageBitmap | null;
+    if (base) {
+      const fovYRad = (HERO_FOV * Math.PI) / 180;
+      const worldPerPixel = (2 * (HERO_CAM_Y - TABLE_Y) * Math.tan(fovYRad / 2)) / HERO_VIEW_H;
+      const mat = new MeshBasicMaterial({ map: this.makeTexture(base) });
+      const plane = new Mesh(
+        new PlaneGeometry(HERO_PLANE_W * worldPerPixel, HERO_PLANE_H * worldPerPixel),
+        mat,
+      );
+      plane.rotation.x = -Math.PI / 2;
+      // flipY=false on the texture flips the image; compensate with plane scale.
+      plane.scale.y = -1;
+      plane.position.set(-0.0105761, TABLE_Y, -0.0485146);
+      this.scene.add(plane);
     }
     // Placeholder lighting until the SH/env material system lands (M2.5).
     this.scene.add(new AmbientLight(0xffffff, 1.1));
@@ -97,14 +135,20 @@ class WebGLApp {
 
   update(): void {
     if (!this.renderer) return;
-    // Source: handScene.animationRatio = fit(aiRange.showScreenOffset, 0, 5.5, 0, 1)
+    // Source: handScene.animationRatio = fit(aiRange.showScreenOffset, 0, 5.5, 0, 1);
+    // hand fades out over r 8..9 and the hero 3D content hides past that.
     let ratio = 0;
+    let offset = 0;
     if (this.aiSection) {
       const range = scrollManager.getDomRange(this.aiSection);
-      ratio = fit(range.showScreenOffset, 0, 5.5, 0, 1);
+      offset = range.showScreenOffset;
+      ratio = fit(offset, 0, 5.5, 0, 1);
     }
+    this.scene.visible = offset < 9;
     this.cameraAnimation.applyTransformByRatio(ratio);
     this.coasterAnimation.applyTransformByRatio(ratio);
+    // Source HandScene overrides the focal track with the hero fov constant.
+    this.camera.fov = HERO_FOV;
     this.camera.updateProjectionMatrix();
     this.renderer.render(this.scene, this.camera);
   }

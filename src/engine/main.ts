@@ -7,6 +7,7 @@ import { loader } from './core/Loader';
 import { properties } from './core/properties';
 import { scrollManager } from './core/ScrollPane';
 import { parseBuf } from './BufLoader';
+import { initSections, updateSections } from './sections';
 import { webglApp } from './webgl';
 
 function detectMobile(): boolean {
@@ -27,6 +28,7 @@ function preInit(): void {
 
 function onReady(): void {
   webglApp.init();
+  initSections();
   document.documentElement.classList.add('is-ready');
   const preloader = document.getElementById('preloader');
   const page = document.getElementById('home');
@@ -87,7 +89,10 @@ export function boot(): void {
       properties.startTime = Math.min(1, properties.startTime + dt);
     }
     scrollManager.update(dt);
-    if (properties.hasStarted) webglApp.update();
+    if (properties.hasStarted) {
+      updateSections();
+      webglApp.update();
+    }
     input.postUpdate();
     requestAnimationFrame(frame);
   };
