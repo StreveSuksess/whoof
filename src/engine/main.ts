@@ -23,6 +23,7 @@ function setStateClasses(): void {
 
 function preInit(): void {
   loader.registerParser('buf', (buffer) => parseBuf(buffer));
+  webglApp.initEngine();
   webglApp.preInit();
 }
 
@@ -91,7 +92,7 @@ export function boot(): void {
     scrollManager.update(dt);
     if (properties.hasStarted) {
       updateSections();
-      webglApp.update();
+      webglApp.update(dt);
     }
     input.postUpdate();
     requestAnimationFrame(frame);

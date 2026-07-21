@@ -8,8 +8,3 @@ html.is-desktop .desktop-only {
 html.is-mobile .mobile-only {
   display: revert !important;
 }
-
-/* WebGL backdrop until the renderer lands (M2.3). */
-#canvas {
-  background: #000;
-}

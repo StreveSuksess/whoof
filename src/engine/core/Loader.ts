@@ -1,15 +1,26 @@
-// Preload queue — reduced port of the source bundle's `properties.loader`.
-// All assets are queued during preInit and downloaded up front; progress
-// drives the preloader UI. Parsers are registered per file extension.
+// Preload queue — port of the source bundle's loader semantics used so far:
+// items queue during preInit and download up front; `add` returns a live item
+// whose `content` for type:"texture" is a THREE.Texture created immediately
+// (image filled on load), matching how the source's scene preInits consume
+// `loader.add(...).content` synchronously. Per-extension parsers cover .buf.
 
+import { LinearFilter, LinearMipMapLinearFilter, Texture } from 'three';
+import type { MagnificationTextureFilter, MinificationTextureFilter, Wrapping } from 'three';
 import { properties } from './properties';
 
 export interface LoadOptions {
   autoMobile?: boolean;
   weight?: number;
+  type?: 'texture';
+  minFilter?: MinificationTextureFilter;
+  magFilter?: MagnificationTextureFilter;
+  wrapS?: Wrapping;
+  wrapT?: Wrapping;
+  colorSpace?: string;
+  onLoad?: (content: unknown) => void;
 }
 
-interface QueueItem {
+export interface LoaderItem {
   url: string;
   options: LoadOptions;
   weight: number;
@@ -21,10 +32,11 @@ interface QueueItem {
 type Parser = (response: ArrayBuffer, url: string) => unknown | Promise<unknown>;
 
 const CONCURRENCY = 8;
+const MIPMAP_FILTERS: number[] = [LinearMipMapLinearFilter];
 
 export class Loader {
-  private queue: QueueItem[] = [];
-  private byUrl = new Map<string, QueueItem>();
+  private queue: LoaderItem[] = [];
+  private byUrl = new Map<string, LoaderItem>();
   private parsers = new Map<string, Parser>();
   onProgress: ((ratio: number) => void) | null = null;
 
@@ -32,12 +44,13 @@ export class Loader {
     this.parsers.set(extension, parser);
   }
 
-  add(url: string, options: LoadOptions = {}): void {
+  add(url: string, options: LoadOptions = {}): LoaderItem {
     if (options.autoMobile && properties.isMobile) {
       url = properties.getMobileUrl(url);
     }
-    if (this.byUrl.has(url)) return;
-    const item: QueueItem = {
+    const existing = this.byUrl.get(url);
+    if (existing) return existing;
+    const item: LoaderItem = {
       url,
       options,
       weight: options.weight ?? 1,
@@ -45,8 +58,18 @@ export class Loader {
       done: false,
       content: null,
     };
+    if (options.type === 'texture') {
+      const tex = new Texture();
+      if (options.minFilter) tex.minFilter = options.minFilter;
+      if (options.magFilter) tex.magFilter = options.magFilter;
+      if (options.wrapS) tex.wrapS = options.wrapS;
+      if (options.wrapT) tex.wrapT = options.wrapT;
+      tex.generateMipmaps = MIPMAP_FILTERS.includes(tex.minFilter as number);
+      item.content = tex;
+    }
     this.byUrl.set(url, item);
     this.queue.push(item);
+    return item;
   }
 
   get(url: string, options: LoadOptions = {}): unknown {
@@ -84,27 +107,36 @@ export class Loader {
     this.onProgress?.(total > 0 ? done / total : 1);
   }
 
-  private async _loadItem(item: QueueItem): Promise<void> {
+  private async _loadItem(item: LoaderItem): Promise<void> {
     const url = item.url;
     const ext = url.slice(url.lastIndexOf('.') + 1).toLowerCase();
     try {
       const buffer = await this._fetchWithProgress(item);
       const parser = this.parsers.get(ext);
-      if (parser) {
+      if (item.options.type === 'texture') {
+        const bitmap = await createImageBitmap(new Blob([buffer]), {
+          premultiplyAlpha: 'none',
+          colorSpaceConversion: 'none',
+        });
+        const tex = item.content as Texture;
+        tex.image = bitmap;
+        tex.needsUpdate = true;
+      } else if (parser) {
         item.content = await parser(buffer, url);
       } else if (['webp', 'png', 'jpg', 'avif'].includes(ext)) {
         item.content = await createImageBitmap(new Blob([buffer]));
       } else {
         item.content = buffer;
       }
+      item.options.onLoad?.(item.content);
     } catch (err) {
       console.error('[loader]', url, err);
-      item.content = null;
+      item.content = item.options.type === 'texture' ? item.content : null;
     }
     item.done = true;
   }
 
-  private _fetchWithProgress(item: QueueItem): Promise<ArrayBuffer> {
+  private _fetchWithProgress(item: LoaderItem): Promise<ArrayBuffer> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('GET', item.url);

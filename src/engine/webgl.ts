@@ -1,158 +1,219 @@
-// WebGL layer, M2.3 vertical slice: renderer on #canvas, hero coaster mesh,
-// scroll-driven hero camera + coaster animation (the source's HandScene
-// choreography: AI-section showScreenOffset -> fit(0..5.5) -> animationRatio).
-// Materials are placeholder-level for now; the full material system is M2.5.
+// WebGL app — port of the source App + Visuals orchestration (pretty line
+// 30174-30216) restricted to the subsystems ported so far: gobo, bg,
+// heroScene (staged), coaster, plus the HandScene camera/coaster animation
+// choreography. Postprocessing renders directly until the post chain lands.
 
-import {
-  AmbientLight,
-  Color,
-  DirectionalLight,
-  Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
-  PerspectiveCamera,
-  PlaneGeometry,
-  Scene,
-  SRGBColorSpace,
-  Texture,
-  WebGLRenderer,
-} from 'three';
+import { Scene, Vector3 } from 'three';
+import { WebGLRenderer } from 'three';
 import type { BufferGeometry } from 'three';
-import { FrameAnimation } from './FrameAnimation';
+import { blueNoise } from './core/blueNoise';
+import { cameraControls } from './core/cameraControls';
+import { fboHelper } from './core/fboHelper';
 import { loader } from './core/Loader';
 import { fit } from './core/math';
 import { properties } from './core/properties';
 import { scrollManager } from './core/ScrollPane';
 import * as settings from './core/settings';
+import { shaderHelper } from './core/shaderHelper';
+import { textureHelper } from './core/textureHelper';
+import { FrameAnimation } from './FrameAnimation';
+import {
+  aces,
+  cart2Polar,
+  hsb2rgb,
+  linearstep,
+  perturbNormalArb,
+  rgb2hsb,
+  sampleBlur,
+  sampleBlurSRGB,
+  sampleHarmonics,
+  sdCappedCone,
+  taaJitteringFrag,
+  taaJitteringFragPars,
+  taaJitteringVert,
+  textureBicubic,
+} from './glsl';
+import { bg } from './scenes/bg';
+import { bindHeroScene, coaster } from './scenes/coaster';
+import { gobo } from './scenes/gobo';
+import { fov, heroScene } from './scenes/heroScene';
 
-const BG_COLOR = '#4c3e37'; // hero bg from the source bundle
-
-// Hero view constants from the source bundle (pretty line 20737-20745).
-const HERO_FOCAL = 50;
-const HERO_APERTURE = 41.4;
-const HERO_VIEW_W = 2240;
-const HERO_VIEW_H = 1260;
-const HERO_PLANE_W = 3296; // expandedViewPixelWidth = BASE.webp size
-const HERO_PLANE_H = 1460;
-const HERO_CAM_Y = 1.22526;
-const TABLE_Y = 0.7471; // u_screenTableNDCDepth reference height
-const HERO_FOV =
-  2 * Math.atan(((HERO_VIEW_H * HERO_APERTURE) / HERO_VIEW_W) / 2 / HERO_FOCAL) * (180 / Math.PI);
+// Source HandScene constants: hand appears between these hero-camera frames.
+const HAND_FRAME_START = 47;
 
 class WebGLApp {
-  renderer!: WebGLRenderer;
   scene = new Scene();
-  camera = new PerspectiveCamera(45, 1, 0.01, 100);
   cameraAnimation = new FrameAnimation();
   coasterAnimation = new FrameAnimation();
-  coaster: Mesh | null = null;
   private aiSection: HTMLElement | null = null;
+  private heroSection: HTMLElement | null = null;
 
-  preInit(): void {
-    loader.add(settings.MODEL_PATH + 'coaster.buf');
-    loader.add(settings.MODEL_PATH + 'hero_camera.buf');
-    loader.add(settings.MODEL_PATH + 'coaster_hero_animation.buf');
-    loader.add(settings.TEXTURE_PATH + 'coaster/DIFF.webp', { autoMobile: true });
-    loader.add(settings.TEXTURE_PATH + 'hero/BASE.webp', { autoMobile: true });
-  }
-
-  private makeTexture(bitmap: ImageBitmap): Texture {
-    const tex = new Texture(bitmap);
-    tex.colorSpace = SRGBColorSpace;
-    tex.flipY = false;
-    tex.needsUpdate = true;
-    return tex;
-  }
-
-  init(): void {
+  /** Source App.initEngine (renderer/chunk/helpers) — needs the canvas. */
+  initEngine(): void {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-    this.renderer = new WebGLRenderer({ canvas, antialias: true });
-    this.renderer.setClearColor(new Color(BG_COLOR));
-    this.camera.matrixAutoUpdate = true;
-    this.cameraAnimation.setTarget(this.camera);
+    const gl = canvas.getContext('webgl2', properties.webglOpts) as WebGL2RenderingContext;
+    properties.renderer = new WebGLRenderer({ canvas, context: gl });
+    // Source: TAAPerspectiveCamera(20, 1, .2, 3)
+    properties.camera.fov = 20;
+    properties.camera.aspect = 1;
+    properties.camera.near = 0.2;
+    properties.camera.far = 3;
+    this.scene.add(properties.camera);
+    shaderHelper.addChunk('textureBicubic', textureBicubic);
+    shaderHelper.addChunk('sampleBlur', sampleBlur);
+    shaderHelper.addChunk('sampleBlurSRGB', sampleBlurSRGB);
+    shaderHelper.addChunk('hsb2rgb', hsb2rgb);
+    shaderHelper.addChunk('rgb2hsb', rgb2hsb);
+    shaderHelper.addChunk('linearstep', linearstep);
+    shaderHelper.addChunk('sampleHarmonics', sampleHarmonics);
+    shaderHelper.addChunk('sdCappedCone', sdCappedCone);
+    shaderHelper.addChunk('perturbNormalArb', perturbNormalArb);
+    shaderHelper.addChunk('cart2Polar', cart2Polar);
+    shaderHelper.addChunk('aces', aces);
+    shaderHelper.addChunk('taaJitteringVert', taaJitteringVert);
+    shaderHelper.addChunk('taaJitteringFrag', taaJitteringFrag);
+    shaderHelper.addChunk('taaJitteringFragPars', taaJitteringFragPars);
+    fboHelper.init(properties.renderer, settings.RENDER_TARGET_FLOAT_TYPE);
+    textureHelper.init();
+    blueNoise.preInit();
+  }
 
-    const coasterGeom = loader.get(settings.MODEL_PATH + 'coaster.buf') as BufferGeometry | null;
-    const cameraGeom = loader.get(settings.MODEL_PATH + 'hero_camera.buf') as BufferGeometry | null;
-    const coasterAnimGeom = loader.get(
-      settings.MODEL_PATH + 'coaster_hero_animation.buf',
-    ) as BufferGeometry | null;
-    const diff = loader.get(settings.TEXTURE_PATH + 'coaster/DIFF.webp', {
-      autoMobile: true,
-    }) as ImageBitmap | null;
+  /** Source App.preInit + Visuals.preInit (ported subset, source order). */
+  preInit(): void {
+    cameraControls.preInit();
+    properties.sharedUniforms.u_brdfLut.value = loader.add(settings.TEXTURE_PATH + 'brdf.png', {
+      type: 'texture',
+    }).content;
+    gobo.preInit();
+    bg.preInit();
+    this.scene.add(bg.container);
+    bindHeroScene(heroScene);
+    heroScene.preInit();
+    coaster.preInit();
+    this.scene.add(coaster.container);
+    // HandScene animations (source HandScene.preInit).
+    loader.add(settings.MODEL_PATH + 'hero_camera.buf', {
+      onLoad: (content) => this.cameraAnimation.setGeometry(content as BufferGeometry),
+    });
+    loader.add(settings.MODEL_PATH + 'coaster_hero_animation.buf', {
+      onLoad: (content) => this.coasterAnimation.setGeometry(content as BufferGeometry),
+    });
+  }
 
-    if (cameraGeom) this.cameraAnimation.setGeometry(cameraGeom);
-    if (coasterGeom) {
-      const material = new MeshStandardMaterial({ roughness: 0.9, metalness: 0 });
-      if (diff) material.map = this.makeTexture(diff);
-      this.coaster = new Mesh(coasterGeom, material);
-      this.coasterAnimation.setTarget(this.coaster);
-      if (coasterAnimGeom) this.coasterAnimation.setGeometry(coasterAnimGeom);
-      this.scene.add(this.coaster);
-    }
-
-    // Cutting-mat backdrop: BASE.webp projected onto the table plane, sized so
-    // 1 texture pixel matches the source's screen-to-world mapping at the
-    // hero camera height.
-    const base = loader.get(settings.TEXTURE_PATH + 'hero/BASE.webp', {
-      autoMobile: true,
-    }) as ImageBitmap | null;
-    if (base) {
-      const fovYRad = (HERO_FOV * Math.PI) / 180;
-      const worldPerPixel = (2 * (HERO_CAM_Y - TABLE_Y) * Math.tan(fovYRad / 2)) / HERO_VIEW_H;
-      const mat = new MeshBasicMaterial({ map: this.makeTexture(base) });
-      const plane = new Mesh(
-        new PlaneGeometry(HERO_PLANE_W * worldPerPixel, HERO_PLANE_H * worldPerPixel),
-        mat,
-      );
-      plane.rotation.x = -Math.PI / 2;
-      // flipY=false on the texture flips the image; compensate with plane scale.
-      plane.scale.y = -1;
-      plane.position.set(-0.0105761, TABLE_Y, -0.0485146);
-      this.scene.add(plane);
-    }
-    // Placeholder lighting until the SH/env material system lands (M2.5).
-    this.scene.add(new AmbientLight(0xffffff, 1.1));
-    const dir = new DirectionalLight(0xffffff, 1.4);
-    dir.position.set(0.2, 1, 0.5);
-    this.scene.add(dir);
-
+  /** Source App.init + Visuals.init (ported subset, source order). */
+  init(): void {
+    cameraControls.init();
+    gobo.init();
+    bg.init();
+    coaster.init();
+    this.coasterAnimation.setTarget(coaster.container);
     this.aiSection = document.getElementById('ai');
-    this.resize();
+    this.heroSection = document.getElementById('hero');
   }
 
   resize(): void {
-    if (!this.renderer) return;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    this.renderer.setSize(w, h, false);
-    this.renderer.setPixelRatio(dpr);
-    this.camera.aspect = w / h;
-    this.cameraAnimation.viewPixelWidth = w;
-    this.cameraAnimation.viewPixelHeight = h;
-    this.camera.updateProjectionMatrix();
+    if (!properties.renderer) return;
+    // Source _onResize resolution math (pretty line 30496-30509).
+    const viewportWidth = (properties.viewportWidth = window.innerWidth);
+    const viewportHeight = (properties.viewportHeight = window.innerHeight);
+    properties.viewportResolution.set(viewportWidth, viewportHeight);
+    document.documentElement.style.setProperty('--vh', viewportHeight * 0.01 + 'px');
+    properties.useMobileLayout = viewportWidth < 768;
+    properties.sharedUniforms.u_useMobileLayout.value = properties.useMobileLayout;
+    const heroInner = document.querySelector('#hero .section__inner');
+    if (heroInner) {
+      const style = getComputedStyle(heroInner);
+      properties.paddingX = parseFloat(style.getPropertyValue('padding-left'));
+      properties.paddingY = parseFloat(style.getPropertyValue('padding-top'));
+    }
+    const upScale = settings.UP_SCALE;
+    let renderWidth = viewportWidth * settings.DPR;
+    let renderHeight = viewportHeight * settings.DPR;
+    if (settings.USE_PIXEL_LIMIT === true && renderWidth * renderHeight > settings.MAX_PIXEL_COUNT) {
+      const aspect = renderWidth / renderHeight;
+      renderHeight = Math.sqrt(settings.MAX_PIXEL_COUNT / aspect);
+      renderWidth = Math.ceil(renderHeight * aspect);
+      renderHeight = Math.ceil(renderHeight);
+    }
+    properties.width = Math.ceil(renderWidth / upScale);
+    properties.height = Math.ceil(renderHeight / upScale);
+    properties.resolution.set(properties.width, properties.height);
+    // Source App.resize.
+    properties.renderer.setSize(properties.width, properties.height);
+    const canvas = properties.renderer.domElement;
+    canvas.style.width = `${properties.viewportWidth}px`;
+    canvas.style.height = `${properties.viewportHeight}px`;
+    properties.camera.aspect = properties.width / properties.height;
+    properties.camera.updateProjectionMatrix();
   }
 
-  update(): void {
-    if (!this.renderer) return;
-    // Source: handScene.animationRatio = fit(aiRange.showScreenOffset, 0, 5.5, 0, 1);
-    // hand fades out over r 8..9 and the hero 3D content hides past that.
-    let ratio = 0;
+  /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
+  update(dt: number): void {
+    if (!properties.renderer) return;
+    properties.time = properties.sharedUniforms.u_time.value += dt;
+    properties.deltaTime = properties.sharedUniforms.u_deltaTime.value = dt;
+    properties.bgColor.setStyle(properties.bgColorHex);
+    blueNoise.update();
+    cameraControls.preUpdate();
+    // Visuals.preUpdate order: gobo.reset, coaster.resetTransform, bg/heroScene/…
+    gobo.reset();
+    coaster.resetTransform();
+    bg.preUpdate();
+    heroScene.preUpdate();
+    this.updateHandSceneChoreography();
+    cameraControls.update(dt);
+    gobo.update(dt);
+    bg.update();
+    heroScene.update();
+    coaster.update();
+    properties.renderer.render(this.scene, properties.camera);
+    properties.tick++;
+  }
+
+  /**
+   * Source AiSection.update -> HandScene.preUpdate wiring:
+   * animationRatio = fit(aiRange.showScreenOffset, 0, 5.5, 0, 1), applied to
+   * hero camera + coaster tracks; fov pinned to the hero constant; hero/bg
+   * colors from the source HandScene.preUpdate.
+   */
+  private updateHandSceneChoreography(): void {
     let offset = 0;
     if (this.aiSection) {
-      const range = scrollManager.getDomRange(this.aiSection);
-      offset = range.showScreenOffset;
-      ratio = fit(offset, 0, 5.5, 0, 1);
+      offset = scrollManager.getDomRange(this.aiSection).showScreenOffset;
     }
-    this.scene.visible = offset < 9;
-    this.cameraAnimation.applyTransformByRatio(ratio);
+    const ratio = fit(offset, 0, 5.5, 0, 1);
+    const frame = ratio * (this.cameraAnimation.frameCount - 1);
+    // Source HeroSection.update: activeRatio from the HERO container's
+    // hideScreenOffset (pretty line 21205).
+    if (this.heroSection) {
+      heroScene.activeRatio = fit(
+        scrollManager.getDomRange(this.heroSection).hideScreenOffset,
+        -1,
+        -0.5,
+        1,
+        0,
+      );
+    }
+    heroScene.isActive = offset < 9;
+    coaster.isActive = true;
     this.coasterAnimation.applyTransformByRatio(ratio);
-    // Source HandScene overrides the focal track with the hero fov constant.
-    this.camera.fov = HERO_FOV;
-    this.camera.updateProjectionMatrix();
-    this.renderer.render(this.scene, this.camera);
+    // Camera track drives cameraControls (not the camera directly).
+    this.cameraAnimation.setTarget(cameraControls as never);
+    this.cameraAnimation.applyTransformByRatio(ratio);
+    cameraControls.fov = fov;
+    bg.opacity = 1;
+    bg.clearColorRatio = fit(frame, HAND_FRAME_START * 0.5, HAND_FRAME_START, 1, 0);
+    if (ratio < 1) {
+      bg.bgColor.set('#4c3e37').convertSRGBToLinear();
+    }
+    // env blend toward the hand env over frames 47..73 (source line 19987).
+    coaster.envBlendRatio = fit(frame, 47, 73, 0, 1);
+    coaster.lightPosition.lerp(_handLightPosition, fit(frame, 47, 73, 0, 1));
+    coaster.extraBumpScale = fit(ratio, 0.45, 0.5, 1.75, 0);
   }
 }
 
+// Source HandScene.coasterLightPosition.
+const _handLightPosition = new Vector3(0.0237565, 0.77265, 0.435661);
+
 export const webglApp = new WebGLApp();
-export { properties };

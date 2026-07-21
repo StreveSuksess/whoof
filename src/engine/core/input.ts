@@ -47,6 +47,8 @@ class Input {
   deltaPixelXY = { x: 0, y: 0 };
   downPixelXY = { x: 0, y: 0 };
   prevMovePixelXY = { x: 0, y: 0 };
+  /** Normalized mouse position, -1..1, +y up (source input.mouseXY). */
+  mouseXY = { x: 0, y: 0 };
 
   private downTarget: EventTarget | null = null;
 
@@ -96,6 +98,8 @@ class Input {
   }
 
   private _onMove(e: PointerEvent): void {
+    this.mouseXY.x = (e.clientX / window.innerWidth) * 2 - 1;
+    this.mouseXY.y = -((e.clientY / window.innerHeight) * 2 - 1);
     if (!this.isDown) return;
     const dx = e.clientX - this.prevMovePixelXY.x;
     const dy = e.clientY - this.prevMovePixelXY.y;
