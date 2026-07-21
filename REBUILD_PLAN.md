@@ -130,7 +130,16 @@
   + HeroSection 尾部 scrollManager.isBtn = activeRatio > .99(pretty 21257)。
   调试实录:效果链逐阶段像素采样定位到 AppleEfx(此前逐一禁用 TAA/SMAA/FXAA/Bloom
   均未涉及它);全新加载验收必须不做任何手动切换。
-  **剩余(均为源站有、尚未移植)**:Bokeh/BlurBox/ScreenPaintDistortion/cameraMotionBlur、
+  已完成(2026-07-21 八轮,commit 49918aa):**Bokeh/BlurBox/ScreenPaint(Distortion)**——
+  Bokeh 四 pass(CoC 预滤波→半分辨率盘形核→tent 模糊→合成,USE_FLOAT 字节打包回退);
+  BlurBox 圆角矩形渐变模糊(hero 卡片编排溯源 HeroSection.update 21210-21215,
+  每帧 pagesManager.update 处 reset);ScreenPaint 1/4 分辨率涂抹速度场模拟 +
+  ScreenPaintDistortion(9-tap 方向模糊 + RGB shift);input 补
+  mousePixelXY/hadMoved。帧循环保真:dt 钳制 1/20、startTime 不封顶(源 30523)。
+  修复 avif 探测竞态:源站 preRun 先跑完 browserSupport loader 轮才 run()/preInit
+  (30460-30465),boot 改为先 await testSupport()——顺带修复 gobo 纹理静默 404
+  (只镜像了 .avif,竞态时请求 .png),hero 桌面光斑(gobo 投影)自此才真正出现。
+  **剩余(均为源站有、尚未移植)**:cameraMotionBlur(cameraControls 内)、
   preloader canvas 动画(绘 logo)、split-text 编排、DeviceOrientation、
   wearable/features/sustainability/stack/footer 场景
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
