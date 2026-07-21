@@ -2,6 +2,7 @@
 // queue, preloader dismissal and page fade-in. The WebGL renderer and scenes
 // arrive in M2.3+.
 
+import { testSupport } from './core/browser';
 import { input } from './core/input';
 import { loader } from './core/Loader';
 import { properties } from './core/properties';
@@ -68,6 +69,12 @@ export function boot(): void {
   scrollManager.init();
   scrollManager.isActive = true;
   interceptAnchorNav();
+  // Source preRun/run split: the avif support probe finishes in the first
+  // loader round before app.preInit computes any texture URLs.
+  void testSupport().then(bootStage2);
+}
+
+function bootStage2(): void {
   preInit();
 
   const onResize = (): void => {
@@ -82,12 +89,14 @@ export function boot(): void {
 
   let lastTime = performance.now();
   const frame = (now: number): void => {
-    const dt = Math.min(0.1, (now - lastTime) / 1000);
+    // Source frame loop (pretty 30523): dt clamped to 1/20, startTime
+    // accumulates unclamped (choreography reads ranges past 1).
+    const dt = Math.min((now - lastTime) / 1000, 1 / 20);
     lastTime = now;
     properties.time += dt;
     properties.deltaTime = dt;
     if (properties.hasStarted) {
-      properties.startTime = Math.min(1, properties.startTime + dt);
+      properties.startTime += dt;
     }
     // Debug probe (dev aid, keep until the engine stabilizes).
     (window as never as Record<string, unknown>).__t = {

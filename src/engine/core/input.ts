@@ -62,6 +62,14 @@ class Input {
   prevMovePixelXY = { x: 0, y: 0 };
   /** Normalized mouse position, -1..1, +y up (source input.mouseXY). */
   mouseXY = new Vector2();
+  /** Mouse position in CSS pixels (source input.mousePixelXY). */
+  mousePixelXY = new Vector2();
+  /** Previous frame's mousePixelXY, copied in postUpdate (source). */
+  prevMousePixelXY = new Vector2();
+  /** Whether the pointer moved during the last event (source input.hasMoved). */
+  hasMoved = false;
+  /** hasMoved as of the previous frame, copied in postUpdate (source). */
+  hadMoved = false;
   /** Source: eased mouse dynamics registry (addEasedInput in preInit). */
   easedMouseDynamics: Record<string, SecondOrderDynamics> = {};
   /** Source: dispatched on pointerup when moved < 40px and pressed < 300ms. */
@@ -105,6 +113,8 @@ class Input {
     this.deltaScrollY = 0;
     this.deltaPixelXY.x = 0;
     this.deltaPixelXY.y = 0;
+    this.prevMousePixelXY.copy(this.mousePixelXY);
+    this.hadMoved = this.hasMoved;
     this.wasDown = this.isDown;
     this.isWheelScrolling = false;
   }
@@ -137,6 +147,8 @@ class Input {
   private _onMove(e: PointerEvent): void {
     this.mouseXY.x = (e.clientX / window.innerWidth) * 2 - 1;
     this.mouseXY.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    this.mousePixelXY.set(e.clientX, e.clientY);
+    this.hasMoved = true;
     if (!this.isDown) return;
     const dx = e.clientX - this.prevMovePixelXY.x;
     const dy = e.clientY - this.prevMovePixelXY.y;

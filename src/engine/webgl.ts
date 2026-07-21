@@ -33,8 +33,11 @@ import {
   taaJitteringVert,
   textureBicubic,
 } from './glsl';
+import { blurBox } from './post/BlurBox';
 import { postprocessing } from './post/postprocessing';
 import { PostProfile } from './post/PostProfile';
+import { screenPaint } from './post/ScreenPaint';
+import { ease } from './core/ease';
 import { bg } from './scenes/bg';
 import { bindHeroScene, coaster } from './scenes/coaster';
 import { gobo } from './scenes/gobo';
@@ -47,6 +50,8 @@ class WebGLApp {
   scene = new Scene();
   private aiSection: HTMLElement | null = null;
   private heroSection: HTMLElement | null = null;
+  private heroInner: Element | null = null;
+  private heroCard: HTMLElement | null = null;
   private wearableSection: HTMLElement | null = null;
 
   /** Source App.initEngine (renderer/chunk/helpers) — needs the canvas. */
@@ -79,6 +84,7 @@ class WebGLApp {
     textureHelper.init();
     postprocessing.init(this.scene, properties.camera);
     blueNoise.preInit();
+    screenPaint.init();
     postprocessing.addQueue();
   }
 
@@ -111,6 +117,8 @@ class WebGLApp {
     coaster.init();
     this.aiSection = document.getElementById('ai');
     this.heroSection = document.getElementById('hero');
+    this.heroInner = this.heroSection?.querySelector('.section__inner') ?? null;
+    this.heroCard = document.getElementById('hero-card');
     this.wearableSection = document.getElementById('wearable');
   }
 
@@ -149,6 +157,7 @@ class WebGLApp {
     properties.camera.aspect = properties.width / properties.height;
     properties.camera.updateProjectionMatrix();
     postprocessing.setSize(properties.width, properties.height);
+    screenPaint.resize(properties.width, properties.height);
     heroScene.resize(properties.width, properties.height);
     handScene.resize();
   }
@@ -176,6 +185,9 @@ class WebGLApp {
       coaster.isActive = t <= 3;
     }
     postprocessing.syncProfile();
+    // Source App.update: screenPaint.update between visuals.preUpdate and
+    // cameraControls.update.
+    screenPaint.update(dt);
     cameraControls.update(dt);
     gobo.update(dt);
     bg.update();
@@ -196,13 +208,36 @@ class WebGLApp {
    * - WearableScene.preUpdate (pretty 20296): coaster.isActive = t <= 3
    */
   private updateSectionDriving(): void {
+    // Source pagesManager.update (pretty 29496): blurBox resets before the
+    // section updates re-anchor it each frame.
+    blurBox.reset();
     if (this.heroSection) {
       const heroRange = scrollManager.getDomRange(this.heroSection);
-      heroScene.activeRatio = fit(heroRange.hideScreenOffset, -1, -0.5, 1, 0);
-      heroScene.isActive = heroScene.activeRatio > 0;
+      const l = (heroScene.activeRatio = fit(heroRange.hideScreenOffset, -1, -0.5, 1, 0));
+      heroScene.isActive = l > 0;
       // HeroSection.update tail (pretty 21257): logo choreography also flips
       // the scroll indicator into its button state while the hero is active.
-      scrollManager.isBtn = heroScene.activeRatio > 0.99;
+      scrollManager.isBtn = l > 0.99;
+      // HeroSection.update blurBox block (pretty 21210-21215): the hero card
+      // backdrop blur/tint, anchored to #hero-card each frame while active.
+      if (heroScene.isActive && this.heroInner && this.heroCard) {
+        const startTime = properties.startTime;
+        const innerRange = scrollManager.getDomRange(this.heroInner);
+        const cardRange = scrollManager.getDomRange(this.heroCard);
+        const b = fit(startTime, 0.5, 1, -properties.paddingX, 0, ease.cubicOut);
+        blurBox.anchor(cardRange);
+        blurBox.x += b;
+        blurBox.outline = 1;
+        blurBox.y = cardRange.screenY - innerRange.screenY;
+        blurBox.color.setStyle('#FFEDD6');
+        const S = fit(l * 1.5, 0, 1, 0, 1) * fit(startTime, 0.5, 1.5, 0, 1);
+        const A = fit(l * 1.5, 0.5, 1.5, 0, 1) * fit(startTime, 1, 2, 0, 1);
+        blurBox.colorAlphaA = 0.15 * S;
+        blurBox.colorAlphaB = 0.15 * A;
+        blurBox.blurRadiusA = 0.08 * S;
+        blurBox.blurRadiusB = 0.08 * A;
+        blurBox.posB.set(cardRange.width, 0);
+      }
     }
     if (this.aiSection) {
       const r = scrollManager.getDomRange(this.aiSection).showScreenOffset;

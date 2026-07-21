@@ -12,14 +12,18 @@ import {
   Vector2,
 } from 'three';
 import type { Camera, Scene, Texture, WebGLRenderTarget } from 'three';
+import { browser } from '../core/browser';
 import { fboHelper } from '../core/fboHelper';
 import { loader } from '../core/Loader';
 import { properties } from '../core/properties';
 import * as settings from '../core/settings';
 import { Bloom } from './Bloom';
+import { blurBox } from './BlurBox';
+import { Bokeh } from './Bokeh';
 import { AppleEfx, Final, Fxaa, PostLayer, Smaa, TAA } from './effects';
 import type { PostEffect } from './PostEffect';
 import { PostProfile } from './PostProfile';
+import { ScreenPaintDistortion } from './ScreenPaintDistortion';
 
 let _usedTAA = false;
 
@@ -52,9 +56,11 @@ export class Postprocessing {
   taa!: TAA;
   fxaa!: Fxaa;
   smaa!: Smaa;
+  bokeh: Bokeh | null = null;
   appleEfx!: AppleEfx;
   magazineLayer!: PostLayer;
   bloom!: Bloom;
+  screenPaintDistortion!: ScreenPaintDistortion;
   final!: Final;
   sharedUniforms = {
     u_sceneTexture: { value: null as Texture | null },
@@ -149,8 +155,12 @@ export class Postprocessing {
       });
       this.queue.push(smaa);
     }
-    // Bokeh (depth), Bloom, BlurBox, ScreenPaintDistortion: staged for later
-    // milestones; the source adds them here.
+    if (this.useDepthTexture) {
+      const bokeh = (this.bokeh = new Bokeh());
+      bokeh.init();
+      bokeh.quality = browser.isMobile ? 0 : 1;
+      this.queue.push(bokeh);
+    }
     const appleEfx = (this.appleEfx = new AppleEfx());
     appleEfx.init();
     this.queue.push(appleEfx);
@@ -168,7 +178,11 @@ export class Postprocessing {
     }
     bloom.init();
     this.queue.push(bloom);
-    // BlurBox, ScreenPaintDistortion: staged for later milestones.
+    blurBox.init();
+    this.queue.push(blurBox);
+    const screenPaintDistortion = (this.screenPaintDistortion = new ScreenPaintDistortion());
+    screenPaintDistortion.init();
+    this.queue.push(screenPaintDistortion);
     const final = (this.final = new Final());
     final.init();
     this.queue.push(final);
@@ -206,6 +220,11 @@ export class Postprocessing {
     bloom.haloStrength = profile.haloStrength;
     bloom.haloMaskInner = profile.haloMaskInner;
     bloom.haloMaskOuter = profile.haloMaskOuter;
+    const screenPaintDistortion = this.screenPaintDistortion;
+    screenPaintDistortion.amount = profile.screenPaintDistortionAmount;
+    screenPaintDistortion.rgbShift = profile.screenPaintDistortionRGBShift;
+    screenPaintDistortion.colorMultiplier = profile.screenPaintDistortionColorMultiplier;
+    screenPaintDistortion.multiplier = profile.screenPaintDistortionMultiplier;
     if (this.smaa) this.smaa.threshold = profile.smaaThreshold;
     final.vignetteFrom = profile.vignetteFrom;
     final.vignetteTo = profile.vignetteTo;
@@ -215,6 +234,14 @@ export class Postprocessing {
     final.brightness = profile.brightness;
     final.tintColor.setStyle(profile.tintColorHex);
     final.tintOpacity = profile.tintOpacity;
+    const bokeh = this.bokeh;
+    if (bokeh) {
+      bokeh.amount = profile.bokehAmount;
+      bokeh.fNumber = profile.bokehFNumber;
+      bokeh.focusDistance = profile.bokehFocusDistance;
+      bokeh.focalLength = profile.bokehFocalLength;
+      bokeh.kFilmHeight = profile.bokehKFilmHeight;
+    }
     final.opacity = 1;
     final.bgColor.setStyle(properties.bgColorHex);
     // Bloom/ScreenPaintDistortion/Bokeh profile sync lands with those effects.
