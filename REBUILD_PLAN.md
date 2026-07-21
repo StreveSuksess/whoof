@@ -139,8 +139,17 @@
   修复 avif 探测竞态:源站 preRun 先跑完 browserSupport loader 轮才 run()/preInit
   (30460-30465),boot 改为先 await testSupport()——顺带修复 gobo 纹理静默 404
   (只镜像了 .avif,竞态时请求 .png),hero 桌面光斑(gobo 投影)自此才真正出现。
-  **剩余(均为源站有、尚未移植)**:cameraMotionBlur(cameraControls 内)、
-  preloader canvas 动画(绘 logo)、split-text 编排、DeviceOrientation、
+  已完成(2026-07-21 九轮,commit 7a32635):**Preloader canvas 动画 + 启动时序**——
+  光圈双环 + Illustrator 锚点/贝塞尔手柄、环间虚线进度饼、径向渐变光泽,
+  环半径随 startTime 收缩恰好落在杯垫轮廓上(源 30217-30290 逐行);
+  启动流程改为源站 preRun/run/init/start 四段(is-ready 在 run 期加上→
+  preloader 背景转透明露出实时 WebGL 帧;loader 进度驱动 _targetPercent;
+  percent==1 触发 init;0.1s init→start 间隔后 start);帧循环无条件跑
+  webglApp.update(加载期由 Final preloader 分支画深绿底);Page.show 的
+  0.3s opacity tween stand-in 取代旧 CSS 淡入 hack。
+  查证:cameraMotionBlurAmount 在源站仅有 PostProfile 字段、无消费点(死代码),
+  无需移植——M2.3 后处理链就此闭环。
+  **剩余(均为源站有、尚未移植)**:split-text 编排、DeviceOrientation、
   wearable/features/sustainability/stack/footer 场景
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
