@@ -16,6 +16,7 @@ import {
 } from 'three';
 import type { BufferGeometry, DataTexture, Texture } from 'three';
 import { blueNoise } from '../core/blueNoise';
+import { cameraControls } from '../core/cameraControls';
 import { fboHelper } from '../core/fboHelper';
 import { input } from '../core/input';
 import { loader } from '../core/Loader';
@@ -199,9 +200,21 @@ class Hand {
     this.uniforms.u_opacity.value = this.opacity;
     this.uniforms.u_highlightRatio.value = this.highlightRatio;
     for (let i = 0; i < 4; i++) {
-      // Desktop path (device-orientation branch is mobile-only, not yet ported).
-      let target = 1 - Math.abs(fit(input.mouseXY.y, -0.2 - i * 0.1, -0.7 - i * 0.1, 0, 1) - 0.5) * 2;
-      target *= fit(Math.abs(input.mouseXY.x), 0.2, 0.3, 1, 0);
+      // Source pretty 19892: device-orientation virtual mouse drives fingers
+      // on mobile, pointer position on desktop.
+      let target: number;
+      if (cameraControls.isDeviceReady) {
+        target =
+          1
+          - Math.abs(
+            fit(clamp(cameraControls.deviceVirtualMouseXY.length(), 0, 1) - i * 0.2, 0, 0.6, 0, 1)
+              - 0.5,
+          )
+            * 2;
+      } else {
+        target = 1 - Math.abs(fit(input.mouseXY.y, -0.2 - i * 0.1, -0.7 - i * 0.1, 0, 1) - 0.5) * 2;
+        target *= fit(Math.abs(input.mouseXY.x), 0.2, 0.3, 1, 0);
+      }
       FINGER_DYNAMICS[i].update(dt, target);
       this.fingerWeights[i] = FINGER_DYNAMICS[i].value * this.fingersActiveRatio;
     }

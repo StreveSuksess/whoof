@@ -170,7 +170,7 @@ class WebGLApp {
     properties.bgColor.setStyle(properties.bgColorHex);
     blueNoise.update();
     this.updateSectionDriving();
-    cameraControls.preUpdate();
+    cameraControls.preUpdate(dt);
     // Visuals.preUpdate order: profile reset, gobo.reset, coaster.resetTransform, …
     postprocessing.blendProfile(DEFAULT_POST_PROFILE, 1);
     gobo.reset();

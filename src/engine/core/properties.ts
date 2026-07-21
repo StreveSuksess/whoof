@@ -3,6 +3,7 @@
 
 import { Color, Matrix4, PerspectiveCamera, Vector2, Vector3 } from 'three';
 import type { WebGLRenderer } from 'three';
+import { MinSignal } from './MinSignal';
 
 // Source camera: TAAPerspectiveCamera (pretty line 17248-17269) with Halton
 // jitter, plus the .mvp matrix the engine attaches to it.
@@ -63,6 +64,8 @@ export const properties = {
   tick: 0,
   /** Objects queued for renderer.compileAsync during preload (source). */
   compileList: [] as unknown[],
+  /** Dispatched on the first pointerup (source; gates iOS device orientation). */
+  onFirstClicked: new MinSignal(),
   hasInitialized: false,
   hasStarted: false,
   startTime: 0,

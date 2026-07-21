@@ -4,6 +4,8 @@
 
 import { Vector2 } from 'three';
 import { clamp } from './math';
+import { MinSignal } from './MinSignal';
+import { properties } from './properties';
 import { SecondOrderDynamics } from './SecondOrderDynamics';
 
 const PIXEL_STEP = 10;
@@ -35,17 +37,6 @@ function normalizeWheel(event: WheelEvent): { pixelX: number; pixelY: number } {
   return { pixelX: pX, pixelY: pY };
 }
 
-/** Minimal port of the source MinSignal (add/dispatch subset). */
-class MinSignal<T = unknown> {
-  private listeners: Array<(payload: T) => void> = [];
-  add(listener: (payload: T) => void): void {
-    this.listeners.push(listener);
-  }
-  dispatch(payload: T): void {
-    for (const listener of this.listeners) listener(payload);
-  }
-}
-
 class Input {
   isDown = false;
   wasDown = false;
@@ -74,6 +65,8 @@ class Input {
   easedMouseDynamics: Record<string, SecondOrderDynamics> = {};
   /** Source: dispatched on pointerup when moved < 40px and pressed < 300ms. */
   onClicked = new MinSignal<PointerEvent>();
+  /** Source: dispatched on every pointerup. */
+  onUped = new MinSignal<PointerEvent>();
 
   private downTarget: EventTarget | null = null;
   private downTime = 0;
@@ -88,6 +81,11 @@ class Input {
     this.addEasedInput('default', 1.35, 0.5, 1.25);
     this.addEasedInput('dragScroll', 2, 1, 1);
     this.addEasedInput('gobo', 1, 0.3, 2);
+    // Source: onUped.addOnce → properties.onFirstClicked (iOS device
+    // orientation permission gate).
+    this.onUped.addOnce(() => {
+      properties.onFirstClicked.dispatch();
+    });
   }
 
   addEasedInput(name: string, f = 1.5, z = 0.8, r = 2): SecondOrderDynamics {
@@ -186,6 +184,7 @@ class Input {
     this.isDown = false;
     this.isDragScrollingX = false;
     this.isDragScrollingY = false;
+    this.onUped.dispatch(e);
   }
 }
 
