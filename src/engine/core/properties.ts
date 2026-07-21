@@ -61,6 +61,8 @@ export const properties = {
   time: 0,
   deltaTime: 0,
   tick: 0,
+  /** Objects queued for renderer.compileAsync during preload (source). */
+  compileList: [] as unknown[],
   hasInitialized: false,
   hasStarted: false,
   startTime: 0,

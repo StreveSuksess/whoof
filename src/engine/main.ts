@@ -5,6 +5,7 @@
 import { testSupport } from './core/browser';
 import { input } from './core/input';
 import { loader } from './core/Loader';
+import { preloader } from './Preloader';
 import { properties } from './core/properties';
 import { scrollManager } from './core/ScrollPane';
 import { parseBuf } from './BufLoader';
@@ -28,28 +29,27 @@ function preInit(): void {
   webglApp.preInit();
 }
 
-function onReady(): void {
+// Source init() (pretty 30473): runs when the loader reaches 1, before the
+// compile/start gap.
+function onInit(): void {
   webglApp.init();
   initSections();
-  document.documentElement.classList.add('is-ready');
-  const preloader = document.getElementById('preloader');
+  properties.hasInitialized = true;
+}
+
+// Source start() (pretty 30483): runs once the init→start percent fills;
+// hasStarted releases the scene update and startTime accumulation, and the
+// Final preloader pass wipes the frame in.
+function onStart(): void {
+  properties.hasStarted = true;
+  scrollManager.isActive = true;
+  // pagesManager.start stand-in: Page.show tweens the page container's
+  // opacity 0→1 over 0.3s (pretty 13029-13032; .page CSS default is 0).
   const page = document.getElementById('home');
-  // Fade the page in and dismiss the preloader, as the source engine does
-  // once preloading completes.
   if (page) {
-    page.style.opacity = '0';
-    void page.offsetHeight; // flush so the transition has a start value
-    page.style.transition = 'opacity 0.6s';
+    page.style.transition = 'opacity 0.3s linear';
     page.style.opacity = '1';
   }
-  if (preloader) {
-    preloader.style.transition = 'opacity 0.4s';
-    preloader.style.opacity = '0';
-    setTimeout(() => {
-      preloader.style.display = 'none';
-    }, 450);
-  }
-  properties.hasStarted = true;
 }
 
 function interceptAnchorNav(): void {
@@ -67,25 +67,28 @@ export function boot(): void {
   setStateClasses();
   input.init();
   scrollManager.init();
-  scrollManager.isActive = true;
   interceptAnchorNav();
   // Source preRun/run split: the avif support probe finishes in the first
   // loader round before app.preInit computes any texture URLs.
   void testSupport().then(bootStage2);
 }
 
+// Source run() (pretty 30467): engine + UI preInit, resize, loop, then
+// ui.preload(init, start) hands the bootstrap callbacks to the preloader.
 function bootStage2(): void {
   preInit();
+  document.documentElement.classList.add('is-ready');
+  preloader.preInit();
 
   const onResize = (): void => {
     properties.viewportWidth = window.innerWidth;
     properties.viewportHeight = window.innerHeight;
     scrollManager.resize(window.innerWidth, window.innerHeight);
+    preloader.resize(window.innerWidth, window.innerHeight);
     webglApp.resize();
   };
   window.addEventListener('resize', onResize);
   onResize();
-  properties.hasInitialized = true;
 
   let lastTime = performance.now();
   const frame = (now: number): void => {
@@ -109,14 +112,16 @@ function bootStage2(): void {
     (window as never as Record<string, unknown>).__app = webglApp;
     input.update(dt);
     scrollManager.update(dt);
-    if (properties.hasStarted) {
-      updateSections();
-      webglApp.update(dt);
-    }
+    preloader.update(dt);
+    // Source loop() runs pagesManager/app update unconditionally: the WebGL
+    // frame renders during preload (Final's preloader branch paints the dark
+    // green base until startTime rises).
+    if (properties.hasInitialized) updateSections();
+    webglApp.update(dt);
     input.postUpdate();
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
 
-  loader.start().then(onReady);
+  preloader.show(onInit, onStart);
 }
