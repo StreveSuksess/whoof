@@ -88,8 +88,13 @@
   `FrameAnimation` 1:1 直译(帧 lerp/slerp + focal→fov,aperture 41.4214),滚动驱动链路打通
   (AI 段 showScreenOffset → fit(0,5.5) → 相机+杯垫动画,与源站 HandScene 一致),
   杯垫贴图渲染在 #4c3e37 背景上,俯视→推近→终点的运镜已验证。
-  **剩余**:切割垫场景(BASE.webp + 文具 sprites)、手模型与 AI_HAND 材质、真实材质(env/RGBM)、
-  各 section DOM 显隐编排(现在所有 section 叠加显示)、与源站逐位置截图比对
+  已完成(2026-07-21 续):**section 通用显隐管理器**(`src/engine/sections.ts`,Section 基类直译,
+  修复了叠加显示)、**切割垫底景**(BASE.webp 按源站 screen-to-world 常数投到桌面平面,
+  focal 50/aperture 41.4/view 2240×1260/桌面 y=0.7471)、fov 每帧钉在 hero 常量(同源站 HandScene)、
+  hand 段结束后 3D 内容隐藏(r>9)。滚动 0 处构图已接近源站 hero。
+  **剩余**:文具 props(2D RT 视差层)、手模型与 AI_HAND 材质、真实材质(env/RGBM/SH)、
+  每 section 的逐元素编排(split-text 进出场——目前相邻段文案会提前可见)、
+  各段背景色/场景切换、与源站逐位置截图比对
 - ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
