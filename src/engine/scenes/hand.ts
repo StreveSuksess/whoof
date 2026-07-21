@@ -24,8 +24,9 @@ import { ease } from '../core/ease';
 import { properties } from '../core/properties';
 import { SecondOrderDynamicsScalar } from '../core/SecondOrderDynamics';
 import * as settings from '../core/settings';
-import { textureHelper } from '../core/textureHelper';
 import { handFrag, handVert } from '../glsl';
+import { postprocessing } from '../post/postprocessing';
+import { TAAMesh } from '../post/TAAMesh';
 import { bg } from './bg';
 import { coaster } from './coaster';
 
@@ -147,15 +148,14 @@ class Hand {
   }
 
   init(): void {
-    this.handMesh = new Mesh(
+    this.handMesh = new TAAMesh(
       this.handGeometry!,
       new ShaderMaterial({
         vertexShader: handVert,
         fragmentShader: handFrag,
         uniforms: Object.assign(
           {
-            // Source: postprocessing.appleEfx.lmsTexture (appleEfx not yet ported).
-            u_lmsTexture: { value: textureHelper.blackTexture },
+            u_lmsTexture: { value: postprocessing.appleEfx.lmsTexture },
             u_time: properties.sharedUniforms.u_time,
           },
           this.uniforms,

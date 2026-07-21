@@ -17,12 +17,15 @@ import {
 } from 'three';
 import type { BufferGeometry, IUniform, Texture, WebGLRenderTarget } from 'three';
 import { blueNoise } from '../core/blueNoise';
+import { cameraControls } from '../core/cameraControls';
 import { fboHelper } from '../core/fboHelper';
 import { loader } from '../core/Loader';
 import { properties } from '../core/properties';
 import * as settings from '../core/settings';
 import { textureHelper } from '../core/textureHelper';
 import { coasterBlendFrag, coasterFrag, coasterVert } from '../glsl';
+import { postprocessing } from '../post/postprocessing';
+import { TAAMesh } from '../post/TAAMesh';
 import { gobo } from './gobo';
 
 const _m = new Matrix4();
@@ -120,9 +123,7 @@ class Coaster {
           u_highlightRatio: { value: 0 },
           u_brdfLut: properties.sharedUniforms.u_brdfLut,
           u_wearableBlendingRatio: { value: 0 },
-          // Source: postprocessing.appleEfx.lmsTexture — appleEfx not yet
-          // ported; black texture is equivalent while u_highlightRatio is 0.
-          u_lmsTexture: { value: textureHelper.blackTexture },
+          u_lmsTexture: { value: postprocessing.appleEfx.lmsTexture },
           u_time: properties.sharedUniforms.u_time,
         },
         this.sharedUniforms,
@@ -134,7 +135,8 @@ class Coaster {
         USE_ZOOM: true,
       },
     });
-    this.mesh = new Mesh(this.coasterGeometry!, this.materialDefault);
+    this.mesh = new TAAMesh(this.coasterGeometry!, this.materialDefault);
+    cameraControls.initClippingMesh(this.mesh);
     this.innerContainer.add(this.mesh);
   }
 

@@ -11,6 +11,8 @@ import { properties } from '../core/properties';
 import * as settings from '../core/settings';
 import { textureHelper } from '../core/textureHelper';
 import { FrameAnimation } from '../FrameAnimation';
+import { postprocessing } from '../post/postprocessing';
+import { PostProfile } from '../post/PostProfile';
 import { bg } from './bg';
 import { coaster } from './coaster';
 import { hand } from './hand';
@@ -22,6 +24,9 @@ export const HAND_FRAME_END = 116;
 
 const _v0 = new Vector3();
 const _v1 = new Vector3();
+// Source POST_PROFILE$6 / APPLE_PROFILE (pretty line 19933-19940).
+const POST_PROFILE = new PostProfile({ bloomAmount: 1.4, bloomLumaStrength: 0.2 });
+const APPLE_PROFILE = new PostProfile({ bloomAmount: 3, bloomSelectiveStrength: 1 });
 
 class HandScene {
   container = new Object3D();
@@ -67,8 +72,8 @@ class HandScene {
     const ratio = this.animationRatio;
     this.container.visible = this.isActive;
     hand.opacity = this.handOpacity;
-    // Source: postprocessing.blendProfile(POST_PROFILE, fit(t,0,.1,0,1)) and
-    // blendProfile(APPLE_PROFILE, highlightRatio) — post chain not yet ported.
+    postprocessing.blendProfile(POST_PROFILE, fit(ratio, 0, 0.1, 0, 1));
+    postprocessing.blendProfile(APPLE_PROFILE, this.highlightRatio);
     const frame = ratio * (this.cameraAnimation.frameCount - 1);
     this.coasterAnimation.applyTransformByRatio(ratio);
     this.cameraAnimation.applyTransformByRatio(ratio);

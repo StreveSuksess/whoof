@@ -33,11 +33,15 @@ import {
   taaJitteringVert,
   textureBicubic,
 } from './glsl';
+import { postprocessing } from './post/postprocessing';
+import { PostProfile } from './post/PostProfile';
 import { bg } from './scenes/bg';
 import { bindHeroScene, coaster } from './scenes/coaster';
 import { gobo } from './scenes/gobo';
 import { handScene } from './scenes/handScene';
 import { heroScene } from './scenes/heroScene';
+
+const DEFAULT_POST_PROFILE = new PostProfile();
 
 class WebGLApp {
   scene = new Scene();
@@ -72,7 +76,9 @@ class WebGLApp {
     shaderHelper.addChunk('taaJitteringFragPars', taaJitteringFragPars);
     fboHelper.init(properties.renderer, settings.RENDER_TARGET_FLOAT_TYPE);
     textureHelper.init();
+    postprocessing.init(this.scene, properties.camera);
     blueNoise.preInit();
+    postprocessing.addQueue();
   }
 
   /** Source App.preInit + Visuals.preInit (ported subset, source order). */
@@ -95,6 +101,7 @@ class WebGLApp {
 
   /** Source App.init + Visuals.init (ported subset, source order). */
   init(): void {
+    postprocessing.updateSmaaTextures();
     cameraControls.init();
     gobo.init();
     bg.init();
@@ -140,6 +147,7 @@ class WebGLApp {
     canvas.style.height = `${properties.viewportHeight}px`;
     properties.camera.aspect = properties.width / properties.height;
     properties.camera.updateProjectionMatrix();
+    postprocessing.setSize(properties.width, properties.height);
     heroScene.resize(properties.width, properties.height);
     handScene.resize();
   }
@@ -153,19 +161,27 @@ class WebGLApp {
     blueNoise.update();
     this.updateSectionDriving();
     cameraControls.preUpdate();
-    // Visuals.preUpdate order: gobo.reset, coaster.resetTransform, bg/heroScene/…
+    // Visuals.preUpdate order: profile reset, gobo.reset, coaster.resetTransform, …
+    postprocessing.blendProfile(DEFAULT_POST_PROFILE, 1);
     gobo.reset();
     coaster.resetTransform();
     bg.preUpdate();
     heroScene.preUpdate();
     handScene.preUpdate();
+    // WearableScene.preUpdate stand-in (source pretty 20296): must run inside
+    // the preUpdate chain, after coaster.resetTransform cleared isActive.
+    if (this.wearableSection) {
+      const t = scrollManager.getDomRange(this.wearableSection).showScreenOffset;
+      coaster.isActive = t <= 3;
+    }
+    postprocessing.syncProfile();
     cameraControls.update(dt);
     gobo.update(dt);
     bg.update();
     heroScene.update(dt);
     handScene.update(dt);
     coaster.update();
-    properties.renderer.render(this.scene, properties.camera);
+    postprocessing.render(this.scene, properties.camera, true);
     properties.tick++;
   }
 
@@ -192,11 +208,8 @@ class WebGLApp {
       handScene.handOpacity = fit(r, 8, 9, 1, 0);
       handScene.isActive =
         aiActive || handScene.animationRatio === 0 || handScene.handOpacity > 0;
-      handScene.highlightRatio = fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
-    }
-    if (this.wearableSection) {
-      const t = scrollManager.getDomRange(this.wearableSection).showScreenOffset;
-      coaster.isActive = t <= 3;
+      handScene.highlightRatio = postprocessing.appleEfx.amount =
+        fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
     }
   }
 }

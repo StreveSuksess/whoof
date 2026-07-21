@@ -16,3 +16,4 @@ export const MAX_PIXEL_COUNT = 2560 * 1440;
 export const UP_SCALE = 1;
 // Set on the WebGL2 support path in the source (pretty line 30091).
 export const RENDER_TARGET_FLOAT_TYPE: TextureDataType = HalfFloatType;
+export const SKIP_ANIMATION = false;

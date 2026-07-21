@@ -28,6 +28,8 @@ import { properties } from '../core/properties';
 import * as settings from '../core/settings';
 import { textureHelper } from '../core/textureHelper';
 import { outFrag, outVert, propsBlurFrag } from '../glsl';
+import { postprocessing } from '../post/postprocessing';
+import { PostProfile } from '../post/PostProfile';
 import { coaster } from './coaster';
 import { gobo } from './gobo';
 import { heroSceneBase } from './heroSceneBase';
@@ -46,6 +48,16 @@ export const fov = 2 * Math.atan(apy / 2 / focalLength) * (180 / Math.PI);
 
 const v4 = new Vector4();
 const _goboMatrix = new Matrix4();
+// Source POST_PROFILE$3 (pretty line 20748-20756).
+const POST_PROFILE = new PostProfile({
+  bloomAmount: 2,
+  bloomLumaStrength: 0.2,
+  bloomSaturation: 1.5,
+  vignetteFrom: 0.5,
+  vignetteTo: 1.3,
+  tintColorHex: '#ef009d',
+  tintOpacity: 0.015,
+});
 
 export interface HeroSceneShared {
   sharedUniforms: {
@@ -201,6 +213,7 @@ class HeroScene implements HeroSceneShared {
       gobo.setMatrix(_goboMatrix, 0.372991, 0.79059);
     }
     gobo.opacity = fit(this.activeRatio, 0, 0.5, 0, 1);
+    postprocessing.blendProfile(POST_PROFILE, 1);
   }
 
   update(dt: number): void {

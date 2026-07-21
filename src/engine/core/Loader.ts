@@ -12,6 +12,9 @@ export interface LoadOptions {
   autoMobile?: boolean;
   weight?: number;
   type?: 'texture';
+  /** Bake the <img>-style flipY into the bitmap (default true). SMAA lookup
+   * tables and SOG planes stay unflipped like the source. */
+  flip?: boolean;
   minFilter?: MinificationTextureFilter;
   magFilter?: MagnificationTextureFilter;
   wrapS?: Wrapping;
@@ -118,7 +121,7 @@ export class Loader {
         // applies the default flipY=true on upload. WebGL ignores flipY for
         // ImageBitmap sources, so bake the flip in here to match.
         const bitmap = await createImageBitmap(new Blob([buffer]), {
-          imageOrientation: 'flipY',
+          imageOrientation: item.options.flip === false ? 'none' : 'flipY',
           premultiplyAlpha: 'none',
           colorSpaceConversion: 'none',
         });
@@ -131,7 +134,7 @@ export class Loader {
         // Same flip rationale as the texture branch: these bitmaps end up in
         // THREE.Texture.image (e.g. blueNoise), where the source used <img>.
         item.content = await createImageBitmap(new Blob([buffer]), {
-          imageOrientation: 'flipY',
+          imageOrientation: item.options.flip === false ? 'none' : 'flipY',
         });
       } else {
         item.content = buffer;
