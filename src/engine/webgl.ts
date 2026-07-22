@@ -44,6 +44,7 @@ import { gobo } from './scenes/gobo';
 import { handScene } from './scenes/handScene';
 import { heroScene } from './scenes/heroScene';
 import { sketches } from './scenes/sketches';
+import { stackScene } from './scenes/stackScene';
 import { sustainabilityScene } from './scenes/sustainabilityScene';
 import { tableScene } from './scenes/tableScene';
 import { wearableScene } from './scenes/wearableScene';
@@ -51,6 +52,8 @@ import { encryptionSection } from './sections/encryptionSection';
 import { featuresSection } from './sections/featuresSection';
 import { gripSection } from './sections/gripSection';
 import { sustainabilitySection } from './sections/sustainabilitySection';
+import { testimoniesSection } from './sections/testimoniesSection';
+import { productSection } from './sections/productSection';
 import { wearableSection } from './sections/wearableSection';
 
 const DEFAULT_POST_PROFILE = new PostProfile();
@@ -117,6 +120,8 @@ class WebGLApp {
     this.scene.add(tableScene.container);
     sustainabilityScene.preInit();
     this.scene.add(sustainabilityScene.container);
+    stackScene.preInit();
+    this.scene.add(stackScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
     sketches.preInit();
@@ -134,6 +139,7 @@ class WebGLApp {
     wearableScene.init();
     tableScene.init();
     sustainabilityScene.init();
+    stackScene.init();
     coaster.init();
     sketches.init();
     wearableSection.preInit(document.documentElement);
@@ -151,6 +157,12 @@ class WebGLApp {
     sustainabilitySection.preInit(document.documentElement);
     sustainabilitySection.init();
     sustainabilitySection.resize();
+    testimoniesSection.preInit(document.documentElement);
+    testimoniesSection.init();
+    testimoniesSection.resize(properties.width, properties.height);
+    productSection.preInit(document.documentElement);
+    productSection.init();
+    productSection.resize(properties.width, properties.height);
     this.aiSection = document.getElementById('ai');
     this.heroSection = document.getElementById('hero');
     this.heroInner = this.heroSection?.querySelector('.section__inner') ?? null;
@@ -204,8 +216,11 @@ class WebGLApp {
       encryptionSection.resize();
       gripSection.resize();
       sustainabilitySection.resize();
+      testimoniesSection.resize(properties.width, properties.height);
+      productSection.resize(properties.width, properties.height);
     }
     sustainabilityScene.resize();
+    stackScene.resize(properties.width, properties.height);
   }
 
   /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
@@ -227,6 +242,7 @@ class WebGLApp {
     wearableScene.preUpdate(dt);
     tableScene.preUpdate(dt);
     sustainabilityScene.preUpdate(dt);
+    stackScene.preUpdate(dt);
     postprocessing.syncProfile();
     // Source App.update: screenPaint.update between visuals.preUpdate and
     // cameraControls.update.
@@ -239,6 +255,7 @@ class WebGLApp {
     wearableScene.update(dt);
     tableScene.update(dt);
     sustainabilityScene.update(dt);
+    stackScene.update(dt);
     coaster.update();
     sketches.update(dt);
     // Source Visuals.update tail: tableScene/footerScene postUpdate after the
@@ -306,6 +323,8 @@ class WebGLApp {
       encryptionSection.update(properties.deltaTime);
       gripSection.update(properties.deltaTime);
       sustainabilitySection.update(properties.deltaTime);
+      testimoniesSection.update(properties.deltaTime);
+      productSection.update(properties.deltaTime);
     }
   }
 }

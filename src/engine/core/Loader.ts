@@ -11,7 +11,7 @@ import { properties } from './properties';
 export interface LoadOptions {
   autoMobile?: boolean;
   weight?: number;
-  type?: 'texture';
+  type?: 'texture' | 'json';
   /** Bake the <img>-style flipY into the bitmap (default true). SMAA lookup
    * tables and SOG planes stay unflipped like the source. */
   flip?: boolean;
@@ -164,6 +164,8 @@ export class Loader {
         const tex = item.content as Texture;
         tex.image = bitmap;
         tex.needsUpdate = true;
+      } else if (item.options.type === 'json') {
+        item.content = JSON.parse(new TextDecoder().decode(buffer));
       } else if (parser) {
         item.content = await parser(buffer, url);
       } else if (['webp', 'png', 'jpg', 'avif'].includes(ext)) {
