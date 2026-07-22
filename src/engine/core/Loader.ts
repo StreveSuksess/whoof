@@ -5,7 +5,7 @@
 // `loader.add(...).content` synchronously. Per-extension parsers cover .buf.
 
 import { LinearFilter, LinearMipMapLinearFilter, RedFormat, RGFormat, Texture } from 'three';
-import type { MagnificationTextureFilter, MinificationTextureFilter, Wrapping } from 'three';
+import type { ColorSpace, MagnificationTextureFilter, MinificationTextureFilter, Wrapping } from 'three';
 import { properties } from './properties';
 
 export interface LoadOptions {
@@ -19,7 +19,7 @@ export interface LoadOptions {
   magFilter?: MagnificationTextureFilter;
   wrapS?: Wrapping;
   wrapT?: Wrapping;
-  colorSpace?: string;
+  colorSpace?: ColorSpace;
   /** Channel COUNT for the texture (source TextureItem: 1 → R8, 2 → RG8). */
   channel?: number;
   onLoad?: (content: unknown) => void;
@@ -69,6 +69,9 @@ export class Loader {
       if (options.magFilter) tex.magFilter = options.magFilter;
       if (options.wrapS) tex.wrapS = options.wrapS;
       if (options.wrapT) tex.wrapT = options.wrapT;
+      // Source TextureItem: i.colorSpace = t.colorSpace || NoColorSpace —
+      // sRGB-declared textures get GPU sRGB→linear decode on sample.
+      if (options.colorSpace) tex.colorSpace = options.colorSpace;
       // Source TextureItem: `channel` is the CHANNEL COUNT (pretty 29992-29993)
       // — 1 → R8, 2 → RG8 (colorless textures only).
       if (options.channel !== undefined && options.channel < 3) {

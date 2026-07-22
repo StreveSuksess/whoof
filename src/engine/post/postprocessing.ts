@@ -3,6 +3,7 @@
 // Bokeh, BlurBox and ScreenPaintDistortion land with their systems.
 
 import {
+  LinearSRGBColorSpace,
   DepthStencilFormat,
   DepthTexture,
   LinearFilter,
@@ -245,9 +246,8 @@ export class Postprocessing {
       bokeh.focalLength = profile.bokehFocalLength;
       bokeh.kFilmHeight = profile.bokehKFilmHeight;
     }
-    final.opacity = 1;
-    final.bgColor.setStyle(properties.bgColorHex);
-    // Bloom/ScreenPaintDistortion/Bokeh profile sync lands with those effects.
+    final.opacity = properties.opacity;
+    final.bgColor.setStyle(properties.bgColorHex, LinearSRGBColorSpace);
   }
 
   swap(): void {

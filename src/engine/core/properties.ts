@@ -96,6 +96,7 @@ export const properties = {
   cameraShakeRotationStrength: 0.003,
   cameraShakeRotationSpeed: 0.3,
   bgColorHex: '#100904',
+  opacity: 1,
   sharedUniforms: {
     u_useMobileLayout: { value: false },
     u_brdfLut: { value: null as unknown },
