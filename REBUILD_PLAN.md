@@ -160,10 +160,21 @@
   标题逐字符,gsap 已入依赖)。基建:postprocessing.cacheScene、
   fboHelper.clearMultisampleRenderTargetState、DomGLRect、loader channel 选项。
   验收:包装(ORYZO 橙色印花)→撕开→杯垫自由旋转 + "it's wearable" bloom 辉光全链路。
-  **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise(依赖
-  tableCoffee)、table 集群(tableBase/Coffee/Grip/thermodynamic/水熊 Wiggle)、
-  sustainability/stack/footer 场景、sketches、全站 split-text 编排、siteHeader/
-  siteFooter、M2.4 SOG splat(tableScene 需要)
+  已完成(2026-07-22 十一轮,commit 699f72d):**table 集群**——TableScene
+  (features/encryption 桌面序列:相机/杯垫/咖啡三条 FrameAnimation 关键帧映射、
+  gallery 退出的 zoom/rotation 交接、杯垫翻面状态机 + 随机翻转轴、scissor 生长数学、
+  env RGBM 混合)、TableBase(DESK/PINBOARD/WALL 双三次纹理 + 咖啡/杯垫逆矩阵
+  SDF 软阴影 + HD 桌面叠加 + splat 反射 RT、TRAY_COVERS 阴影层、PINBOARD 双实例)、
+  TableCoffee(谐波动画杯身、热感重着色、83×184 烟雾 RT 模拟)、TableGrip 家族
+  (软木特写、显微条带、WiggleSystem verlet 骨链 + BrownianMotion fBm 驱动水熊、
+  2D 水熊精灵鼠标碰撞)、ThermodynamicOverlay(热感 LUT 擦除)。
+  发现并保真:源站 mipFilter 是 TextureItem 死参数(仅 magFilter 生效)。
+  验收:桌面 + 洞洞板 + gobo 光影 + **splat 道具(手柄/键盘)実渲染** + 咖啡杯
+  落桌,scissor 裁剪在 wearable 框内,零控制台报错——M2.4 像素级验收一并完成。
+  **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise、
+  coaster encryption MSDF 文字与背面材质、features/encryption/grip section DOM
+  驱动(animation 3..10 段)、sustainability/stack/footer 场景、sketches、
+  全站 split-text 编排、siteHeader/siteFooter
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
