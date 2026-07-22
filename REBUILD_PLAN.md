@@ -164,7 +164,14 @@
   tableCoffee)、table 集群(tableBase/Coffee/Grip/thermodynamic/水熊 Wiggle)、
   sustainability/stack/footer 场景、sketches、全站 split-text 编排、siteHeader/
   siteFooter、M2.4 SOG splat(tableScene 需要)
-- ⬜ **M2.4 `.sog` Splat 加载器**:按 engine-notes 的 GPU 解码流程移植 + worker 排序
+- ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
+  解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
+  16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
+  相机方向触发的 WASM 基数排序 worker)。补齐镜像缺口:splat_sorter_bg wasm 是
+  worker 运行时才 fetch 的,当初镜像没抓到,已从源站补入 legacy-mirror 与 public。
+  Loader 增补:post-preload 的 load()、channel 语义修正(= 通道数 R8/RG8,非 uv 通道)。
+  验证:props.sog 67486 splats 解析、worker READY、排序完成 full draw range;
+  像素级渲染随 TableScene 集成验收(那里才有正确的空间变换)
 - ⬜ **M2.5 材质体系**:球谐重打光、MSDF 文字、后处理链(SMAA/AgX/gobo)——GLSL 从 bundle 提取
 
 ### 阶段 3 — 分场景还原(3–5 周)
