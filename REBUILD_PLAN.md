@@ -263,6 +263,16 @@
   噪声:虚拟滚动缓动相位造成的 10-80px 构图偏移、product 杯垫因 animation
   相位不同的 halo/env 色温差、hero 卡片一处换行差(Halyard 授权字体在
   headless 下未加载,已知限制)。无新代码变更。
+  已完成(2026-07-22 二十轮,commit e3339c5):**sRGB 解码修复**——用户真机
+  对比发现切割垫场景(hero 及复用处)整体偏亮发灰。根因:LoadOptions 的
+  colorSpace 字段声明了但 _createItem 从未赋给纹理,8 处声明 SRGBColorSpace
+  的纹理(hero BASE、hand、table 系列、bark、STACK、wearable frame)全都
+  缺 GPU sRGB→linear 解码,采样值偏高。走 textureHelper RT 合成的纹理
+  (coaster DIFF 等)不受影响——这解释了此前像素比对中 coaster 场景一致而
+  hero 略亮被误判为相位噪声。顺带对齐 syncProfile:final.opacity 读
+  properties.opacity(补字段)、bgColor.setStyle 带 LinearSRGBColorSpace。
+  验收:本地 vs 源站平均亮度 hero 106.4/106.1、features 122.3/121.8,
+  并排逐像素吻合。
   **复刻工程至此收尾**:桌面 + 移动、12 section、全场景/后处理/chrome
   齐备;像素级比对通过。后续若要打磨:Halyard 字体(需 Adobe Fonts 订阅)、
   滚动手感 A/B 对拍、性能预算(预载分包)
