@@ -246,7 +246,15 @@
   源 _setThroughElementsByEvent)。
   验收(无头):19/19 注册、悬停 footer 链接 flipRatio 0→1、双层字符生成、
   CONTACT 导航态 + LUSION.CO 按钮辉光,零控制台错误。
-  **剩余**:核对 mobile 布局分支;像素级比对与打磨(阶段 4)
+  已完成(2026-07-22 十八轮,commit e365748):**mobile 分支验证 + 资产补录**——
+  发现镜像(桌面爬取)漏了所有 mobile 专属路径:condom 的 png 全套(mobile
+  完全不走 avif)、COFFEE_BEAN/BARK 的 _MOBILE.buf、两个 _MOBILE.sog。
+  粗指针视口下 loader 404 → coffeeParticles.init 在 null 几何上崩掉帧循环。
+  已从源站补 16 个文件入 legacy-mirror + public。
+  验收(无头 iPhone 级仿真 390×844 触摸):is-mobile 分支启动、七段 mobile
+  编排全部正确(gallery 整页分页、social 逐页横滑、product 选项横排 +
+  mobileShift、footer 纵向堆叠、MENU 按钮 + 右下滚动指示),零控制台错误。
+  **剩余**:像素级比对与打磨(阶段 4)
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
