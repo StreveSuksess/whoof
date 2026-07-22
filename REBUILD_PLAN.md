@@ -224,8 +224,23 @@
   hasStarted/startTime 门槛 + 三段截图 + 零控制台错误。
   验收(无头全新加载):social 轨道 "Always On" 项 + 前后项探出、open-weight
   论文段 bibtex 面板、footer 咖啡豆粒子流(鼠标光照)+ newsletter 表单。
-  **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise、
-  hero/AI 完整 split-text、siteHeader/siteFooter/videoOverlay
+  已完成(2026-07-22 十六轮,commit fa726a1):**站点 chrome + hero/AI section +
+  wearable gallery/magazine/rise**——SiteHeader(logo 变换交接、导航下划线
+  缓动、逐项落入、移动菜单、主题类)、SiteFooter(滚动指示条:转轮/箭头循环/
+  逐字,按 section 左/中/右吸附)、VideoOverlay(npm @vimeo/player;hover
+  预取、自绘光标态、静音、移动 iframe 分支)、HeroSection/AiSection(完整
+  split-text 编排,替换 webgl.ts 桩)、WearableGallery/Item + RafVideo
+  (图/视频轨道 + 缩略条、过场倾斜缩放、yoga 警告、bikini 叠加、outro 交接;
+  gallery 资产是懒加载的、镜像没抓到,已从源站补入 legacy-mirror + public)、
+  WearableMagazine + WearablesRise(封面编排 + WebGL RISE 刊头:杯罩蒙版 RT、
+  from/to ping-pong 的背景压暗模糊 color pass、magazine post layer)。
+  各 section 的 changeNav/setScroll/setTheme 调用全部启用;通用 sections.ts
+  可见性兜底退役(Section 类自管)。GLSL 四段逐字提取。
+  验收(无头全新加载):hero 的 header 导航下划线 + SCROLL TO CONTINUE +
+  视频按钮、AI 段 LMS 彩虹辉光 + 手模、gallery 中段 + 左右缩略条、RISE 刊头
+  被咖啡杯正确遮挡 + 杂志文案条码,零控制台错误。
+  **剩余**:核对 mobile 布局分支、letterFlippers(30367 提及)等零星站点
+  细节;像素级比对与打磨(阶段 4)
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
