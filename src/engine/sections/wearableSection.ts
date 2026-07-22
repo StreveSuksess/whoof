@@ -12,6 +12,7 @@ import { fit, unClampedFit } from '../core/math';
 import { properties } from '../core/properties';
 import { scrollManager } from '../core/ScrollPane';
 import { handScene } from '../scenes/handScene';
+import { tableScene } from '../scenes/tableScene';
 import { wearableFrame } from '../scenes/wearableFrame';
 import { wearableScene } from '../scenes/wearableScene';
 import { wearableText } from '../scenes/wearableText';
@@ -64,7 +65,10 @@ export class WearableSection {
     const showRatio = fit(r, 0.5, 1, 0, 1);
     const hideRatio = fit(r, 12.25, 13.25, 0, 1);
     _domContainer.style.visibility = showRatio > 0 && hideRatio < 1 ? 'visible' : 'hidden';
-    // tableScene.animation handoff (pretty 21453) lands with the table cluster.
+    // tableScene.animation handoff (pretty 21453).
+    tableScene.animation = fit(r, 10.75 - 0.75, 10.75, 0, 1);
+    tableScene.animation = fit(r, 10.75, 11.75, tableScene.animation, 2);
+    tableScene.animation = fit(r, 11.75, 13.25, tableScene.animation, 3);
     const innerRange = scrollManager.getDomRange(_domInner);
     const copyDecsRange = scrollManager.getDomRange(_domCopyDecs);
     const titleWrapperRange = scrollManager.getDomRange(_domCopyTitleWrapper);
@@ -153,8 +157,18 @@ export class WearableSection {
     }
     const itemCount = _galleryItemCount;
     if (galleryIndex > itemCount - 2) {
-      // tableScene from-view-offset handoff (pretty 21497-21504) lands with
-      // the table cluster; the offsets/scissor consume only tableScene state.
+      // tableScene from-view-offset handoff (pretty 21497-21504);
+      // wearableMagazine.frameX/Y joins with the magazine port.
+      // wearableGallery.offsetX = clamp(index, 0, count-1) * itemWidth.
+      const offsetX = Math.max(0, Math.min(galleryIndex, itemCount - 1)) * b;
+      const N = Math.max(0, Math.min(b, b * (itemCount - 1) - offsetX));
+      const U = mainRange.screenY - innerRange.screenY;
+      const k = mainRange.screenY + S - innerRange.screenY;
+      const G = N + mainRange.screenX;
+      const L = mainRange.screenX + b;
+      tableScene.fromViewOffsetX = (G + b / 2) / properties.viewportWidth - 0.5;
+      tableScene.fromViewOffsetY = D;
+      tableScene.clipScissor.set((G + L) / 2, (U + k) / 2, L - G, S);
     }
     let E = fit(r, 0.5, 1.5, 0, 1);
     E = fit(r, 1.5, 3, E, 2);

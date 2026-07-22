@@ -43,6 +43,7 @@ import { bindHeroScene, coaster } from './scenes/coaster';
 import { gobo } from './scenes/gobo';
 import { handScene } from './scenes/handScene';
 import { heroScene } from './scenes/heroScene';
+import { tableScene } from './scenes/tableScene';
 import { wearableScene } from './scenes/wearableScene';
 import { wearableSection } from './sections/wearableSection';
 
@@ -106,6 +107,8 @@ class WebGLApp {
     this.scene.add(handScene.container);
     wearableScene.preInit();
     this.scene.add(wearableScene.container);
+    tableScene.preInit();
+    this.scene.add(tableScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
   }
@@ -119,6 +122,7 @@ class WebGLApp {
     heroScene.init();
     handScene.init();
     wearableScene.init();
+    tableScene.init();
     coaster.init();
     wearableSection.preInit(document.documentElement);
     wearableSection.init();
@@ -169,6 +173,7 @@ class WebGLApp {
     heroScene.resize(properties.width, properties.height);
     handScene.resize();
     wearableScene.resize(properties.width, properties.height);
+    tableScene.resize(properties.width, properties.height);
     if (properties.hasInitialized) wearableSection.resize();
   }
 
@@ -189,6 +194,7 @@ class WebGLApp {
     heroScene.preUpdate();
     handScene.preUpdate();
     wearableScene.preUpdate(dt);
+    tableScene.preUpdate(dt);
     postprocessing.syncProfile();
     // Source App.update: screenPaint.update between visuals.preUpdate and
     // cameraControls.update.
@@ -199,7 +205,11 @@ class WebGLApp {
     heroScene.update(dt);
     handScene.update(dt);
     wearableScene.update(dt);
+    tableScene.update(dt);
     coaster.update();
+    // Source Visuals.update tail: tableScene/footerScene postUpdate after the
+    // scene updates.
+    tableScene.postUpdate(dt);
     postprocessing.render(this.scene, properties.camera, true);
     properties.tick++;
   }

@@ -49,6 +49,8 @@ class Input {
   deltaDragScrollX = 0;
   deltaDragScrollY = 0;
   deltaPixelXY = { x: 0, y: 0 };
+  /** Per-frame normalized (-1..1, +y up) pointer delta (source input.deltaXY). */
+  deltaXY = new Vector2();
   downPixelXY = { x: 0, y: 0 };
   prevMovePixelXY = { x: 0, y: 0 };
   /** Normalized mouse position, -1..1, +y up (source input.mouseXY). */
@@ -111,6 +113,7 @@ class Input {
     this.deltaScrollY = 0;
     this.deltaPixelXY.x = 0;
     this.deltaPixelXY.y = 0;
+    this.deltaXY.set(0, 0);
     this.prevMousePixelXY.copy(this.mousePixelXY);
     this.hadMoved = this.hasMoved;
     this.wasDown = this.isDown;
@@ -143,8 +146,12 @@ class Input {
   }
 
   private _onMove(e: PointerEvent): void {
+    const prevX = this.mouseXY.x;
+    const prevY = this.mouseXY.y;
     this.mouseXY.x = (e.clientX / window.innerWidth) * 2 - 1;
     this.mouseXY.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    this.deltaXY.x += this.mouseXY.x - prevX;
+    this.deltaXY.y += this.mouseXY.y - prevY;
     this.mousePixelXY.set(e.clientX, e.clientY);
     this.hasMoved = true;
     if (!this.isDown) return;

@@ -54,6 +54,13 @@ class Coaster {
   handSectionHighlightRatio = 0;
   condomSceneRatio = 0;
   coffeeShadowStrength = 0;
+  // Encryption-section state written by TableScene.update (source Coaster
+  // fields); the back-face material/MSDF consumption lands with the
+  // encryption milestone.
+  isFeatureEncryptionSectionActive = false;
+  featureSectionRatio = 0;
+  encryptionSectionTopToFrontRatio = 0;
+  encryptionSectionZoomRatio = 0;
   coasterGeometry: BufferGeometry | null = null;
   mesh!: Mesh;
   materialDefault!: ShaderMaterial;

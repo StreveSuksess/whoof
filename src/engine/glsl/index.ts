@@ -532,3 +532,182 @@ uint pack8888(vec4 v){uvec4 t=uvec4(v*255.0+.5)<<uvec4(24u,16u,8u,0u);return t.x
 
 export const sogCombineShNFrag = `#define GLSLIFY 1
 uint pack111110(vec3 v){uvec3 t=uvec3(v*vec3(2047.0,2047.0,1023.0))<<uvec3(21u,10u,0u);return t.x|t.y|t.z;}vec4 unpack8888(uint v){return vec4((uvec4(v)>>uvec4(24u,16u,8u,0u))&0xffu)/255.0;}vec3 codebookNormalize(vec3 s,vec4 codebook[64]){uvec3 idx=uvec3(s*255.0);vec3 v=vec3(codebook[idx.x>>2u][idx.x&3u],codebook[idx.y>>2u][idx.y&3u],codebook[idx.z>>2u][idx.z&3u]);return(v-codebook[0].x)/(codebook[63].w-codebook[0].x);}uniform sampler2D u_shNCentroidsTexture;uniform vec4 u_shNCodebook[64];out vec4 packedFragColor;void main(){ivec2 xy=ivec2(gl_FragCoord.xy);vec3 shNData=texelFetch(u_shNCentroidsTexture,xy,0).xyz;packedFragColor=unpack8888(pack111110(codebookNormalize(shNData,u_shNCodebook)));}`;
+
+export const coffeeVert = `#define GLSLIFY 1
+#ifdef IS_COVER
+attribute float Cd;varying float v_ao;
+#else
+varying vec2 v_uv;
+#ifdef IS_LABEL
+varying vec2 v_labelUv;
+#endif
+#endif
+varying vec3 v_viewNormal;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_viewPosition;
+#include <taaJitteringVert>
+void main(){vec3 pos=position;vec4 viewPosition=modelViewMatrix*vec4(pos,1.0);getTAAPositions(pos,gl_Position,v_currentFramePosition,v_previousFramePosition);v_viewNormal=normalMatrix*normal;v_modelPosition=position;v_worldPosition=(modelMatrix*vec4(pos,1.0)).xyz;v_viewPosition=-viewPosition.xyz;
+#ifdef IS_COVER
+v_ao=Cd;
+#else
+v_uv=uv*vec2(.5,1.);
+#ifdef IS_LABEL
+v_uv.x+=.5;v_labelUv=uv*vec2(2.,1.);
+#endif
+#endif
+}`;
+
+export const coffeeCoverFrag = `#define GLSLIFY 1
+varying vec3 v_viewNormal;varying vec2 v_uv;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_viewPosition;uniform vec3 u_lightPosition;uniform sampler2D u_specTexture;uniform sampler2D u_brdfLut;uniform vec3 u_smokePosition;uniform vec2 u_bboxY;uniform float u_alphaMultiplier;uniform vec2 u_resolution;varying float v_ao;
+#include <taaJitteringFragPars>
+#include <linearstep>
+#include <thermodynamicPars>
+#include <cart2Polar>
+void main(){float smoke=distance(v_modelPosition,u_smokePosition);smoke=1.0/(1000.0*smoke*smoke+1.0);float unitHeight=(v_modelPosition.y-u_bboxY.x)/(u_bboxY.y-u_bboxY.x);vec3 viewNormal=normalize(v_viewNormal);vec3 N=normalize((vec4(viewNormal,0.)*viewMatrix).xyz);vec3 V=normalize(cameraPosition-v_worldPosition);vec3 reflection=normalize(reflect(-V,N));vec3 L=normalize(vec3(0.5,0.48,1.));float NdL=max(0.,dot(N,L));float NdV=clamp(abs(dot(N,V)),0.001,1.0);vec3 albedo=vec3(0.2);vec3 f0=vec3(0.04);float roughness=0.;float metallic=0.28;vec3 specularColor=mix(f0,albedo,metallic);vec3 brdf=texture2D(u_brdfLut,vec2(NdV,roughness)).rgb;reflection.xz=mat2(0.,-1.,1.,0.)*reflection.xz;vec4 specularMap=texture2D(u_specTexture,cart2Polar(reflection)+vec2(0.25,0.0));vec3 specularLight=specularMap.rgb*specularMap.a*4.*specularColor;vec3 color=specularLight*(specularColor*brdf.x+brdf.y);color+=vec3(pow(linearstep(0.9,1.0,NdL),8.))*vec3(1.,0.9,0.7)*0.5;color*v_ao;vec3 thermalGradient=0.1+pow(texture2D(u_thermalTexture,vec2(0.3+0.1*smoke+0.5*unitHeight*unitHeight,0.5)).rgb,vec3(2.2));gl_FragColor=vec4(pow(color,vec3(1./2.2)),(thermalGradient.g*0.5+smoothstep(0.5,1.,thermalGradient.r)*0.5)*u_alphaMultiplier);gl_FragColor.rgb=mix(gl_FragColor.rgb,thermalGradient,getThermalFadeStep(u_resolution));
+#include <taaJitteringFrag>
+}`;
+
+export const coffeeCupFrag = `#define GLSLIFY 1
+varying vec3 v_viewNormal;varying vec2 v_uv;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_viewPosition;uniform sampler2D u_baseTexture;uniform sampler2D u_harmonics0Texture;uniform float u_strength;uniform vec2 u_freq;uniform float u_time;uniform float u_shadow;uniform vec3 u_lightPosition;uniform vec3 u_position;uniform float u_alphaMultiplier;uniform vec2 u_resolution;uniform mat4 u_coasterInvMatrix;uniform mat4 modelMatrix;
+#include <taaJitteringFragPars>
+#include <hsb2rgb>
+#include <rgb2hsb>
+#include <sampleHarmonics>
+#include <getBlueNoise>
+#include <linearstep>
+#include <thermodynamicPars>
+#ifdef IS_LABEL
+uniform sampler2D u_texture;varying vec2 v_labelUv;
+#endif
+void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);vec3 rgb=texture2D(u_baseTexture,v_uv).rgb;vec3 hsb=rgb2hsb(rgb);hsb.b+=sampleHarmonics(u_harmonics0Texture,v_uv,u_freq,u_time,u_strength);vec3 color=hsb2rgb(hsb);color=clamp(color,vec3(0.0),vec3(1.0));color=pow(color,vec3(1.3));
+#ifdef IS_CUP
+float bottomRatio=linearstep(.04,-.01,v_worldPosition.y-u_position.y);bottomRatio*=bottomRatio;color*=mix(vec3(1.),mix(vec3(0.,0.3,0.2),vec3(1.,0.3,0.),linearstep(0.,0.0075,u_position.y)),bottomRatio);
+#endif
+float luma=dot(color,vec3(0.2126,0.7152,0.0722));float thermalLevel=0.65+0.35*smoothstep(0.1,0.3,v_uv.x);vec3 thermalGradient=texture2D(u_thermalTexture,vec2(thermalLevel*(0.85+0.15*luma),0.5)).rgb;
+#ifdef IS_LABEL
+vec3 labelColor=pow(texture2D(u_texture,v_labelUv).rrr,vec3(2.2))*vec3(1.,0.9,0.85);thermalGradient=texture2D(u_thermalTexture,vec2(thermalLevel*0.72*(1.0-0.15*labelColor.r),0.5)).rgb;color*=mix(labelColor,vec3(1.),color.r*color.r*0.07);
+#endif
+thermalGradient=pow(0.1+thermalGradient,vec3(2.2));color=mix(color,thermalGradient,getThermalFadeStep(u_resolution));gl_FragColor=vec4(pow(color,vec3(1./2.2)),(thermalGradient.g*0.5+smoothstep(0.5,1.,thermalGradient.r)*0.5)*u_alphaMultiplier);
+#include <taaJitteringFrag>
+}`;
+
+export const thermodynamicVert = `#define GLSLIFY 1
+varying vec2 v_uv;void main(){gl_Position=vec4(position.xy,0.0,1.0);v_uv=position.xy*0.5+0.5;}`;
+
+export const thermodynamicFrag = `#define GLSLIFY 1
+varying vec2 v_uv;uniform sampler2D u_sceneCacheTexture;uniform vec2 u_resolution;
+#include <thermodynamicPars>
+void main(){vec2 screenUv=gl_FragCoord.xy/u_resolution;float thermalFadeStep=getThermalFadeStep(u_resolution);vec3 sceneCacheColor=texture2D(u_sceneCacheTexture,screenUv).rgb;float luma=dot(sceneCacheColor,vec3(0.299,0.587,0.114));luma=0.8*smoothstep(0.0,1.5,luma);vec3 thermalColor=0.1+pow(texture2D(u_thermalTexture,vec2(luma,0.5)).rgb,vec3(2.2));gl_FragColor.rgb=mix(sceneCacheColor,thermalColor,thermalFadeStep);gl_FragColor.a=0.;}`;
+
+export const thermodynamicPars = `#define GLSLIFY 1
+uniform sampler2D u_thermalTexture;uniform float u_thermalRatio;uniform float u_thermalAnimation;float getThermalFadeStep(vec2 res){vec2 uv=gl_FragCoord.xy/res;float a=res.x/res.y*0.2;float l=1.+a;float s=0.2;float x=uv.y+uv.x*a;return smoothstep(0.,s,u_thermalAnimation*(l+s)-x)*smoothstep(s,0.,(u_thermalAnimation-1.)*(l+s)-x);}`;
+
+export const smokeCacheFrag = `#define GLSLIFY 1
+uniform sampler2D u_baseTexture;uniform sampler2D u_harmonics0Texture;uniform sampler2D u_harmonics1Texture;uniform float u_strength;uniform float u_time;varying vec2 v_uv;
+#include <sampleHarmonics>
+void main(){vec3 color=texture2D(u_baseTexture,v_uv).rgb;float c=color.r+calcHarmonic(color.g,color.b,1.,u_time)*u_strength+sampleHarmonics(u_harmonics0Texture,v_uv,vec2(2.,3.),u_time,u_strength)+sampleHarmonics(u_harmonics1Texture,v_uv,vec2(4.,5.),u_time,u_strength);gl_FragColor=vec4(pow(vec3(c),vec3(1./2.2)),1.);}`;
+
+export const smokeVert = `#define GLSLIFY 1
+varying vec2 v_uv;void main(){vec3 pos=normalMatrix*position;vec4 mvPosition=modelViewMatrix*vec4(pos,1.0);gl_Position=projectionMatrix*mvPosition;v_uv=uv;}`;
+
+export const smokeFrag = `#define GLSLIFY 1
+varying vec2 v_uv;uniform sampler2D u_smokeTexture;uniform float u_alphaMultiplier;uniform vec2 u_resolution;
+#include <thermodynamicPars>
+void main(){float s=texture2D(u_smokeTexture,v_uv).r;gl_FragColor=vec4(vec3(s*0.3+0.7),s*0.15);vec3 thermalGradient=texture2D(u_thermalTexture,vec2(s,0.5)).rgb;thermalGradient=pow(thermalGradient*0.6+0.4,vec3(2.2));gl_FragColor=mix(gl_FragColor,vec4(thermalGradient,s),getThermalFadeStep(u_resolution));}`;
+
+export const tableVert = `#define GLSLIFY 1
+varying vec3 v_viewNormal;varying vec2 v_uv;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_worldNormal;varying vec3 v_viewPosition;
+#ifdef IS_PINBOARD
+attribute float instanceId;
+#endif
+#ifdef IS_DESK
+attribute float type;varying float v_shadow;varying float v_type;
+#endif
+#include <taaJitteringVert>
+void main(){vec3 pos=position;vec2 outUv=uv;
+#ifdef IS_PINBOARD
+pos.x+=instanceId*0.767429;outUv.y+=instanceId*.5;
+#endif
+vec4 viewPosition=modelViewMatrix*vec4(pos,1.0);getTAAPositions(pos,gl_Position,v_currentFramePosition,v_previousFramePosition);vec3 viewNormal=normalMatrix*normal;v_worldNormal=normalize((vec4(viewNormal,0.)*viewMatrix).xyz);v_uv=outUv;v_modelPosition=position;v_worldPosition=(modelMatrix*vec4(pos,1.0)).xyz;v_viewPosition=-viewPosition.xyz;
+#ifdef IS_DESK
+v_shadow=min(1.,abs(mod(floor(type+.5),2.)-1.))*.95+.05;v_shadow*=mix(max(0.,dot(v_worldNormal.xz,normalize(vec2(1.,0.2))))*.9+.1,1.,min(1.,abs(type-3.)));v_type=type;
+#endif
+}`;
+
+export const tableFrag = `#define GLSLIFY 1
+#include <linearstep>
+varying vec3 v_viewNormal;varying vec2 v_uv;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_worldNormal;varying vec3 v_viewPosition;uniform sampler2D u_texture;uniform vec2 u_textureSize;uniform sampler2D u_goboTexture;uniform mat4 u_goboMatrix;uniform float u_goboOpacity;uniform vec4 u_goboParams;uniform vec3 u_lightPosition;uniform float u_thermalRatio;
+#include <getGoboBlurRatio>
+#ifdef IS_DESK
+uniform vec3 u_localLightPosition;uniform vec3 u_coffeePosition;uniform vec4 u_coffeeQuaternion;uniform vec3 u_coasterPosition;uniform vec4 u_coasterQuaternion;uniform mat4 modelMatrix;uniform mat4 u_coffeeInvMatrix;uniform mat4 u_coasterInvMatrix;uniform sampler2D u_hdTexture;uniform float u_hdTextureShift;uniform sampler2D u_reflectionTexture;uniform vec2 u_resolution;varying float v_shadow;varying float v_type;float dot2(vec2 v){return dot(v,v);}float opUnion(float d1,float d2){return min(d1,d2);}float opSubtraction(float d1,float d2){return max(-d1,d2);}
+#include <sdCappedCone>
+float map(in vec3 worldPos){vec3 coasterObjSpacePos=(u_coasterInvMatrix*vec4(worldPos,1.0)).xyz;float yBias=-0.000025;float cTop=sdCappedCone(coasterObjSpacePos,vec3(0.,0.003+yBias,0.),vec3(0.,0.0175+yBias,0.),0.0415,0.045);float cBottom=sdCappedCone(coasterObjSpacePos,vec3(0.,0.0+yBias,0.),vec3(0.,0.003+yBias,0.),0.03912,0.0397);float coasterSDF=opUnion(cTop,cBottom);vec3 coffeeObjSpacePos=(u_coffeeInvMatrix*vec4(worldPos,1.0)).xyz;float coffeeRadiusBottom=0.029881315305829048;float coffeeRadiusTop=0.04465631768107414;float coffeeHeight=0.10891598463058472;float coffeeSDF=sdCappedCone(coffeeObjSpacePos,vec3(0.,0.,0.),vec3(0.,coffeeHeight,0.),coffeeRadiusBottom,coffeeRadiusTop);return opUnion(coffeeSDF,coasterSDF);}float calcSoftshadow(in vec3 ro,in vec3 rd,float mint,float maxt,float w){float res=1.0;float t=mint;for(int i=0;i<32&&t<maxt;i++){float h=map(ro+t*rd);res=min(res,h/(w*t));t+=clamp(h,0.0005,0.1);if(res<-1.||t>maxt)break;}res=max(res,-1.);res=0.25*(1.+res)*(1.+res)*(2.0-res);return res;}
+#endif
+#include <taaJitteringFragPars>
+#include <textureBicubic>
+#include <getBlueNoise>
+#include <sampleBlur>
+void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);vec2 uv=v_uv;
+#ifdef IS_DESK
+uv.x=pow(linearstep(0.,.25,uv.x),2.)*.1+linearstep(.25,.75,uv.x)*.8+pow(linearstep(.75,1.,uv.x),.5)*.1;
+#endif
+vec3 color=textureBicubic(u_texture,uv,u_textureSize).rgb;
+#ifdef IS_DESK
+vec2 hdUv=v_modelPosition.xz/vec2(.45,-.225)+vec2(.5,.5-.005*u_hdTextureShift);hdUv.y=pow(max(0.,hdUv.y),1./1.35);float hdD=length(hdUv-.5)*2.;float hdBlend=smoothstep(1.,0.95,hdD);color=mix(color,textureBicubic(u_hdTexture,hdUv,u_textureSize).rgb,hdBlend);color*=v_shadow;float shadow=calcSoftshadow(v_worldPosition+vec3(0.,-0.003,0.),normalize(u_lightPosition-v_worldPosition),0.005,1.0,0.03);shadow=clamp(shadow+u_thermalRatio*0.5,0.0,1.0);color*=0.05+0.95*shadow*shadow;vec2 screenUv=gl_FragCoord.xy/u_resolution;vec3 reflection=pow(texture2D(u_reflectionTexture,screenUv).rgb,vec3(2.2));color+=reflection*(v_type>1.5 ? 0.65 : 1.)*(shadow*.8+.2);
+#endif
+float gobo=1.0;vec4 goboNdc=u_goboMatrix*vec4(v_worldPosition,1.);goboNdc/=goboNdc.w;vec2 goboUv=goboNdc.xy*0.5+0.5;if(u_goboOpacity>0.&&goboUv.x>=0.0&&goboUv.x<=1.0&&goboUv.y>=0.0&&goboUv.y<=1.0){gobo=sampleBlur(u_goboTexture,goboUv,vec2(1./512.),getGoboBlurRatio(goboNdc.z,u_goboParams)*2.,blueNoise.z).r;gobo=mix(1.0,gobo,u_goboOpacity);gobo=clamp(gobo+u_thermalRatio*0.5,0.0,1.0);}color*=0.35+0.65*mix(vec3(0.1,0.05,0.),vec3(1.),gobo);color=pow(color,vec3(1./2.2));gl_FragColor=vec4(color,0.);
+#include <taaJitteringFrag>
+}`;
+
+export const tableShadowVert = `#define GLSLIFY 1
+varying vec3 v_worldPosition;varying vec3 v_modelNormal;
+#include <taaJitteringVert>
+void main(){getTAAPositions(position,gl_Position,v_currentFramePosition,v_previousFramePosition);v_worldPosition=(modelMatrix*vec4(position,1.0)).xyz;v_modelNormal=normal;}`;
+
+export const tableShadowFrag = `#define GLSLIFY 1
+#include <linearstep>
+varying vec3 v_worldPosition;varying vec3 v_modelNormal;uniform sampler2D u_goboTexture;uniform mat4 u_goboMatrix;uniform float u_goboOpacity;uniform vec4 u_goboParams;uniform float u_thermalRatio;
+#include <getGoboBlurRatio>
+#include <taaJitteringFragPars>
+#include <getBlueNoise>
+#include <sampleBlur>
+void main(){vec3 modelNormal=normalize(v_modelNormal);vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);float gobo=1.0;vec4 goboNdc=u_goboMatrix*vec4(v_worldPosition,1.);goboNdc/=goboNdc.w;vec2 goboUv=goboNdc.xy*0.5+0.5;if(u_goboOpacity>0.&&goboUv.x>=0.0&&goboUv.x<=1.0&&goboUv.y>=0.0&&goboUv.y<=1.0){gobo=sampleBlur(u_goboTexture,goboUv,vec2(1./512.),getGoboBlurRatio(goboNdc.z,u_goboParams)*2.,blueNoise.z).r;gobo=mix(1.0,gobo,u_goboOpacity);gobo=clamp(gobo,0.0,1.0);}vec3 color=vec3(0.9,0.85,0.7);color*=mix(vec3(0.3,0.25,0.2),vec3(1.),gobo);color=pow(color,vec3(1./2.2));gl_FragColor=vec4(color,modelNormal.z*modelNormal.z*modelNormal.z*(1.-gobo)*0.5);
+#include <taaJitteringFrag>
+}`;
+
+export const gripOverlayVert = `#define GLSLIFY 1
+attribute vec2 position;uniform float u_aspect;uniform float u_zoom;uniform vec2 u_texelSize;varying vec2 v_uv;void main(){v_uv=position*vec2(u_aspect*.5,.5)*vec2(u_texelSize.x/u_texelSize.y,1.)+.5;vec2 pos=position;pos*=u_zoom;gl_Position=vec4(pos,0.,1.);}`;
+
+export const gripOverlayFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform float u_opacity;uniform vec2 u_texelSize;uniform float u_blurRadius;uniform float u_brightness;varying vec2 v_uv;
+#include <getBlueNoise>
+#include <sampleBlurSRGB>
+void main(){vec3 bnoise=getBlueNoise(gl_FragCoord.xy);float blurRadius=(smoothstep(0.3,0.05,v_uv.y)+smoothstep(0.35,0.8,v_uv.y)+smoothstep(0.5,0.6,abs(v_uv.x-.5))*2.)*u_blurRadius;vec3 color=sampleBlurSRGB(u_texture,v_uv,u_texelSize,blurRadius,bnoise.z).rrr;color*=u_brightness;gl_FragColor=vec4(pow(color,vec3(1./2.2)),u_opacity);}`;
+
+export const gripMicroVert = `#define GLSLIFY 1
+attribute vec3 position;uniform vec4 u_rect;uniform vec2 u_viewportResolution;uniform float u_offsetX;uniform float u_delayedOffsetX;uniform vec2 u_textureSize;uniform vec2 u_mouseOffset;uniform float u_uvBoxAspect;uniform float u_zoom;varying vec2 v_uv;varying vec2 v_screenUv;varying vec2 v_uvFrom;varying vec2 v_uvTo;void main(){vec2 pos=position.xy*.5+.5;v_uv=pos;pos=mix(u_rect.xy,u_rect.xy+u_rect.zw,pos)/u_viewportResolution;v_screenUv=pos.xy;pos=pos*2.-1.;gl_Position=vec4(pos,0.,1.0);vec2 baseUv=position.xy*.5*u_textureSize;baseUv.x*=u_textureSize.y/u_textureSize.x*u_uvBoxAspect;v_uvFrom=baseUv;v_uvFrom.x+=u_delayedOffsetX*5.*(u_textureSize.x-u_textureSize.y*u_uvBoxAspect)/2.;v_uvFrom/=u_textureSize;v_uvFrom+=u_mouseOffset*.5;v_uvFrom.y+=0.08;v_uvFrom/=u_zoom;v_uvFrom.y-=0.08;v_uvFrom+=.5;v_uvTo=baseUv;v_uvTo.x+=u_offsetX*5.*(u_textureSize.x-u_textureSize.y*u_uvBoxAspect)/2.;v_uvTo/=u_textureSize;v_uvTo+=u_mouseOffset*.5;v_uvTo.y+=0.08;v_uvTo/=u_zoom;v_uvTo.y-=0.08;v_uvTo+=.5;}`;
+
+export const gripMicroFrag = `#define GLSLIFY 1
+layout(location=1)out vec4 pc_fragVelocity;
+#define gl_FragVelocity pc_fragVelocity
+vec4 pack2HalfToRGBA(const in vec2 v){vec4 r=vec4(v.x,fract(v.x*255.0),v.y,fract(v.y*255.0));return vec4(r.x-r.y/255.0,r.y,r.z-r.w/255.0,r.w);}uniform sampler2D u_texture;uniform sampler2D u_sceneCacheTexture;uniform vec2 u_textureSize;uniform vec2 u_viewportResolution;uniform vec2 u_resolution;uniform float u_opacity;uniform float u_brightness;uniform vec4 u_rect;uniform vec2 u_mouseOffset;varying vec2 v_uv;varying vec2 v_uvFrom;varying vec2 v_uvTo;varying vec2 v_screenUv;
+#include <linearstep>
+#include <getBlueNoise>
+#include <sampleBlur>
+void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);float uvSBit=1./float(BLUR_SAMPLE);float t=uvSBit*blueNoise.z;vec3 color=vec3(0.);for(int i=0;i<BLUR_SAMPLE;i++){t+=uvSBit;vec2 uv=mix(v_uvFrom,v_uvTo,t);color+=texture2D(u_texture,uv).rgb;}color/=float(BLUR_SAMPLE);vec2 midUv=(v_uvFrom+v_uvTo)*.5;float edgeStrength=max(0.,abs(midUv.y-.5)-.5);vec3 edgeColor=sampleBlur(u_texture,midUv,1./u_textureSize,edgeStrength*u_textureSize.y*5.,blueNoise.x).rgb;color=mix(color,edgeColor,min(1.,edgeStrength*10.));color=vec3(mix(mix(color.r,color.g,linearstep(-0.5,0.,u_mouseOffset.x)),color.b,linearstep(0.,0.5,u_mouseOffset.x)));color*=u_brightness;vec3 sceneColor=pow(texture2D(u_sceneCacheTexture,v_screenUv).rgb,vec3(2.2));float alpha=min(u_opacity,1.-min(1.,edgeStrength*1.));color=mix(sceneColor,color,alpha);color=pow(color,vec3(1./2.2));gl_FragColor.rgb=color;gl_FragColor.a=u_opacity;gl_FragVelocity=pack2HalfToRGBA(vec2(0.5));}`;
+
+export const waterBearVert = `#define GLSLIFY 1
+attribute vec4 boneIndices;attribute vec4 boneWeights;attribute float Cd;attribute float thickness;uniform mat4 u_projectionMatrix;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_viewPosition;varying vec3 v_viewNormal;varying vec2 v_uv;varying float v_ao;varying float v_thickness;uniform sampler2D u_boneDataTexture;mat4 getBoneMatrix(float index){float uvT=(index+.5)/float(MAX_BONES);return mat4(texture2D(u_boneDataTexture,vec2(.125,uvT)),texture2D(u_boneDataTexture,vec2(.375,uvT)),texture2D(u_boneDataTexture,vec2(.625,uvT)),texture2D(u_boneDataTexture,vec2(.875,uvT)));}void main(){vec4 position4=vec4(position,1.0);vec4 skinnedPosition=vec4(0.0);mat4 boneMatrix0=getBoneMatrix(boneIndices.x);mat4 boneMatrix1=getBoneMatrix(boneIndices.y);mat4 boneMatrix2=getBoneMatrix(boneIndices.z);mat4 boneMatrix3=getBoneMatrix(boneIndices.w);skinnedPosition+=(boneMatrix0*position4)*boneWeights.x;skinnedPosition+=(boneMatrix1*position4)*boneWeights.y;skinnedPosition+=(boneMatrix2*position4)*boneWeights.z;skinnedPosition+=(boneMatrix3*position4)*boneWeights.w;vec3 pos=skinnedPosition.xyz;skinnedPosition=vec4(0.0);position4=vec4(position+normal*0.01,1.0);skinnedPosition+=(boneMatrix0*position4)*boneWeights.x;skinnedPosition+=(boneMatrix1*position4)*boneWeights.y;skinnedPosition+=(boneMatrix2*position4)*boneWeights.z;skinnedPosition+=(boneMatrix3*position4)*boneWeights.w;vec3 nor=normalize(skinnedPosition.xyz-pos);vec4 mvPosition=modelViewMatrix*vec4(pos,1.0);v_viewPosition=-mvPosition.xyz;v_modelPosition=pos;v_viewNormal=normalMatrix*nor;v_worldPosition=(modelMatrix*vec4(pos,1.0)).xyz;v_ao=Cd;v_thickness=thickness;v_uv=uv;gl_Position=u_projectionMatrix*mvPosition;}`;
+
+export const waterBearFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;varying vec3 v_modelPosition;varying vec3 v_worldPosition;varying vec3 v_viewPosition;varying vec3 v_viewNormal;varying vec2 v_uv;varying float v_ao;varying float v_thickness;
+#include <perturbNormalArb>
+void main(){if(v_worldPosition.z<-0.1&&v_worldPosition.y<-0.22){discard;}vec4 map=texture2D(u_texture,v_uv);vec3 N=normalize(v_viewNormal);float bumpScale=3.;vec2 dSTdx=dFdx(v_uv);vec2 dSTdy=dFdy(v_uv);vec2 dHdxy=(vec2(texture2D(u_texture,v_uv+dSTdx).r,texture2D(u_texture,v_uv+dSTdy).r)-map.r)*bumpScale;N=perturbNormalArb(-v_viewPosition,N,dHdxy,1.0);vec3 V=normalize(-v_viewPosition);vec3 R=reflect(V,N);float NdV=clamp(abs(dot(N,V)),0.001,1.0);float fresnel=pow(1.0-NdV,3.0);float smallPart=pow(1.-v_thickness,8.)*pow(1.-v_ao,5.);vec3 color=vec3(v_ao*0.025+smallPart*smoothstep(-0.5,1.,R.z)*0.975);color+=(1.-color)*fresnel*(.25+v_ao*.75);gl_FragColor=vec4(pow(color,vec3(1./2.2)),smoothstep(-0.1,0.2,v_worldPosition.z));gl_FragColor.rgb=1.-gl_FragColor.ggg;}`;
+
+export const waterBear2DVert = `#define GLSLIFY 1
+attribute vec2 a_instancePosition;attribute float a_instanceRotation;attribute vec2 a_instanceDirection;attribute vec2 a_uvOffsetX;attribute float a_spriteAspect;attribute float a_spriteScale;attribute vec3 a_collision;uniform float u_scale;uniform vec2 u_resolution;varying vec2 v_uv;varying vec2 v_uvOffsetX;varying vec3 v_test;float fit(float v,float a,float b,float c,float d){return c+(d-c)*((v-a)/(b-a));}
+#define PI 3.14159265358979323846
+void main(){vec2 impulse=a_collision.xy;float impulseRatio=a_collision.z;vec2 impulseDirection=normalize(impulse);vec2 centerUv=2.0*(uv-0.5);float prod=dot(centerUv,impulseDirection);float rotation=a_instanceRotation;vec2 aspect=vec2(u_resolution.x/u_resolution.y,1.0);vec2 pos=position.xy+0.025*sin(PI*impulseRatio)*(0.5+0.5*sin(4.0*PI*prod+32.0*impulseRatio))*impulseDirection;pos*=a_spriteScale*u_scale*vec2(a_spriteAspect,1.0);float wobble=pow(cos(0.5*PI*impulseRatio)*sin(8.0*PI*impulseRatio),2.0);pos*=1.0+0.12*vec2(wobble,-wobble);float c=cos(rotation);float s=sin(rotation);pos=vec2(pos.x*c-pos.y*s,pos.x*s+pos.y*c);pos/=aspect;pos+=a_instancePosition;gl_Position=vec4(pos,0.,1.);v_uv=uv;v_uvOffsetX=a_uvOffsetX;v_test=a_collision;}`;
+
+export const waterBear2DFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform float u_opacity;varying vec2 v_uv;varying vec2 v_uvOffsetX;varying vec3 v_test;float fit(float v,float a,float b,float c,float d){return c+(d-c)*((v-a)/(b-a));}
+#define PI 3.14159265358979323846
+void main(){float uvX=v_uvOffsetX.x+v_uv.x*(v_uvOffsetX.y-v_uvOffsetX.x);vec2 texCoord=vec2(uvX,v_uv.y);vec4 sprite=texture2D(u_texture,texCoord);float color=sprite.r;float mask=sprite.g;gl_FragColor.rgb=vec3(color)*mask;gl_FragColor.a=u_opacity*mask;}`;
