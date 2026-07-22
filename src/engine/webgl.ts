@@ -43,8 +43,12 @@ import { bindHeroScene, coaster } from './scenes/coaster';
 import { gobo } from './scenes/gobo';
 import { handScene } from './scenes/handScene';
 import { heroScene } from './scenes/heroScene';
+import { sketches } from './scenes/sketches';
 import { tableScene } from './scenes/tableScene';
 import { wearableScene } from './scenes/wearableScene';
+import { encryptionSection } from './sections/encryptionSection';
+import { featuresSection } from './sections/featuresSection';
+import { gripSection } from './sections/gripSection';
 import { wearableSection } from './sections/wearableSection';
 
 const DEFAULT_POST_PROFILE = new PostProfile();
@@ -111,6 +115,8 @@ class WebGLApp {
     this.scene.add(tableScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
+    sketches.preInit();
+    this.scene.add(sketches.container);
   }
 
   /** Source App.init + Visuals.init (ported subset, source order). */
@@ -124,9 +130,19 @@ class WebGLApp {
     wearableScene.init();
     tableScene.init();
     coaster.init();
+    sketches.init();
     wearableSection.preInit(document.documentElement);
     wearableSection.init();
     wearableSection.resize();
+    featuresSection.preInit(document.documentElement);
+    featuresSection.init();
+    featuresSection.resize();
+    encryptionSection.preInit(document.documentElement);
+    encryptionSection.init();
+    encryptionSection.resize();
+    gripSection.preInit(document.documentElement);
+    gripSection.init();
+    gripSection.resize();
     this.aiSection = document.getElementById('ai');
     this.heroSection = document.getElementById('hero');
     this.heroInner = this.heroSection?.querySelector('.section__inner') ?? null;
@@ -174,7 +190,12 @@ class WebGLApp {
     handScene.resize();
     wearableScene.resize(properties.width, properties.height);
     tableScene.resize(properties.width, properties.height);
-    if (properties.hasInitialized) wearableSection.resize();
+    if (properties.hasInitialized) {
+      wearableSection.resize();
+      featuresSection.resize();
+      encryptionSection.resize();
+      gripSection.resize();
+    }
   }
 
   /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
@@ -207,6 +228,7 @@ class WebGLApp {
     wearableScene.update(dt);
     tableScene.update(dt);
     coaster.update();
+    sketches.update(dt);
     // Source Visuals.update tail: tableScene/footerScene postUpdate after the
     // scene updates.
     tableScene.postUpdate(dt);
@@ -266,7 +288,12 @@ class WebGLApp {
       handScene.highlightRatio = postprocessing.appleEfx.amount =
         fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
     }
-    if (properties.hasInitialized) wearableSection.update(properties.deltaTime);
+    if (properties.hasInitialized) {
+      wearableSection.update(properties.deltaTime);
+      featuresSection.update(properties.deltaTime);
+      encryptionSection.update(properties.deltaTime);
+      gripSection.update(properties.deltaTime);
+    }
   }
 }
 

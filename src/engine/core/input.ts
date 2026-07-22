@@ -69,6 +69,8 @@ class Input {
   onClicked = new MinSignal<PointerEvent>();
   /** Source: dispatched on every pointerup. */
   onUped = new MinSignal<PointerEvent>();
+  /** Source: dispatched on every pointerdown. */
+  onDowned = new MinSignal<PointerEvent>();
 
   private downTarget: EventTarget | null = null;
   private downTime = 0;
@@ -143,6 +145,7 @@ class Input {
     this.downPixelXY.y = this.prevMovePixelXY.y = e.clientY;
     this.isDragScrollingX = false;
     this.isDragScrollingY = false;
+    this.onDowned.dispatch(e);
   }
 
   private _onMove(e: PointerEvent): void {

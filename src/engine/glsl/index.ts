@@ -711,3 +711,11 @@ export const waterBear2DFrag = `#define GLSLIFY 1
 uniform sampler2D u_texture;uniform float u_opacity;varying vec2 v_uv;varying vec2 v_uvOffsetX;varying vec3 v_test;float fit(float v,float a,float b,float c,float d){return c+(d-c)*((v-a)/(b-a));}
 #define PI 3.14159265358979323846
 void main(){float uvX=v_uvOffsetX.x+v_uv.x*(v_uvOffsetX.y-v_uvOffsetX.x);vec2 texCoord=vec2(uvX,v_uv.y);vec4 sprite=texture2D(u_texture,texCoord);float color=sprite.r;float mask=sprite.g;gl_FragColor.rgb=vec3(color)*mask;gl_FragColor.a=u_opacity*mask;}`;
+
+export const sketchesVert = `#define GLSLIFY 1
+attribute vec3 position;uniform mat4 u_mvp;varying vec2 v_uv;void main(){v_uv=position.xy*.5+.5;gl_Position=u_mvp*vec4(position,1.0);}`;
+
+export const sketchesFrag = `#define GLSLIFY 1
+uniform sampler2D u_texture;uniform sampler2D u_screenPaintTexture;uniform vec2 u_resolution;uniform vec3 u_mixer;uniform float u_opacity;uniform float u_activeRatio;uniform vec3 u_color;uniform float u_blur;varying vec2 v_uv;vec3 sampleBlur(sampler2D tex,vec2 uv,vec2 texelSize,float blurAmount,float n){const float G=2.39996323;float gc=cos(G);float gs=sin(G);mat2 rot=mat2(gc,gs,-gs,gc);float initialAngle=n*6.28318530718;vec2 uvOffset=vec2(5./512.,0.);vec2 d=vec2(cos(initialAngle),sin(initialAngle));float sn=1.0/sqrt(float(BLUR_SAMPLE));vec2 s=texelSize*blurAmount*sn;vec3 c=vec3(0.);for(int i=0;i<BLUR_SAMPLE;i++){float r=sqrt(float(i+1));vec2 o=d*r*s;vec3 masks=c+=vec3(dot(u_mixer,texture2D(u_texture,uv+o-uvOffset).rgb),dot(u_mixer,texture2D(u_texture,uv+o).rgb),dot(u_mixer,texture2D(u_texture,uv+o+uvOffset).rgb));d=rot*d;}return c/float(BLUR_SAMPLE);}
+#include <getBlueNoise>
+void main(){vec3 blueNoise=getBlueNoise(gl_FragCoord.xy);vec2 screenUv=gl_FragCoord.xy/u_resolution;vec4 screenPaint=texture2D(u_screenPaintTexture,screenUv);float paint=smoothstep(0.1,0.3,0.5*(screenPaint.z+screenPaint.w));vec3 masks=sampleBlur(u_texture,v_uv,vec2(1./512.),15.*min((1.-paint),u_blur),blueNoise.z)*2.;float alpha=max(u_opacity,paint*(0.5+u_opacity*0.5)*2.)*masks.g*u_activeRatio;vec3 color=mix(u_color,(u_color*masks*0.75+masks*0.25),paint);gl_FragColor=vec4(min(vec3(1.),color*(1.+paint)),alpha);}`;

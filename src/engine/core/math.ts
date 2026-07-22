@@ -47,3 +47,14 @@ export function unClampedFit(
   const t = fromMax === fromMin ? 0 : (v - fromMin) / (fromMax - fromMin);
   return mix(toMin, toMax, t);
 }
+
+// Source math.hash / math.loop (bundle math module).
+export function hash(v: number): number {
+  return fract(Math.sin(v) * 43758.5453123);
+}
+
+export function loop(v: number, min: number, max: number): number {
+  v -= min;
+  max -= min;
+  return (v < 0 ? (max - (Math.abs(v) % max)) % max : v % max) + min;
+}

@@ -285,6 +285,13 @@ export class TableScene {
     if (this.canFlip) this.isFlipped = !this.isFlipped;
   }
 
+  /** Source: passthrough to coaster.updateEncryptionText — the MSDF
+   * engraving lands with the CoasterText port. */
+  updateMsdfMessage(message: string): void {
+    const coasterWithText = coaster as unknown as { updateEncryptionText?: (m: string) => void };
+    coasterWithText.updateEncryptionText?.(message);
+  }
+
   get _isCurrFlipped(): boolean {
     return this.flipAnimation === 0 || this.flipAnimation > 1;
   }
