@@ -115,6 +115,13 @@ function bootStage2(): void {
   };
   window.addEventListener('resize', onResize);
   onResize();
+  // SplitText measures with whatever font is live at split time; if Halyard
+  // (Adobe Fonts) lands after the sections split, the fallback-metric line
+  // wrap stays frozen until a resize. Re-run the resize chain once fonts are
+  // ready — identical to the source's behavior on a window resize.
+  void document.fonts.ready.then(() => {
+    onResize();
+  });
 
   let lastTime = performance.now();
   const frame = (now: number): void => {
