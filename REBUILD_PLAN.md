@@ -182,9 +182,19 @@
   input.onDowned、math.hash/loop 补齐。
   验收:features 条目 1 + 咖啡杯架在杯垫上(lift 特写)、blurBox 面板、splat 道具
   清晰、相机沿 CAMERA_ANIM 推进——与源站一致。
+  已完成(2026-07-22 十三轮,commit 35784aa):**sustainability 集群 + 驱动**——
+  SustainabilityBg(gobo 平面背景)、SustainabilityBark(bend-roll 四元数顶点
+  变形的撕标签)、SustainabilityText(矢量文字 + 逐字 hash 错峰的虚线描边动画、
+  screen-paint 揭示、脉冲波)、SustainabilityScene(focal 50 相机预设、gobo_c、
+  bloom 2.5 profile)、SustainabilitySection + RiveAnimation(@rive-app/canvas
+  新依赖;harvesting/text 两块 Rive 画布 inview 启动/outview 重置)。
+  教训:新 section 必须同时接 preInit/init/resize/update 四处——漏接 preInit
+  导致帧循环在 undefined dom range 上抛异常(全新加载验收当场抓住)。
+  验收:sustainability hero 巨型标题 bloom 辉光、标注、暗色主题过渡。
   **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise、
-  coaster encryption MSDF(CoasterText)与背面材质、sustainability/stack/footer
-  场景、hero/AI section 完整 split-text、siteHeader/siteFooter/videoOverlay
+  coaster encryption MSDF(CoasterText)与背面材质、stack/footer 场景、
+  product/testimonies/socialContent/openWeight section、hero/AI 完整 split-text、
+  siteHeader/siteFooter/videoOverlay
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
