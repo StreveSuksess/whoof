@@ -4,7 +4,7 @@
 // (image filled on load), matching how the source's scene preInits consume
 // `loader.add(...).content` synchronously. Per-extension parsers cover .buf.
 
-import { LinearFilter, LinearMipMapLinearFilter, Texture } from 'three';
+import { LinearFilter, LinearMipMapLinearFilter, RedFormat, RGFormat, Texture } from 'three';
 import type { MagnificationTextureFilter, MinificationTextureFilter, Wrapping } from 'three';
 import { properties } from './properties';
 
@@ -20,7 +20,7 @@ export interface LoadOptions {
   wrapS?: Wrapping;
   wrapT?: Wrapping;
   colorSpace?: string;
-  /** three.js UV channel index for the texture (source passes channel: 1). */
+  /** Channel COUNT for the texture (source TextureItem: 1 → R8, 2 → RG8). */
   channel?: number;
   onLoad?: (content: unknown) => void;
 }
@@ -49,12 +49,12 @@ export class Loader {
     this.parsers.set(extension, parser);
   }
 
-  add(url: string, options: LoadOptions = {}): LoaderItem {
+  private _createItem(url: string, options: LoadOptions): LoaderItem | null {
     if (options.autoMobile && properties.isMobile) {
       url = properties.getMobileUrl(url);
     }
     const existing = this.byUrl.get(url);
-    if (existing) return existing;
+    if (existing) return null;
     const item: LoaderItem = {
       url,
       options,
@@ -69,12 +69,45 @@ export class Loader {
       if (options.magFilter) tex.magFilter = options.magFilter;
       if (options.wrapS) tex.wrapS = options.wrapS;
       if (options.wrapT) tex.wrapT = options.wrapT;
-      if (options.channel !== undefined) tex.channel = options.channel;
+      // Source TextureItem: `channel` is the CHANNEL COUNT (pretty 29992-29993)
+      // — 1 → R8, 2 → RG8 (colorless textures only).
+      if (options.channel !== undefined && options.channel < 3) {
+        if (options.channel === 1) {
+          tex.format = RedFormat;
+          tex.internalFormat = 'R8';
+        } else if (options.channel === 2) {
+          tex.format = RGFormat;
+          tex.internalFormat = 'RG8';
+        }
+      }
       tex.generateMipmaps = MIPMAP_FILTERS.includes(tex.minFilter as number);
       item.content = tex;
     }
-    this.byUrl.set(url, item);
+    this.byUrl.set(item.url, item);
+    return item;
+  }
+
+  add(url: string, options: LoadOptions = {}): LoaderItem {
+    const item = this._createItem(url, options);
+    if (!item) {
+      const key =
+        options.autoMobile && properties.isMobile ? properties.getMobileUrl(url) : url;
+      return this.byUrl.get(key)!;
+    }
     this.queue.push(item);
+    return item;
+  }
+
+  /** Source loader.load: bypasses the preload queue and loads immediately
+   * (used by scene init() code after the preload round). */
+  load(url: string, options: LoadOptions = {}): LoaderItem {
+    const item = this._createItem(url, options);
+    if (!item) {
+      const key =
+        options.autoMobile && properties.isMobile ? properties.getMobileUrl(url) : url;
+      return this.byUrl.get(key)!;
+    }
+    void this._loadItem(item);
     return item;
   }
 

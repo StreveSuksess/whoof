@@ -9,6 +9,8 @@ import { preloader } from './Preloader';
 import { properties } from './core/properties';
 import { scrollManager } from './core/ScrollPane';
 import { parseBuf } from './BufLoader';
+import { parseSog } from './SogLoader';
+import { Splats } from './Splats';
 import { initSections, updateSections } from './sections';
 import { webglApp, _pp } from './webgl';
 
@@ -25,6 +27,7 @@ function setStateClasses(): void {
 
 function preInit(): void {
   loader.registerParser('buf', (buffer) => parseBuf(buffer));
+  loader.registerParser('sog', (buffer) => parseSog(buffer));
   webglApp.initEngine();
   webglApp.preInit();
 }
@@ -110,6 +113,7 @@ function bootStage2(): void {
     (window as never as Record<string, unknown>).__pp = _pp;
     (window as never as Record<string, unknown>).__props = properties;
     (window as never as Record<string, unknown>).__app = webglApp;
+    (window as never as Record<string, unknown>).__Splats = Splats;
     input.update(dt);
     scrollManager.update(dt);
     preloader.update(dt);
