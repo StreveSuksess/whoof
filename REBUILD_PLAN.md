@@ -209,8 +209,22 @@
   验收(全新加载):testimonies 杯垫悬浮 + halo 光晕、product hero 选项点击
   PRO/PRO MAX 二/三层堆叠 + 层间 AO、红色霓虹 sketch 环绕、compare 表滚入、
   encryption 翻面刻字凹痕 + SDF 软阴影,零控制台报错。
+  已完成(2026-07-22 十五轮,commit 31c8ee4):**footer 集群 + social/openWeight/
+  footer 驱动**——AboutHeroLightField(32×16×16 切片光体积:MAX 混合点注入、
+  时域衰减 slice blend、逐帧清 drawn-slice;发现源站 rt.format=R8 是写在 RT
+  对象上的死赋值,按原样镜像为 no-op)、Particles(咖啡豆漂移螺旋路径:
+  curve+spiral 求值、路径吸附/漂移、鼠标平面推力、两两接触解算、slerp 朝向,
+  写入 position/rotation DataTexture;实例化豆子 mesh + light-field Points)、
+  FooterScene(bokeh profile 混合、相机钉在 (0,.4,.45))、SocialSection
+  (横滑轨道 clip 生长、逐项视差、进度点、移动端分页分支)、OpenWeightSection
+  (bibtex blurBox)、FooterSection + NewsletterForm(Mailchimp post-json
+  JSONP、love 按钮剪贴板交换)。GLSL 六段逐字提取。
+  教训:标签页 hidden 时 Chrome 把 rAF 节流到 0,帧循环"卡死"是环境问题不是
+  代码问题——已改用 puppeteer-core(devDep)无头验证兜底,headless 下
+  hasStarted/startTime 门槛 + 三段截图 + 零控制台错误。
+  验收(无头全新加载):social 轨道 "Always On" 项 + 前后项探出、open-weight
+  论文段 bibtex 面板、footer 咖啡豆粒子流(鼠标光照)+ newsletter 表单。
   **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise、
-  footer 场景(咖啡粒子 + lightField/Bokeh)、socialContent/openWeight section、
   hero/AI 完整 split-text、siteHeader/siteFooter/videoOverlay
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
