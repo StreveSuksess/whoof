@@ -191,10 +191,27 @@
   教训:新 section 必须同时接 preInit/init/resize/update 四处——漏接 preInit
   导致帧循环在 undefined dom range 上抛异常(全新加载验收当场抓住)。
   验收:sustainability hero 巨型标题 bloom 辉光、标注、暗色主题过渡。
+  已完成(2026-07-22 十四轮,commit 43f529f):**stack 场景 + product/testimonies
+  驱动 + MSDF 刻字**——Coaster 补全:materialEncryption(背面 SDF 软阴影 raymarch +
+  u_textMap 刻字)、materialStack 三件套(mesh/meshPro/meshProMax 各持独立
+  coasterStackFrag 实例、层间 neighboorTop/BottomAo)、stackedSharedUniforms
+  (halo/blendEnv/双补光)、oryzoProRatio/Max 堆叠位移(step .016/gap .005/lift .35)。
+  CoasterText:1024×128 RT + 正交相机 zoom 5.5,MSDF 材质输出 RG bump 梯度 +
+  B 覆盖度;几何用 npm three-msdf-text-utils(bundle 即 vendored 同库),
+  Inter.json/webp 走 loader 新增 json 类型。StackScene:stack_camera.buf
+  (2240×1260)、fold-up(PI/2→0)+ 绕 (1,1,1) 三圈翻滚、bg 取景/清色混合、
+  STACK.webp image-based 叠加、bloom 6 profile。Section 基类(13046)+
+  ProductSection(选项三态 onOptionChanged、details 标题/描述/extra 逐字
+  choreography、sketch 环绕轨道复用)+ TestimoniesSection(评论表逐条淡入、
+  o-dashline 书夹、hero mask:chars 逐字)。接线顺序:场景在 sustainability
+  之后 coaster 之前;section 更新 testimonies 先于 product(product 覆写
+  stackScene.animation)。
+  验收(全新加载):testimonies 杯垫悬浮 + halo 光晕、product hero 选项点击
+  PRO/PRO MAX 二/三层堆叠 + 层间 AO、红色霓虹 sketch 环绕、compare 表滚入、
+  encryption 翻面刻字凹痕 + SDF 软阴影,零控制台报错。
   **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise、
-  coaster encryption MSDF(CoasterText)与背面材质、stack/footer 场景、
-  product/testimonies/socialContent/openWeight section、hero/AI 完整 split-text、
-  siteHeader/siteFooter/videoOverlay
+  footer 场景(咖啡粒子 + lightField/Bokeh)、socialContent/openWeight section、
+  hero/AI 完整 split-text、siteHeader/siteFooter/videoOverlay
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
