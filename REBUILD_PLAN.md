@@ -171,10 +171,20 @@
   发现并保真:源站 mipFilter 是 TextureItem 死参数(仅 magFilter 生效)。
   验收:桌面 + 洞洞板 + gobo 光影 + **splat 道具(手柄/键盘)実渲染** + 咖啡杯
   落桌,scissor 裁剪在 wearable 框内,零控制台报错——M2.4 像素级验收一并完成。
+  已完成(2026-07-22 十二轮,commit 5b47311):**features/encryption/grip section
+  驱动 + Sketches**——FeaturesSection(三条目逐字符/逐行 split-text、温度滑块、
+  blurBox 锚定、animation 4..6 交接)、FeaturesCurveCanvas(四分之一圆贝塞尔缓存 +
+  Illustrator 控制柄、logo 双 O 分裂)、FeaturesSectionCurve(环绕 sketches 编排:
+  缓动鼠标斥力、循环透明度/模糊)、Sketches(6 张加色混合草图卡,screen-paint 蒙版)、
+  EncryptionSection(字符模糊入场、输入框线框 + blurBox、翻面按钮/聚焦联动、
+  反向滚动重置输入、animation 7..8)、GripSection(可拖拽 zoom box 弹回 + 弧线下坠、
+  鼠标视差入显微条带、摩擦系数 math.hash 读数、拖拽累计激活水熊、animation 9..10)。
+  input.onDowned、math.hash/loop 补齐。
+  验收:features 条目 1 + 咖啡杯架在杯垫上(lift 特写)、blurBox 面板、splat 道具
+  清晰、相机沿 CAMERA_ANIM 推进——与源站一致。
   **剩余(均为源站有、尚未移植)**:wearable 的 gallery DOM/magazine/rise、
-  coaster encryption MSDF 文字与背面材质、features/encryption/grip section DOM
-  驱动(animation 3..10 段)、sustainability/stack/footer 场景、sketches、
-  全站 split-text 编排、siteHeader/siteFooter
+  coaster encryption MSDF(CoasterText)与背面材质、sustainability/stack/footer
+  场景、hero/AI section 完整 split-text、siteHeader/siteFooter/videoOverlay
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
