@@ -239,8 +239,14 @@
   验收(无头全新加载):hero 的 header 导航下划线 + SCROLL TO CONTINUE +
   视频按钮、AI 段 LMS 彩虹辉光 + 手模、gallery 中段 + 左右缩略条、RISE 刊头
   被咖啡杯正确遮挡 + 杂志文案条码,零控制台错误。
-  **剩余**:核对 mobile 布局分支、letterFlippers(30367 提及)等零星站点
-  细节;像素级比对与打磨(阶段 4)
+  已完成(2026-07-22 十七轮,commit 4b1a37b):**LetterFlippers 悬停翻字**——
+  每个 SplitText 字符 mask 内叠一份复制字符(top:100%),悬停整组上翻 100%、
+  逐字 backOut 错峰、方向跟随指针 x 增量;ui.init 注册全部 19 个 .is-flipper,
+  ui 循环在 videoOverlay 之后更新。input 补 currThroughElems(指针目标祖先链,
+  源 _setThroughElementsByEvent)。
+  验收(无头):19/19 注册、悬停 footer 链接 flipRatio 0→1、双层字符生成、
+  CONTACT 导航态 + LUSION.CO 按钮辉光,零控制台错误。
+  **剩余**:核对 mobile 布局分支;像素级比对与打磨(阶段 4)
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
