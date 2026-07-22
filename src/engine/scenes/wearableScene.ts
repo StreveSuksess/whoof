@@ -1,6 +1,5 @@
 // 1:1 port of the source WearableScene (pretty 20259-20313): the condom
 // tear-off choreography around the coaster, driven by the wearable section's
-// animation value (0..6). The wearableRise magazine overlay lands with the
 // table cluster (it reads tableCoffee state).
 
 import { Euler, Matrix4, Object3D, Quaternion, Vector3, Vector4 } from 'three';
@@ -16,6 +15,7 @@ import { PostProfile } from '../post/PostProfile';
 import { coaster } from './coaster';
 import { wearableCondom } from './wearableCondom';
 import { wearableFrame } from './wearableFrame';
+import { wearableRise } from './wearableRise';
 import { wearableText } from './wearableText';
 
 // Source module state (pretty 20259-20274).
@@ -60,16 +60,19 @@ export class WearableScene {
     coasterAnimation.preInit(coasterDummy, settings.MODEL_PATH + 'wearable/coaster_first.buf');
     wearableFrame.preInit();
     this.container3d.add(wearableFrame.container);
-    // wearableRise.preInit lands with the table cluster (magazineLayer scene).
+    wearableRise.preInit();
+    postprocessing.magazineLayer.scene.add(wearableRise.container);
   }
 
   init(): void {
     wearableText.init();
     wearableCondom.init();
     wearableFrame.init();
+    wearableRise.init();
   }
 
-  resize(_width: number, _height: number): void {
+  resize(width: number, height: number): void {
+    wearableRise.resize(width, height);
     _forceHasMoved = true;
   }
 
@@ -130,6 +133,7 @@ export class WearableScene {
           .copy(this.clipScissor)
           .multiplyScalar(properties.width / properties.viewportWidth);
       }
+      wearableRise.preUpdate(dt);
     }
     coaster.sharedUniforms.u_zoom.value = zoom;
     const condomRatio = fit(t, 0.3, 1, 0, 1) * fit(t, 1, 2, 1, 0);
@@ -140,6 +144,7 @@ export class WearableScene {
     if (properties.useMobileLayout) {
       cameraControls.zoom = fit(t, 0, 1, cameraControls.zoom, this.frameZoom);
     }
+    postprocessing.magazineLayer.enabled = wearableRise.isActive;
   }
 
   update(dt: number): void {
@@ -151,6 +156,7 @@ export class WearableScene {
       wearableText.update(dt);
       wearableCondom.update(dt);
       wearableFrame.update(dt);
+      wearableRise.update(dt);
     }
   }
 }

@@ -7,6 +7,7 @@ import { ease } from '../core/ease';
 import { clamp, fit, mix, saturate } from '../core/math';
 import { properties } from '../core/properties';
 import { scrollManager } from '../core/ScrollPane';
+import { siteFooter } from '../SiteFooter';
 import { Section } from './Section';
 
 type SocialItem = HTMLElement & {
@@ -152,9 +153,9 @@ export class SocialSection extends Section {
       for (let i = 0; i < _domProgressItems.length; i++) {
         _domProgressItems[i].classList.toggle('is-active', i === activeIndex);
       }
-      // siteFooter.setScroll('right'|'center', 0, ratio) with
-      // fit(r,.9,1.4,0,1)*fit(o,-1.5,-1,1,0) lands with the site chrome.
-      void o;
+      const scrollRatio = fit(r, 0.9, 1.4, 0, 1) * fit(o, -1.5, -1, 1, 0);
+      if (useMobileLayout) siteFooter.setScroll('right', 0, scrollRatio);
+      else siteFooter.setScroll('center', 0, scrollRatio);
     }
     _hasResized = false;
   }

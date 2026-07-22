@@ -49,6 +49,8 @@ import { stackScene } from './scenes/stackScene';
 import { sustainabilityScene } from './scenes/sustainabilityScene';
 import { tableScene } from './scenes/tableScene';
 import { wearableScene } from './scenes/wearableScene';
+import { heroSection } from './sections/heroSection';
+import { aiSection } from './sections/aiSection';
 import { encryptionSection } from './sections/encryptionSection';
 import { featuresSection } from './sections/featuresSection';
 import { gripSection } from './sections/gripSection';
@@ -59,16 +61,13 @@ import { productSection } from './sections/productSection';
 import { openWeightSection } from './sections/openWeightSection';
 import { footerSection } from './sections/footerSection';
 import { wearableSection } from './sections/wearableSection';
+import { siteFooter } from './SiteFooter';
+import { siteHeader } from './SiteHeader';
 
 const DEFAULT_POST_PROFILE = new PostProfile();
 
 class WebGLApp {
   scene = new Scene();
-  private aiSection: HTMLElement | null = null;
-  private heroSection: HTMLElement | null = null;
-  private heroInner: Element | null = null;
-  private heroCard: HTMLElement | null = null;
-  private wearableSection: HTMLElement | null = null;
 
   /** Source App.initEngine (renderer/chunk/helpers) — needs the canvas. */
   initEngine(): void {
@@ -149,6 +148,12 @@ class WebGLApp {
     footerScene.init();
     coaster.init();
     sketches.init();
+    heroSection.preInit(document.documentElement);
+    heroSection.init();
+    heroSection.resize(properties.width, properties.height);
+    aiSection.preInit(document.documentElement);
+    aiSection.init();
+    aiSection.resize(properties.width, properties.height);
     wearableSection.preInit(document.documentElement);
     wearableSection.init();
     wearableSection.resize();
@@ -179,11 +184,6 @@ class WebGLApp {
     footerSection.preInit(document.documentElement);
     footerSection.init();
     footerSection.resize(properties.width, properties.height);
-    this.aiSection = document.getElementById('ai');
-    this.heroSection = document.getElementById('hero');
-    this.heroInner = this.heroSection?.querySelector('.section__inner') ?? null;
-    this.heroCard = document.getElementById('hero-card');
-    this.wearableSection = document.getElementById('wearable');
   }
 
   resize(): void {
@@ -227,6 +227,8 @@ class WebGLApp {
     wearableScene.resize(properties.width, properties.height);
     tableScene.resize(properties.width, properties.height);
     if (properties.hasInitialized) {
+      heroSection.resize(properties.width, properties.height);
+      aiSection.resize(properties.width, properties.height);
       wearableSection.resize();
       featuresSection.resize();
       encryptionSection.resize();
@@ -288,59 +290,18 @@ class WebGLApp {
     properties.tick++;
   }
 
-  /**
-   * Stand-in for the not-yet-ported DOM section classes, feeding the scene
-   * singletons exactly as the source sections do:
-   * - HeroSection.update (pretty 21205-21206): heroScene.activeRatio from the
-   *   hero container's hideScreenOffset; isActive = activeRatio > 0
-   * - AiSection.update (pretty 21368): handScene ratios from the AI
-   *   container's showScreenOffset
-   * - WearableScene.preUpdate (pretty 20296): coaster.isActive = t <= 3
-   */
+  /** Source HomePage.update (pretty 29298-29300): per-frame chrome defaults,
+   * then every section in order. blurBox resets first (pagesManager.update,
+   * pretty 29496). */
   private updateSectionDriving(): void {
-    // Source pagesManager.update (pretty 29496): blurBox resets before the
-    // section updates re-anchor it each frame.
     blurBox.reset();
-    if (this.heroSection) {
-      const heroRange = scrollManager.getDomRange(this.heroSection);
-      const l = (heroScene.activeRatio = fit(heroRange.hideScreenOffset, -1, -0.5, 1, 0));
-      heroScene.isActive = l > 0;
-      // HeroSection.update tail (pretty 21257): logo choreography also flips
-      // the scroll indicator into its button state while the hero is active.
-      scrollManager.isBtn = l > 0.99;
-      // HeroSection.update blurBox block (pretty 21210-21215): the hero card
-      // backdrop blur/tint, anchored to #hero-card each frame while active.
-      if (heroScene.isActive && this.heroInner && this.heroCard) {
-        const startTime = properties.startTime;
-        const innerRange = scrollManager.getDomRange(this.heroInner);
-        const cardRange = scrollManager.getDomRange(this.heroCard);
-        const b = fit(startTime, 0.5, 1, -properties.paddingX, 0, ease.cubicOut);
-        blurBox.anchor(cardRange);
-        blurBox.x += b;
-        blurBox.outline = 1;
-        blurBox.y = cardRange.screenY - innerRange.screenY;
-        blurBox.color.setStyle('#FFEDD6');
-        const S = fit(l * 1.5, 0, 1, 0, 1) * fit(startTime, 0.5, 1.5, 0, 1);
-        const A = fit(l * 1.5, 0.5, 1.5, 0, 1) * fit(startTime, 1, 2, 0, 1);
-        blurBox.colorAlphaA = 0.15 * S;
-        blurBox.colorAlphaB = 0.15 * A;
-        blurBox.blurRadiusA = 0.08 * S;
-        blurBox.blurRadiusB = 0.08 * A;
-        blurBox.posB.set(cardRange.width, 0);
-      }
-    }
-    if (this.aiSection) {
-      const r = scrollManager.getDomRange(this.aiSection).showScreenOffset;
-      const aiActive = scrollManager.getDomRange(this.aiSection).isActive;
-      handScene.animationRatio = fit(r, 0, 5.5, 0, 1);
-      handScene.fingersActiveRatio = fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
-      handScene.handOpacity = fit(r, 8, 9, 1, 0);
-      handScene.isActive =
-        aiActive || handScene.animationRatio === 0 || handScene.handOpacity > 0;
-      handScene.highlightRatio = postprocessing.appleEfx.amount =
-        fit(r, 5.5, 6, 0, 1) * fit(r, 7.5, 8, 1, 0);
-    }
     if (properties.hasInitialized) {
+      siteHeader.changeNav('hero');
+      siteHeader.setTheme('dark');
+      siteFooter.setScroll('left', 0, 0);
+      siteFooter.setTheme('dark');
+      heroSection.update(properties.deltaTime);
+      aiSection.update(properties.deltaTime);
       wearableSection.update(properties.deltaTime);
       featuresSection.update(properties.deltaTime);
       encryptionSection.update(properties.deltaTime);

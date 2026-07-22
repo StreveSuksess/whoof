@@ -1,9 +1,7 @@
-// Port of the source WearableSection.update (pretty 21430-21508), covering
-// every target ported so far: wearableScene animation chain (incl. the
-// gallery index math), wearableText rect choreography, frame/scene clip
-// rects, section canvas and the split-char title. The gallery item DOM
-// transforms, wearableMagazine, tableScene handoff and siteFooter scroll
-// land with their clusters.
+// 1:1 port of the source WearableSection (pretty 21430-21508): wearableScene
+// animation chain, gallery index driving, wearableText rect choreography,
+// frame/scene clip rects, magazine frame handoff, section canvas, split-char
+// title and the siteFooter scroll indicator.
 
 import { SplitText } from 'gsap/SplitText';
 import { gsap } from 'gsap';
@@ -14,7 +12,10 @@ import { scrollManager } from '../core/ScrollPane';
 import { handScene } from '../scenes/handScene';
 import { tableScene } from '../scenes/tableScene';
 import { wearableFrame } from '../scenes/wearableFrame';
+import { wearableGallery } from '../scenes/wearableGallery';
+import { wearableMagazine } from '../scenes/wearableMagazine';
 import { wearableScene } from '../scenes/wearableScene';
+import { siteFooter } from '../SiteFooter';
 import { wearableText } from '../scenes/wearableText';
 import { wearableSectionCanvas } from './wearableSectionCanvas';
 
@@ -28,7 +29,6 @@ let _domCopyTitle1: HTMLElement;
 let _domCopyTitle1SplitText: SplitText;
 let _domCopyTitle2: HTMLElement;
 let _domMain: Element;
-let _galleryItemCount = 0;
 
 export class WearableSection {
   preInit(root: Element): void {
@@ -44,8 +44,9 @@ export class WearableSection {
     });
     _domCopyTitle2 = _domContainer.querySelector('#wearable-title span:last-child') as HTMLElement;
     _domMain = _domContainer.querySelector('#wearable-main') as Element;
-    _galleryItemCount = _domContainer.querySelectorAll('.wearable-gallery-item').length;
     wearableSectionCanvas.preInit(root);
+    wearableGallery.preInit(root);
+    wearableMagazine.preInit(root);
   }
 
   init(): void {
@@ -55,6 +56,8 @@ export class WearableSection {
   resize(): void {
     _domCopyTitle1SplitText.split({ type: 'chars', autoSplit: false, mask: 'chars' });
     wearableSectionCanvas.resize();
+    wearableGallery.resize();
+    wearableMagazine.resize();
   }
 
   update(dt: number): void {
@@ -74,10 +77,12 @@ export class WearableSection {
     const titleWrapperRange = scrollManager.getDomRange(_domCopyTitleWrapper);
     const title2Range = scrollManager.getDomRange(_domCopyTitle2);
     const mainRange = scrollManager.getDomRange(_domMain);
-    // WearableGallery index math (pretty 21459) — item DOM animation joins
-    // with the gallery port; the index itself drives the scene animation.
-    const rawIndex = unClampedFit(r, 5.5, 10.75, 0, 7);
-    const galleryIndex = Math.floor(rawIndex) + fit(rawIndex % 1, 0.1, 0.9, 0, 1, ease.sineInOut);
+    wearableGallery.rawIndex = unClampedFit(r, 5.5, 10.75, 0, 7);
+    wearableGallery.index =
+      Math.floor(wearableGallery.rawIndex)
+      + fit(wearableGallery.rawIndex % 1, 0.1, 0.9, 0, 1, ease.sineInOut);
+    wearableGallery.update(dt);
+    const galleryIndex = wearableGallery.index;
     const b = mainRange.width;
     const S = mainRange.height;
     const A = -Math.max(0, galleryIndex) * b;
@@ -87,9 +92,10 @@ export class WearableSection {
     if (isActive) {
       const N = fit(r, 3.25, 4.75, 0, 1);
       const U = titleWrapperRange.screenY + titleWrapperRange.height - innerRange.screenY;
-      // Source subtracts wearableGallery.thumbItemHeight / 2 here; the thumb
-      // strip DOM is created by the gallery port (pending).
-      const k = properties.viewportHeight / 2 - title2Range.height / 6;
+      const k =
+        properties.viewportHeight / 2
+        - wearableGallery.thumbItemHeight / 2
+        - title2Range.height / 6;
       const G = fit(N, 0, 1, 0, -Math.max(0, U - k));
       const L =
         innerRange.height / 2
@@ -153,15 +159,13 @@ export class WearableSection {
       wearableText.shrinkRatio = N;
       wearableText.opacity = 1 - Q;
       if (useMobileLayout) wearableText.rectTo.copy(wearableText.rectFrom);
-      // siteFooter.setScroll (pretty 21494) lands with the site footer port.
+      const scrollRatio = showRatio * (1 - hideRatio);
+      if (useMobileLayout) siteFooter.setScroll('right', 0, scrollRatio);
+      else siteFooter.setScroll('center', 0, scrollRatio);
     }
-    const itemCount = _galleryItemCount;
+    const itemCount = wearableGallery.itemList.length;
     if (galleryIndex > itemCount - 2) {
-      // tableScene from-view-offset handoff (pretty 21497-21504);
-      // wearableMagazine.frameX/Y joins with the magazine port.
-      // wearableGallery.offsetX = clamp(index, 0, count-1) * itemWidth.
-      const offsetX = Math.max(0, Math.min(galleryIndex, itemCount - 1)) * b;
-      const N = Math.max(0, Math.min(b, b * (itemCount - 1) - offsetX));
+      const N = Math.max(0, Math.min(b, b * (itemCount - 1) - wearableGallery.offsetX));
       const U = mainRange.screenY - innerRange.screenY;
       const k = mainRange.screenY + S - innerRange.screenY;
       const G = N + mainRange.screenX;
@@ -169,6 +173,8 @@ export class WearableSection {
       tableScene.fromViewOffsetX = (G + b / 2) / properties.viewportWidth - 0.5;
       tableScene.fromViewOffsetY = D;
       tableScene.clipScissor.set((G + L) / 2, (U + k) / 2, L - G, S);
+      wearableMagazine.frameX = G;
+      wearableMagazine.frameY = M;
     }
     let E = fit(r, 0.5, 1.5, 0, 1);
     E = fit(r, 1.5, 3, E, 2);
@@ -188,6 +194,7 @@ export class WearableSection {
     wearableSectionCanvas.scaleRatio = fit(r, 2.2, 3.4, 0, 1, ease.cubicInOut);
     wearableSectionCanvas.scaleRatio2 = fit(r, 2.3, 3.5, 0, 1, ease.cubicInOut);
     wearableSectionCanvas.update(dt);
+    wearableMagazine.update(dt);
   }
 }
 

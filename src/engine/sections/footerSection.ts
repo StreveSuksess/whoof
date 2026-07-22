@@ -7,6 +7,7 @@
 import { fit } from '../core/math';
 import { scrollManager } from '../core/ScrollPane';
 import { footerScene } from '../scenes/footerScene';
+import { siteHeader } from '../SiteHeader';
 import { Section } from './Section';
 
 // Source jsonp package (pretty 29168-29195), single-use subset.
@@ -196,8 +197,7 @@ export class FooterSection extends Section {
     const range = scrollManager.getDomRange(this.domContainer);
     const hide = range.hideScreenOffset;
     footerScene.activeRatio = fit(hide, -2, -1, 0, 1);
-    // siteHeader.changeNav('footer') at showScreenOffset > 0 lands with the
-    // site chrome.
+    if (range.showScreenOffset > 0) siteHeader.changeNav('footer');
   }
 }
 

@@ -2,7 +2,6 @@
 // 28000-28131): scene activation/animation map, hero tagline/title/desc
 // split-text with theme color transition, per-item char reveals, Rive
 // harvesting/text illustration canvases with in/out-view start/reset.
-// siteHeader/siteFooter theme + scroll calls land with the site chrome.
 
 import { Alignment, Fit, Layout, Rive } from '@rive-app/canvas';
 import { SplitText } from 'gsap/SplitText';
@@ -11,6 +10,8 @@ import { ease } from '../core/ease';
 import { fit } from '../core/math';
 import { properties } from '../core/properties';
 import { scrollManager } from '../core/ScrollPane';
+import { siteFooter } from '../SiteFooter';
+import { siteHeader } from '../SiteHeader';
 import {
   sustainabilityBg,
   sustainabilityScene,
@@ -197,8 +198,11 @@ export class SustainabilitySection {
     const heroVisible = r >= 1.8 && o < 0;
     _domHero.style.visibility = heroVisible ? 'visible' : 'hidden';
     _domContainer.style.backgroundColor = r > 6 ? '#ffedd7' : 'transparent';
-    // siteFooter.setScroll (r > 4.5, pretty 28090-28093) lands with the
-    // site chrome.
+    if (r > 4.5) {
+      const scrollRatio = fit(r, 4.5, 5, 1, 0);
+      if (useMobileLayout) siteFooter.setScroll('right', 0, scrollRatio);
+      else siteFooter.setScroll('center', 0, scrollRatio);
+    }
     if (heroVisible) {
       const taglineShow = fit(r, 1.8, 2.5, 0, 1);
       _domHeroTagline.style.transform = `translateY(${fit(taglineShow, 0, 1, -1, 0, ease.cubicOut)}em)`;
@@ -217,8 +221,10 @@ export class SustainabilitySection {
         char.style.transform = `translate3d(0,${(1 - reveal) * 0.5}em, 0)`;
         char.style.opacity = String(fit(reveal, 0, 1, 0, 1));
       }
-      // siteHeader/siteFooter.setTheme('light') (pretty 28107) lands with
-      // the site chrome.
+      if (r > 3.3 && o * properties.viewportHeight + 40 < 0) {
+        siteHeader.setTheme('light');
+        siteFooter.setTheme('light');
+      }
       for (let i = 0, count = _domItemList.length; i < count; i++) {
         const item = _domItemList[i];
         const itemOffset =

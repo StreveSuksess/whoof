@@ -8,6 +8,7 @@ import { fit } from '../core/math';
 import { properties } from '../core/properties';
 import { scrollManager } from '../core/ScrollPane';
 import { stackScene } from '../scenes/stackScene';
+import { siteHeader } from '../SiteHeader';
 import { Section } from './Section';
 
 class TestimoniesStars {
@@ -140,7 +141,7 @@ export class TestimoniesSection extends Section {
   update(dt: number): void {
     super.update(dt);
     const r = scrollManager.getDomRange(_domContainer).showScreenOffset;
-    // siteHeader.changeNav('testimonies') at r > .5 lands with the site chrome.
+    if (r > 0.5) siteHeader.changeNav('testimonies');
     stackScene.animation = fit(r, 0, 1, 0, 1);
     stackScene.isActive = stackScene.animation > 0;
     stackScene.viewOffsetY = fit(r, 0, 1, 1, 0);

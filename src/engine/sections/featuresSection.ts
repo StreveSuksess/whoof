@@ -2,7 +2,6 @@
 // FeaturesSection (pretty 21510-21896): the coaster-to-logo bezier circle
 // canvas, orbiting sketches, per-item split-text choreography, blurBox
 // anchoring, temperature slider and the tableScene animation 3..6 handoff.
-// siteHeader.changeNav / siteFooter.setScroll land with the site chrome port.
 
 import { SplitText } from 'gsap/SplitText';
 import { Color, Vector4 } from 'three';
@@ -11,6 +10,8 @@ import { clamp, fit, hash, loop, mix } from '../core/math';
 import { input } from '../core/input';
 import { properties } from '../core/properties';
 import { scrollManager } from '../core/ScrollPane';
+import { siteFooter } from '../SiteFooter';
+import { siteHeader } from '../SiteHeader';
 import * as settings from '../core/settings';
 import { sketches } from '../scenes/sketches';
 import { tableScene } from '../scenes/tableScene';
@@ -549,7 +550,12 @@ export class FeaturesSection {
     const a = containerRange.showScreenOffset;
     const isVisible = a > 0 && a < 10.6;
     _domContainer.style.visibility = isVisible ? 'visible' : 'hidden';
-    // siteHeader.changeNav / siteFooter.setScroll land with the site chrome.
+    if (a > 0.5) siteHeader.changeNav('features');
+    if (a > 7) {
+      const scrollRatio = fit(a, 7, 8, 0, 1);
+      if (useMobileLayout) siteFooter.setScroll('right', 0, scrollRatio);
+      else siteFooter.setScroll('center', 0, scrollRatio);
+    }
     if (isVisible) {
       let show: number;
       let hide: number;

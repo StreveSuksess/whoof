@@ -11,7 +11,10 @@ import { scrollManager } from './core/ScrollPane';
 import { parseBuf } from './BufLoader';
 import { parseSog } from './SogLoader';
 import { Splats } from './Splats';
-import { initSections, updateSections } from './sections';
+import { siteFooter } from './SiteFooter';
+import { siteHeader } from './SiteHeader';
+import { videoOverlay } from './VideoOverlay';
+import { wearableGallery } from './scenes/wearableGallery';
 import { webglApp, _pp } from './webgl';
 
 function detectMobile(): boolean {
@@ -36,7 +39,9 @@ function preInit(): void {
 // compile/start gap.
 function onInit(): void {
   webglApp.init();
-  initSections();
+  siteHeader.init();
+  siteFooter.init();
+  videoOverlay.init();
   properties.hasInitialized = true;
 }
 
@@ -46,6 +51,9 @@ function onInit(): void {
 function onStart(): void {
   properties.hasStarted = true;
   scrollManager.isActive = true;
+  // Source HomePage.preShow on first show (pretty 29296): kick off the
+  // wearable gallery image/video loads.
+  wearableGallery.start();
   // pagesManager.start stand-in: Page.show tweens the page container's
   // opacity 0→1 over 0.3s (pretty 13029-13032; .page CSS default is 0).
   const page = document.getElementById('home');
@@ -82,12 +90,18 @@ function bootStage2(): void {
   preInit();
   document.documentElement.classList.add('is-ready');
   preloader.preInit();
+  siteHeader.preInit();
+  siteFooter.preInit();
+  videoOverlay.preInit();
 
   const onResize = (): void => {
     properties.viewportWidth = window.innerWidth;
     properties.viewportHeight = window.innerHeight;
     scrollManager.resize(window.innerWidth, window.innerHeight);
     preloader.resize(window.innerWidth, window.innerHeight);
+    siteHeader.resize(window.innerWidth, window.innerHeight);
+    siteFooter.resize(window.innerWidth, window.innerHeight);
+    videoOverlay.resize();
     webglApp.resize();
   };
   window.addEventListener('resize', onResize);
@@ -116,11 +130,13 @@ function bootStage2(): void {
     (window as never as Record<string, unknown>).__Splats = Splats;
     input.update(dt);
     scrollManager.update(dt);
+    // Source ui.update order (pretty 30367): preloader, siteHeader,
+    // siteFooter, videoOverlay before the app update; the WebGL frame renders
+    // during preload (Final's preloader branch paints the dark green base).
     preloader.update(dt);
-    // Source loop() runs pagesManager/app update unconditionally: the WebGL
-    // frame renders during preload (Final's preloader branch paints the dark
-    // green base until startTime rises).
-    if (properties.hasInitialized) updateSections();
+    siteHeader.update(dt);
+    siteFooter.update(dt);
+    videoOverlay.update(dt);
     webglApp.update(dt);
     input.postUpdate();
     requestAnimationFrame(frame);
