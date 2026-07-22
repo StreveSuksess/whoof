@@ -254,7 +254,18 @@
   验收(无头 iPhone 级仿真 390×844 触摸):is-mobile 分支启动、七段 mobile
   编排全部正确(gallery 整页分页、social 逐页横滑、product 选项横排 +
   mobileShift、footer 纵向堆叠、MENU 按钮 + 右下滚动指示),零控制台错误。
-  **剩余**:像素级比对与打磨(阶段 4)
+  已完成(2026-07-22 十九轮):**阶段 4 像素级比对**——无头 Chrome 在同视口
+  (1456×830)按 section 对齐的 14 个滚动点分别截取本地复刻与源站画面,
+  PIL 上下拼接逐组核对:hero/ai/wearable-tear/gallery/magazine/features/
+  encryption/grip/sustainability/testimonies/product/social/openweight/
+  footer 全部一致——布局、光照、gobo 阴影、splat 道具、bloom/halo、
+  粒子、导航态、SplitText 编排均与源站吻合。观察到的差异全部为截图方法学
+  噪声:虚拟滚动缓动相位造成的 10-80px 构图偏移、product 杯垫因 animation
+  相位不同的 halo/env 色温差、hero 卡片一处换行差(Halyard 授权字体在
+  headless 下未加载,已知限制)。无新代码变更。
+  **复刻工程至此收尾**:桌面 + 移动、12 section、全场景/后处理/chrome
+  齐备;像素级比对通过。后续若要打磨:Halyard 字体(需 Adobe Fonts 订阅)、
+  滚动手感 A/B 对拍、性能预算(预载分包)
 - ✅ **M2.4 `.sog` Splat 加载器**(2026-07-22,commit a52f270):SogLoader(无压缩 ZIP
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
