@@ -795,3 +795,37 @@ attribute vec2 layoutUv;attribute float lineIndex;attribute float lineLettersTot
 
 export const coasterTextFrag = `#define GLSLIFY 1
 varying vec2 vUv;uniform float uOpacity;uniform float uAlphaTest;uniform vec3 uColor;uniform sampler2D uMap;uniform vec2 u_resolution;float median(float r,float g,float b){return max(min(r,g),min(max(r,g),b));}float getAlpha(vec2 uv){vec3 s=texture2D(uMap,uv).rgb;float sigDist=median(s.r,s.g,s.b)-0.4;return clamp(sigDist/fwidth(4.0*sigDist)+0.5,0.0,1.0);}void main(){vec2 screenUv=gl_FragCoord.xy/u_resolution;vec2 texel=1.0/u_resolution;vec2 uv=vUv;vec2 uvDx=vUv+vec2(texel.x,0.0);vec2 uvDy=vUv+vec2(0.0,texel.y);float alpha=getAlpha(uv);float alphaDx=getAlpha(uvDx);float alphaDy=getAlpha(uvDy);vec2 bump=(vec2(alphaDx,alphaDy)-alpha);if(alpha<uAlphaTest)discard;if(screenUv.x<texel.x)discard;if(screenUv.x>1.0-texel.x)discard;vec4 filledFragColor=vec4(bump,uOpacity*alpha,1.0);gl_FragColor=filledFragColor;}`;
+
+export const coffeeParticlesVert = `#define GLSLIFY 1
+attribute vec2 instanceUv;attribute float Cd;uniform sampler2D u_positionTexture;uniform sampler2D u_rotationTexture;uniform float u_scale;varying vec2 v_uv;varying vec3 v_worldPosition;varying vec3 v_worldNormal;varying vec3 v_viewNormal;varying vec3 v_viewPosition;varying float v_ao;varying float v_brightness;float linearStep(float edge0,float edge1,float x){return clamp((x-edge0)/(edge1-edge0),0.0,1.0);}vec3 qrotate(vec4 q,vec3 v){return v+2.0*cross(q.xyz,cross(q.xyz,v)+q.w*v);}void main(){vec4 posData=texture2D(u_positionTexture,instanceUv);vec4 rotData=texture2D(u_rotationTexture,instanceUv);vec3 instancePosition=posData.xyz;vec4 instanceQuat=rotData;vec3 localPos=position;vec3 norm=normal;localPos*=u_scale;localPos=qrotate(instanceQuat,localPos);vec3 rotatedNormal=qrotate(instanceQuat,norm);vec3 worldPos=localPos+instancePosition;vec4 mvPosition=modelViewMatrix*vec4(worldPos,1.0);v_viewNormal=normalMatrix*rotatedNormal;v_viewPosition=-mvPosition.xyz;v_worldPosition=(modelMatrix*vec4(worldPos,1.0)).xyz;v_uv=uv;v_ao=Cd;v_brightness=posData.w;gl_Position=projectionMatrix*mvPosition;}`;
+
+export const coffeeParticlesFrag = `#define GLSLIFY 1
+uniform vec3 u_lightPosition;uniform sampler2D u_coffeeBeansTexture;uniform sampler2D u_lightFieldSlicedTexture;uniform vec2 u_resolution;uniform vec3 u_lightColor;
+#include <lightFieldSlice>
+varying vec2 v_uv;varying vec3 v_worldPosition;varying vec3 v_viewPosition;varying vec3 v_viewNormal;varying float v_ao;varying float v_brightness;
+#define PI 3.141592653589793
+#define PI2 6.283185307179586
+#define PI_HALF 1.5707963267948966
+#define ENV_LODS 6.0
+#define LN2 0.6931472
+#include <packing>
+#include <getBlueNoise>
+#include <getBgColor>
+#include <perturbNormalArb>
+void main(){vec4 map=texture2D(u_coffeeBeansTexture,v_uv);vec3 albedo=pow(map.rgb,vec3(2.2+0.8*(v_brightness-0.5)));vec3 VN=normalize(v_viewNormal);float bumpScale=1.25;vec2 dSTdx=dFdx(v_uv);vec2 dSTdy=dFdy(v_uv);vec2 dHdxy=(vec2(texture2D(u_coffeeBeansTexture,v_uv+dSTdx).w,texture2D(u_coffeeBeansTexture,v_uv+dSTdy).w)-map.w)*bumpScale;VN=perturbNormalArb(-v_viewPosition,VN,dHdxy,1.0);vec3 N=normalize((vec4(VN,0.)*viewMatrix).xyz);vec3 V=normalize(cameraPosition-v_worldPosition);vec3 L=u_lightPosition-v_worldPosition;float lightDistance=length(L);L/=lightDistance;vec3 H=normalize(L+V);float NdL=dot(N,L);float NdH=clamp(dot(N,H),0.0,1.0);float NdV=clamp(dot(N,V),0.001,1.0);float specular=pow(NdH,80.0-40.0*v_brightness);float attenuation=1.0/(30.0*lightDistance*lightDistance+0.01);float diff=max(0.,NdL);float backLight=max(0.,-NdL);vec3 rayGridPos=lightFieldPosToGrid(v_worldPosition);float ao=1.0-sampleLightField(u_lightFieldSlicedTexture,rayGridPos+N).r;ao*=ao*ao*v_ao;float shadow=1.-max(sampleLightField(u_lightFieldSlicedTexture,rayGridPos+L).r,sampleLightField(u_lightFieldSlicedTexture,rayGridPos+L*2.).r);shadow*=shadow;vec3 color=vec3(0.);color+=albedo*diff*attenuation*shadow*ao;color+=albedo*backLight*attenuation*(1.-shadow)*0.015;color+=(albedo*0.8+0.2)*specular*attenuation*shadow*ao;gl_FragColor.rgb=pow(color,vec3(1.0/2.2));gl_FragColor.a=min(1.,shadow*ao*attenuation);}`;
+
+export const lightFieldVert = `#define GLSLIFY 1
+attribute vec3 position;attribute vec2 instanceUv;uniform sampler2D u_positionTexture;uniform vec3 u_lightPosition;uniform vec3 u_color;
+#include <lightFieldSlice>
+varying vec4 v_color;void main(){vec4 posData=texture2D(u_positionTexture,instanceUv);vec3 instancePosition=posData.xyz;vec3 L=u_lightPosition-instancePosition;float lightDistance=length(L);L/=lightDistance;vec3 lightFieldGrid=clampedLightFieldPosToGrid(instancePosition);vec2 lightFieldUv=lightFieldGridToUv(lightFieldGrid);gl_Position=vec4(lightFieldUv*2.0-1.0,0.0,1.0);gl_PointSize=1.;v_color=vec4(1.);}`;
+
+export const lightFieldFrag = `#define GLSLIFY 1
+varying vec4 v_color;void main(){gl_FragColor=v_color;}`;
+
+export const lightFieldSlice = `#define GLSLIFY 1
+uniform vec2 u_lightFieldSlicedTextureSize;uniform vec2 u_lightFieldSliceColRowCount;uniform vec3 u_lightFieldGridCount;uniform vec3 u_lightFieldVolumeOffset;uniform vec3 u_lightFieldVolumeSize;vec2 lightFieldGridToUv(vec3 grid){vec2 uv=grid.xy;vec2 colRow=floor(vec2(mod(grid.z,u_lightFieldSliceColRowCount.x),grid.z/u_lightFieldSliceColRowCount.x));uv+=colRow*u_lightFieldGridCount.xy+.5;return uv/u_lightFieldSlicedTextureSize;}vec3 lightFieldGridToUv3(vec3 grid){return grid/u_lightFieldGridCount;}vec3 clampLightFieldGrid(vec3 grid){return clamp(grid,vec3(.5),u_lightFieldGridCount-vec3(.5));}vec3 lightFieldPosToGrid(vec3 pos){return(pos-u_lightFieldVolumeOffset)/u_lightFieldVolumeSize*u_lightFieldGridCount;}vec3 clampedLightFieldPosToGrid(vec3 pos){return clampLightFieldGrid(lightFieldPosToGrid(pos));}vec4 sampleLightField(sampler2D tex,vec3 gridPos){gridPos.z-=.5;vec2 uv1=lightFieldGridToUv(clampLightFieldGrid(vec3(gridPos.xy,floor(gridPos.z)+.5)));vec2 uv2=lightFieldGridToUv(clampLightFieldGrid(vec3(gridPos.xy,ceil(gridPos.z)+.5)));return mix(texture2D(tex,uv1),texture2D(tex,uv2),fract(gridPos.z));}`;
+
+export const lightFieldSliceBlendFrag = `#define GLSLIFY 1
+uniform sampler2D u_prevSliceTexture;uniform sampler2D u_drawnSliceTexture;varying vec2 v_uv;
+#include <lightFieldSlice>
+float sampleSlice4(vec3 gridPos){vec3 sliceOffset=vec3(-.5,.5,0.);return(texture2D(u_drawnSliceTexture,lightFieldGridToUv(clampLightFieldGrid(gridPos+sliceOffset.xxz))).r+texture2D(u_drawnSliceTexture,lightFieldGridToUv(clampLightFieldGrid(gridPos+sliceOffset.xyz))).r+texture2D(u_drawnSliceTexture,lightFieldGridToUv(clampLightFieldGrid(gridPos+sliceOffset.yxz))).r+texture2D(u_drawnSliceTexture,lightFieldGridToUv(clampLightFieldGrid(gridPos+sliceOffset.yyz))).r)/4.;}void main(){vec3 gridPos=vec3(mod(gl_FragCoord.xy,u_lightFieldGridCount.xy),dot(floor(gl_FragCoord.xy/u_lightFieldGridCount.xy),vec2(1.,u_lightFieldSliceColRowCount.x))+.5);float prev=texture2D(u_prevSliceTexture,v_uv).r;float curr=(sampleSlice4(gridPos+vec3(0.,0.,-1.))+sampleSlice4(gridPos)*2.+sampleSlice4(gridPos+vec3(0.,0.,1.)))*.25;float delta=(curr-prev)*mix(0.15,0.05,step(prev,curr));prev+=delta;gl_FragColor=vec4(prev);}`;

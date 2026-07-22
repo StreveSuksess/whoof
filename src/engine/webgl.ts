@@ -44,6 +44,7 @@ import { gobo } from './scenes/gobo';
 import { handScene } from './scenes/handScene';
 import { heroScene } from './scenes/heroScene';
 import { sketches } from './scenes/sketches';
+import { footerScene } from './scenes/footerScene';
 import { stackScene } from './scenes/stackScene';
 import { sustainabilityScene } from './scenes/sustainabilityScene';
 import { tableScene } from './scenes/tableScene';
@@ -53,7 +54,10 @@ import { featuresSection } from './sections/featuresSection';
 import { gripSection } from './sections/gripSection';
 import { sustainabilitySection } from './sections/sustainabilitySection';
 import { testimoniesSection } from './sections/testimoniesSection';
+import { socialContentSection } from './sections/socialSection';
 import { productSection } from './sections/productSection';
+import { openWeightSection } from './sections/openWeightSection';
+import { footerSection } from './sections/footerSection';
 import { wearableSection } from './sections/wearableSection';
 
 const DEFAULT_POST_PROFILE = new PostProfile();
@@ -122,6 +126,8 @@ class WebGLApp {
     this.scene.add(sustainabilityScene.container);
     stackScene.preInit();
     this.scene.add(stackScene.container);
+    footerScene.preInit();
+    this.scene.add(footerScene.container);
     coaster.preInit();
     this.scene.add(coaster.container);
     sketches.preInit();
@@ -140,6 +146,7 @@ class WebGLApp {
     tableScene.init();
     sustainabilityScene.init();
     stackScene.init();
+    footerScene.init();
     coaster.init();
     sketches.init();
     wearableSection.preInit(document.documentElement);
@@ -160,9 +167,18 @@ class WebGLApp {
     testimoniesSection.preInit(document.documentElement);
     testimoniesSection.init();
     testimoniesSection.resize(properties.width, properties.height);
+    socialContentSection.preInit(document.documentElement);
+    socialContentSection.init();
+    socialContentSection.resize(properties.width, properties.height);
     productSection.preInit(document.documentElement);
     productSection.init();
     productSection.resize(properties.width, properties.height);
+    openWeightSection.preInit(document.documentElement);
+    openWeightSection.init();
+    openWeightSection.resize(properties.width, properties.height);
+    footerSection.preInit(document.documentElement);
+    footerSection.init();
+    footerSection.resize(properties.width, properties.height);
     this.aiSection = document.getElementById('ai');
     this.heroSection = document.getElementById('hero');
     this.heroInner = this.heroSection?.querySelector('.section__inner') ?? null;
@@ -217,10 +233,14 @@ class WebGLApp {
       gripSection.resize();
       sustainabilitySection.resize();
       testimoniesSection.resize(properties.width, properties.height);
+      socialContentSection.resize(properties.width, properties.height);
       productSection.resize(properties.width, properties.height);
+      openWeightSection.resize(properties.width, properties.height);
+      footerSection.resize(properties.width, properties.height);
     }
     sustainabilityScene.resize();
     stackScene.resize(properties.width, properties.height);
+    footerScene.resize(properties.width, properties.height);
   }
 
   /** Source App.update + Visuals.preUpdate/update + HandScene choreography. */
@@ -243,6 +263,7 @@ class WebGLApp {
     tableScene.preUpdate(dt);
     sustainabilityScene.preUpdate(dt);
     stackScene.preUpdate(dt);
+    footerScene.preUpdate(dt);
     postprocessing.syncProfile();
     // Source App.update: screenPaint.update between visuals.preUpdate and
     // cameraControls.update.
@@ -256,11 +277,13 @@ class WebGLApp {
     tableScene.update(dt);
     sustainabilityScene.update(dt);
     stackScene.update(dt);
+    footerScene.update(dt);
     coaster.update();
     sketches.update(dt);
     // Source Visuals.update tail: tableScene/footerScene postUpdate after the
     // scene updates.
     tableScene.postUpdate(dt);
+    footerScene.postUpdate(dt);
     postprocessing.render(this.scene, properties.camera, true);
     properties.tick++;
   }
@@ -324,7 +347,10 @@ class WebGLApp {
       gripSection.update(properties.deltaTime);
       sustainabilitySection.update(properties.deltaTime);
       testimoniesSection.update(properties.deltaTime);
+      socialContentSection.update(properties.deltaTime);
       productSection.update(properties.deltaTime);
+      openWeightSection.update(properties.deltaTime);
+      footerSection.update(properties.deltaTime);
     }
   }
 }
