@@ -13,6 +13,7 @@ import { parseSog } from './SogLoader';
 import { Splats } from './Splats';
 import { siteFooter } from './SiteFooter';
 import { siteHeader } from './SiteHeader';
+import { letterFlippers } from './LetterFlippers';
 import { videoOverlay } from './VideoOverlay';
 import { wearableGallery } from './scenes/wearableGallery';
 import { webglApp, _pp } from './webgl';
@@ -42,6 +43,14 @@ function onInit(): void {
   siteHeader.init();
   siteFooter.init();
   videoOverlay.init();
+  // Source ui.init (pretty 30355): register every .is-flipper element.
+  document.querySelectorAll('.is-flipper').forEach((dom) => {
+    let targets: NodeListOf<HTMLElement> | HTMLElement[] = dom.querySelectorAll(
+      '.is-flipper-target',
+    );
+    if (targets.length === 0) targets = [dom as HTMLElement];
+    letterFlippers.add(dom as HTMLElement, Array.from(targets));
+  });
   properties.hasInitialized = true;
 }
 
@@ -137,6 +146,7 @@ function bootStage2(): void {
     siteHeader.update(dt);
     siteFooter.update(dt);
     videoOverlay.update(dt);
+    letterFlippers.update(dt);
     webglApp.update(dt);
     input.postUpdate();
     requestAnimationFrame(frame);

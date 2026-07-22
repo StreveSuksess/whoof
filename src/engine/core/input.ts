@@ -51,6 +51,8 @@ class Input {
   deltaPixelXY = { x: 0, y: 0 };
   /** Per-frame normalized (-1..1, +y up) pointer delta (source input.deltaXY). */
   deltaXY = new Vector2();
+  /** Elements under the pointer, target-to-root (source currThroughElems). */
+  currThroughElems: Element[] = [];
   downPixelXY = { x: 0, y: 0 };
   prevMovePixelXY = { x: 0, y: 0 };
   /** Normalized mouse position, -1..1, +y up (source input.mouseXY). */
@@ -157,6 +159,13 @@ class Input {
     this.deltaXY.y += this.mouseXY.y - prevY;
     this.mousePixelXY.set(e.clientX, e.clientY);
     this.hasMoved = true;
+    // Source _setThroughElementsByEvent: the pointer target's ancestry chain.
+    let node = e.target as Node | null;
+    this.currThroughElems.length = 0;
+    while (node && node.parentNode) {
+      this.currThroughElems.push(node as Element);
+      node = node.parentNode;
+    }
     if (!this.isDown) return;
     const dx = e.clientX - this.prevMovePixelXY.x;
     const dy = e.clientY - this.prevMovePixelXY.y;
