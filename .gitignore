@@ -5,3 +5,4 @@ dist/
 DEPLOY.md
 scripts/deploy.sh
 scripts/deploy-cf.sh
+.wrangler/
