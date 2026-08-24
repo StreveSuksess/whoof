@@ -344,3 +344,17 @@ src/      ③ 人写的工程(Astro + TS,自包含)
   与七月完全一致;FrameAnimation 18500 / HeroScene 20757 / Visuals 30174 锚点逐一命中)。
   **发现**:bundle 顶层声明名未混淆(FrameAnimation/HeroScene/Visuals/properties 均为真名),
   只有局部变量被压缩——符号映射大部分是恒等映射。
+- ✅ **R2 port 层建立**(2026-08-24,commit 5fcfad9):对 30,537 行 _pretty 做 acorn 全量顶层语句普查
+  (886 条),机械导出语句级精确、首尾相接的切片表:**123 个引擎切片 + 5 个 vendor 区间**无缝铺满全文件
+  (verify-coverage 断言零缺口零重叠)。`port/_gen/engine.gen.js`(11,443 源行)由 extract-source 生成,
+  `--check` 字节门绿。**port↔src 全量分类映射**(docs/rename-map.json,tools/build-rename-map.mjs 生成,
+  docs/rename-overrides.json 存人工裁决):819 条声明映射(645 恒等唯一/165 证据消歧/9 人工裁决)、
+  12 个重写区登记(D-R5..D-R14)、12 条省略登记(D-O1..D-O4)、1 条塌缩、7 条内化、6 条注册孤儿。
+  证据链:GLSL 按字节级内容匹配、模块级临时变量按「唯一消费类」归属、前后邻类文件消歧。
+  门 scripts/verify-decls.mjs(分类门,按 readable-source §3.0.5「门的形状跟着产物的形状走」):
+  前向 1059/1059、目标存在、单射、反向 868/868 全绿。tier-2 抽查 12/12 吻合。
+  **反向闭合抓到的真问题**:src 死代码 `_cameraControlsMouse`(零消费导出,已删);七月从未登记的省略
+  (GlPositionOffset 子系统 D-O1、ImageExporter D-O2、GUI 调试面板 D-O3、Bloom 卷积路径 D-O4)
+  与结构拆分(SecondOrderDynamicsScalar D-S1)全部逼出显式登记。
+  **worker 复用**:SplatsWorker JS + splat_sorter wasm 是镜像字节的原样复用(D-R15),
+  verify-coverage 以 sha256 断言双侧一致。
