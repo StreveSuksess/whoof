@@ -276,4 +276,3 @@ class CameraControls {
 }
 
 export const cameraControls = new CameraControls();
-export const _cameraControlsMouse = new Vector2();

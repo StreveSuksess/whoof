@@ -1,0 +1,78 @@
+{
+  "_comment": [
+    "Hand-authored decisions merged into docs/rename-map.json by tools/build-rename-map.mjs.",
+    "Every entry is a REGISTERED deviation or a tier-0 human ruling with its evidence.",
+    "Ranges are mirror/_pretty/hoisted.CRsATKbF.js line numbers.",
+    "rewrites: regions the July port reimplemented semantically instead of declaration-by-",
+    "declaration (REBUILD_PLAN 6.1 D-R5..D-R14) — every port declaration inside the range",
+    "is excused, and every top-level declaration of the listed srcFiles is claimed."
+  ],
+  "declarations": {
+    "TAAPerspectiveCamera": {
+      "to": "src/engine/core/properties.ts#EngineCamera",
+      "why": "src's own header comment cites 'Source camera: TAAPerspectiveCamera (pretty line 17248-17269) with Halton jitter' — renamed EngineCamera in the port."
+    },
+    "_mesh": {
+      "to": "src/engine/scenes/sustainabilityScene.ts#_textMesh",
+      "why": "pretty 22183-22184 declares `rect, _mesh, _outlineMesh` for SustainabilityText; sustainabilityScene.ts L154-157 declares the same trio as rect/_textMesh/_outlineMesh — renamed for clarity."
+    },
+    "_mesh$5": { "to": "src/engine/scenes/tableGrip.ts#_overlayMesh", "why": "TableGripOverlay module vars `_mesh$5, _uniforms$1` (pretty 18553) -> tableGrip.ts L57-58 `_overlayMesh, _overlayUniforms` — renamed with the overlay prefix." },
+    "_uniforms$1": { "to": "src/engine/scenes/tableGrip.ts#_overlayUniforms", "why": "second of the TableGripOverlay pair (pretty 18553) — see _mesh$5." },
+    "_mesh$4": { "to": "src/engine/scenes/tableGrip.ts#_bearMesh", "why": "water-bear chain `_mesh$4, _camera, _wiggleSystem, _e$3` (pretty 18715) -> tableGrip.ts L128-130 `_bearMesh, _bearCamera, _wiggleSystem` — same chain, bear prefix." },
+    "_camera": { "to": "src/engine/scenes/tableGrip.ts#_bearCamera", "why": "see _mesh$4 — same pretty-18715 chain, position 2." },
+    "_texture": { "to": "src/engine/scenes/tableGrip.ts#_bearTexture", "why": "pretty 18718-18720 `_localOffset, _targetLocalOffset, _texture` -> tableGrip.ts, where the texture slot is _bearTexture (L136) beside the matching offsets." },
+    "_mesh$3": { "to": "src/engine/scenes/tableGrip.ts#_microMesh", "why": "TableGripMicro pair `_mesh$3, _uniforms` (pretty 18997) -> tableGrip.ts L577-578 `_microMesh, _microUniforms`." },
+    "_uniforms": { "to": "src/engine/scenes/tableGrip.ts#_microUniforms", "why": "second of the TableGripMicro pair (pretty 18997) — see _mesh$3." }
+  },
+  "internalized": {
+    "PARTICLE_COUNT": { "into": "src/engine/scenes/footerScene.ts", "why": "footer Particles count const (pretty 28667); src computes it as the class field particleCount = TEXTURE_WIDTH * TEXTURE_WIDTH (footerScene.ts L215) — see also the TEXTURE_HEIGHT collapse." }
+  },
+  "collapsed": {
+    "TEXTURE_HEIGHT": {
+      "into": "src/engine/scenes/footerScene.ts#TEXTURE_WIDTH",
+      "why": "source declares TEXTURE_WIDTH and TEXTURE_HEIGHT with the same value; src collapsed both reads onto TEXTURE_WIDTH (footerScene.ts L172, textureHeight = TEXTURE_WIDTH). Registered structural collapse."
+    }
+  },
+  "plumbing": {
+    "commonjsGlobal$1": "rollup commonjs-interop helper (globalThis probe); no src counterpart by construction",
+    "getDefaultExportFromCjs": "rollup commonjs-interop helper; no src counterpart by construction",
+    "SplitText": "vendor adoption binding (var SplitText = _SplitText after the inlined GSAP registration); src imports SplitText from npm gsap instead (D-R4)",
+    "fromEntries": "Object.fromEntries feature-probe fallback next to Settings; src targets runtimes where the native exists"
+  },
+  "omitted": {
+    "GlPositionOffset": "never ported: registers the glPositionOffset shader chunk + u_glPositionOffset shared uniform (pretty 30026-30067, init'd in App.init 30198). src carries TAA jitter via EngineCamera only. REGISTERED DEVIATION D-O1 — re-examine if sub-pixel TAA differences ever surface.",
+    "glPositionOffset": "singleton of GlPositionOffset — see D-O1.",
+    "shader": "the glPositionOffset chunk's GLSL source string (pretty 30026) — see D-O1.",
+    "ImageExporter": "debug capture tool (pretty 30125-30172): renders scene to canvas for export, driven only via window.__debug hooks; not ported (July scope). REGISTERED DEVIATION D-O2.",
+    "imageExporter": "singleton of ImageExporter — see D-O2.",
+    "GUI": "debug parameter panel (pretty 30371-30427), shown only behind a settings flag; not ported (July scope). REGISTERED DEVIATION D-O3.",
+    "gui": "singleton of GUI — see D-O3.",
+    "fftFrag": "Bloom FFT/convolution path shaders (pretty 16353-16424): the convolution branch is not ported — Bloom.ts guards it with a loud throw ('Bloom convolution path not ported (unused by the source site)'). REGISTERED DEVIATION D-O4.",
+    "convolutionSrcFrag": "see D-O4 (fftFrag).",
+    "convolutionMixFrag": "see D-O4 (fftFrag).",
+    "convolutionCacheFrag": "see D-O4 (fftFrag).",
+    "convolutionFrag": "see D-O4 (fftFrag)."
+  },
+  "allow_orphans": {
+    "src/engine/core/SecondOrderDynamics.ts#SecondOrderDynamicsScalar": "REGISTERED SPLIT D-S1: the source class's _updateNumber branch (scalar path) split into its own class; the vector path keeps the original name. src's own comment records the split.",
+    "src/engine/scenes/coaster.ts#_heroSceneRef": "module-boundary artifact: the bundle reads the flat-scope heroScene singleton directly; TS modules would import-cycle (coaster <-> heroScene), so webgl.ts injects it via bindHeroScene.",
+    "src/engine/scenes/coaster.ts#bindHeroScene": "setter half of _heroSceneRef — see that entry.",
+    "src/engine/scenes/wearableConstants.ts#WEARABLE_GALLERY_INNER_ROTATION": "hoisted from WearableGalleryItem's static INNER_ROTATION (pretty 19590, same expression -10*Math.PI/180); shared as a const so frame/rise/table modules can import it without the class.",
+    "src/engine/scenes/wearableConstants.ts#WEARABLE_GALLERY_INNER_SCALE": "hoisted from WearableGalleryItem's static INNER_SCALE (pretty 19591, same value 1.2) — see INNER_ROTATION.",
+    "src/engine/scenes/wearableScene.ts#forceWearableHasMoved": "ESM import bindings are not assignable (readable-source.md §3.5-③): the bundle writes the flat-scope _forceHasMoved directly (pretty 20268); src exports this setter instead. _forceHasMoved itself maps by identity."
+  },
+  "rewrites": [
+    { "range": [1, 142], "srcFiles": ["src/engine/core/math.ts"], "deviation": "D-R13", "note": "MathUtils$1 class + _sfc32 seeded RNG -> free functions in core/math.ts ('matching the source bundle's math singleton semantics')" },
+    { "range": [11776, 12396], "srcFiles": ["src/engine/core/Loader.ts", "src/engine/core/MinSignal.ts"], "deviation": "D-R5", "note": "vendored min-signal + quick-loader CJS packages -> semantic rewrite as Loader.ts/MinSignal.ts ('port of the source bundle's loader semantics')" },
+    { "range": [12397, 12552], "srcFiles": ["src/engine/core/browser.ts"], "deviation": "D-R6", "note": "vendored detect-ua + Browser class + _testSupport -> core/browser.ts" },
+    { "range": [30068, 30124], "srcFiles": [], "deviation": "D-R6", "note": "Support (WebGL2/feature probe) -> folded into core/browser.ts testSupport (srcFiles claimed by the 12397 range)" },
+    { "range": [12553, 12666], "srcFiles": ["src/engine/core/properties.ts"], "deviation": "D-R7", "note": "Properties class + UA _populate flags -> core/properties.ts module state" },
+    { "range": [12667, 12774], "srcFiles": ["src/engine/core/input.ts"], "deviation": "D-R8", "note": "vendored fbjs UserAgent_DEPRECATED / isEventSupported / normalizeWheel -> core/input.ts" },
+    { "range": [12973, 13045], "srcFiles": ["src/engine/main.ts"], "deviation": "D-R10", "note": "Tween + instances + Page -> page show/hide tweening inlined in main.ts (its comments cite HomePage.preShow pretty 29296, pagesManager.start)" },
+    { "range": [13299, 13339], "srcFiles": ["src/engine/core/settings.ts"], "deviation": "D-R14", "note": "Settings class (URL-flag parsing) -> core/settings.ts module" },
+    { "range": [28903, 29199], "srcFiles": ["src/engine/sections/footerSection.ts"], "deviation": "D-R9", "note": "vendored to-querystring + debug + ms + jsonp (Mailchimp transport) -> newsletter code in footerSection.ts" },
+    { "range": [29281, 29499], "srcFiles": [], "deviation": "D-R10", "note": "HomePage / Route / RouteManager / PageManager -> single-route boot orchestration in main.ts (srcFiles claimed by the 12973 range)" },
+    { "range": [29720, 30025], "srcFiles": ["src/engine/BufLoader.ts", "src/engine/SogLoader.ts"], "deviation": "D-R11", "note": "loader item classes (XHRItem/BufItem/SogItem/ImageItem/TextureItem/AnyItem/ThreeLoaderItem + sog combine materials) -> BufLoader.ts / SogLoader.ts / Loader.ts parsers" },
+    { "range": [30173, 30537], "srcFiles": ["src/engine/webgl.ts", "src/engine/main.ts"], "deviation": "D-R12", "note": "Visuals + App + UI + preRun/run/init/start/loop/fps/preventZoom tail -> WebGLApp (webgl.ts) + boot (main.ts)" }
+  ]
+}

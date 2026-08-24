@@ -1,0 +1,66 @@
+{
+  "kind": "cross-side",
+  "walk-000": {
+    "meanAbsDiff": 8.93,
+    "worstCellDiff": 108.3,
+    "worstCell": [
+      43,
+      2
+    ],
+    "similarityPct": 96.5
+  },
+  "walk-020": {
+    "meanAbsDiff": 1.12,
+    "worstCellDiff": 163,
+    "worstCell": [
+      63,
+      1
+    ],
+    "similarityPct": 99.6
+  },
+  "walk-040": {
+    "meanAbsDiff": 1.5,
+    "worstCellDiff": 153.7,
+    "worstCell": [
+      63,
+      16
+    ],
+    "similarityPct": 99.4
+  },
+  "walk-060": {
+    "meanAbsDiff": 1.72,
+    "worstCellDiff": 158.3,
+    "worstCell": [
+      63,
+      0
+    ],
+    "similarityPct": 99.3
+  },
+  "walk-080": {
+    "meanAbsDiff": 1.41,
+    "worstCellDiff": 172.7,
+    "worstCell": [
+      63,
+      32
+    ],
+    "similarityPct": 99.4
+  },
+  "walk-100": {
+    "meanAbsDiff": 2.76,
+    "worstCellDiff": 178.7,
+    "worstCell": [
+      63,
+      38
+    ],
+    "similarityPct": 98.9
+  },
+  "top-settled": {
+    "meanAbsDiff": 0.64,
+    "worstCellDiff": 13.7,
+    "worstCell": [
+      7,
+      27
+    ],
+    "similarityPct": 99.8
+  }
+}
