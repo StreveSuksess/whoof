@@ -310,3 +310,37 @@
 | **资产版权** | ★★★★★ | **最大风险是法务而非技术**:模型、贴图、文案、品牌全为 Lusion 原创。技术上可 1:1,公开发布必须先有授权 |
 
 **总体判断**:纯技术上可行,预计 6–10 周(单人全职、有 WebGL 经验)。最大的工程难点是 `.buf`/`.sog` 私有格式与球谐光照材质的逆向;最大的非工程风险是版权。省力路径:资产与 shader 全部从 bundle/镜像直接复用(逆向工作量最小),自己只重写工程骨架与编排层。
+
+## 6. 三层工程结构与源码化 M(n+1)(2026-08-24 起)
+
+七月的复刻先于 website-rebuild skill 成熟版完成,目录结构是两层(mirror + 根目录 Astro 工程)。
+本节把项目改造为 skill 规定的三层单向依赖结构,并补齐源码化阶段的门:
+
+```
+mirror/   ① 只读证据(206 文件 28MB + _pretty/ 行号坐标系 + 四本账)
+port/     ② 逐字移植(extract-source 切片,--check 守字节一致)
+src/      ③ 人写的工程(Astro + TS,自包含)
+```
+
+### 6.1 与 skill 标准流程的登记偏差
+
+| # | 源站/skill 怎么做 | 我们怎么做 | 为什么 | 何时重新考虑 |
+|---|---|---|---|---|
+| D-R1 | 账本在镜像时由 mirror-site.mjs 写出 | 账本由 scripts/rebuild-manifest.mjs 事后重建;mirroredAt=2026-07-20,声明 content-type 为 2026-08-24 线上重采 | 七月抓取先于工具链;2026-08-24 实测线上与镜像逐字节一致(index.html+bundle sha256 相同),两个日期描述同一次部署 | 源站改版后此账本即为最终证据,不再重采 |
+| D-R2 | port/ 在 M2+ 阶段与移植同步建立 | port/ 于 M(n+1) 补建:切片表按 src/ 已有模块划分回溯建立 | 七月移植是手工 TS 直译(port 与 src 融合);现按 skill 三层契约补出 ② 层作为等价性基准 | — |
+| D-R3 | src/ 由 port/ 经作用域安全重命名派生,verify-symbols 做 token 级双向单射 | src/ 是 TS 翻译(加类型、Astro 组件化),符号门做「顶层声明名双向单射」而非 token 一致 | readable-source §3.0.5:门的形状跟着产物的形状走;TS 翻译无法 token 对齐,但 bundle 顶层名未混淆,声明名单射可判 | 若重做 canonical src(纯 JS 重命名派生),升级为 token 门 |
+| D-R4 | bundle 内联的 three.js r178 / GSAP SplitText / MSDF 库逐字切片进 port/ | vendor 区间登记行号但不切片,src 侧用钉版本 npm 包(three@0.178.0 等) | 七月已验收的既有决定;vendor 库与 npm 发行版同源 | — |
+
+### 6.2 里程碑日志
+
+- ✅ **R0 skill 引入**(2026-08-24,commit e63a206):skill 拷入 `.claude/skills/website-rebuild/`,
+  零依赖判据拷入 `scripts/`,重构器拷入 `tools/`。verify-zerodep 绿。
+- ✅ **R1 镜像层规范化**(2026-08-24,commit 67c5b6e):`legacy-mirror/` → `mirror/`(全部文本引用
+  同步更新);`scripts/rebuild-manifest.mjs` 重建四本账(URL 经 lib/urlpath.mjs 正反向往返断言;
+  声明 content-type 线上低频重采 206/206);verify-mirror 五项全绿 + 抽样回源 8/8 字节一致。
+  **闭包门当场抓到 4 个藏了一个月的死引用**(bundle 里 rive.wasm/rive_fallback.wasm 同源回退路径、
+  site.webmanifest 声明的两个 PWA 图标)——线上验证源站自己也 404,属源站自身缺陷,照纪律 4 保留,
+  登记 LATENT 于 mirror/external.txt。`mirror/_pretty/` 用 js-beautify@1.15.1 重建(30,536 行,
+  与七月完全一致;FrameAnimation 18500 / HeroScene 20757 / Visuals 30174 锚点逐一命中)。
+  **发现**:bundle 顶层声明名未混淆(FrameAnimation/HeroScene/Visuals/properties 均为真名),
+  只有局部变量被压缩——符号映射大部分是恒等映射。
