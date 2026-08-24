@@ -1,11 +1,11 @@
 # ORYZO.ai 1:1 工程化复刻计划
 
 > 源站:https://oryzo.ai/ — Lusion 出品的创意营销单页(恶搞"AI 软木杯垫"产品站)
-> 镜像时间:2026-07-21,快照位于 `legacy-mirror/`(168 个文件,约 19MB)
+> 镜像时间:2026-07-21,快照位于 `mirror/`(168 个文件,约 19MB)
 
 ---
 
-## 1. 镜像内容清单(legacy-mirror/)
+## 1. 镜像内容清单(mirror/)
 
 | 类别 | 内容 | 说明 |
 |---|---|---|
@@ -66,7 +66,7 @@
 
 ### 阶段 1 — 骨架 ✅(2026-07-21 完成)
 - Astro 5 工程:`src/pages/index.astro` + `src/layouts/Layout.astro` + 18 个组件(12 个 section + SvgDefs/SiteHeader/SiteFooter/ScrollIndicator/Preloader/VideoOverlay)
-- 组件由 `scripts/gen_components.py` 从 `legacy-mirror/index.html` 生成:保守 pretty-print(只在原有空白间隙换行、紧贴处保持紧贴、花括号转义防 Astro 模板语法冲突)
+- 组件由 `scripts/gen_components.py` 从 `mirror/index.html` 生成:保守 pretty-print(只在原有空白间隙换行、紧贴处保持紧贴、花括号转义防 Astro 模板语法冲突)
 - **构建产物 body 与源站逐字节等价**(空白归一化后 diff 为空);浏览器验证 scrollHeight 46410px 与源站一致
 - 静态资源(fonts/images/meta/textures/models/splats/rive/PDF,约 18MB)复制到 `public/`
 - `src/styles/main.css` = 源站 CSS 原样;`src/styles/phase1-shims.css` = 临时 shim(`.page` 淡入、preloader 隐藏、desktop-only 显隐、canvas 黑底),**每条 shim 都将在 phase 2 被引擎逻辑取代**
@@ -231,7 +231,7 @@
   预取、自绘光标态、静音、移动 iframe 分支)、HeroSection/AiSection(完整
   split-text 编排,替换 webgl.ts 桩)、WearableGallery/Item + RafVideo
   (图/视频轨道 + 缩略条、过场倾斜缩放、yoga 警告、bikini 叠加、outro 交接;
-  gallery 资产是懒加载的、镜像没抓到,已从源站补入 legacy-mirror + public)、
+  gallery 资产是懒加载的、镜像没抓到,已从源站补入 mirror + public)、
   WearableMagazine + WearablesRise(封面编排 + WebGL RISE 刊头:杯罩蒙版 RT、
   from/to ping-pong 的背景压暗模糊 color pass、magazine post layer)。
   各 section 的 changeNav/setScroll/setTheme 调用全部启用;通用 sections.ts
@@ -250,7 +250,7 @@
   发现镜像(桌面爬取)漏了所有 mobile 专属路径:condom 的 png 全套(mobile
   完全不走 avif)、COFFEE_BEAN/BARK 的 _MOBILE.buf、两个 _MOBILE.sog。
   粗指针视口下 loader 404 → coffeeParticles.init 在 null 几何上崩掉帧循环。
-  已从源站补 16 个文件入 legacy-mirror + public。
+  已从源站补 16 个文件入 mirror + public。
   验收(无头 iPhone 级仿真 390×844 触摸):is-mobile 分支启动、七段 mobile
   编排全部正确(gallery 整页分页、social 逐页横滑、product 选项横排 +
   mobileShift、footer 纵向堆叠、MENU 按钮 + 右下滚动指示),零控制台错误。
@@ -280,7 +280,7 @@
   解析 webp 平面 + codebook、GPU 合成打包 RGBA32UI splat 纹理 + RGBA8 sh0、
   16 位重组 + unlog 读回中心点)、Splats 渲染器(EWA 协方差投影 + SH 频带求值原文、
   相机方向触发的 WASM 基数排序 worker)。补齐镜像缺口:splat_sorter_bg wasm 是
-  worker 运行时才 fetch 的,当初镜像没抓到,已从源站补入 legacy-mirror 与 public。
+  worker 运行时才 fetch 的,当初镜像没抓到,已从源站补入 mirror 与 public。
   Loader 增补:post-preload 的 load()、channel 语义修正(= 通道数 R8/RG8,非 uv 通道)。
   验证:props.sog 67486 splats 解析、worker READY、排序完成 full draw range;
   像素级渲染随 TableScene 集成验收(那里才有正确的空间变换)

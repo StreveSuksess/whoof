@@ -15,7 +15,7 @@ import {
 
 /**
  * Parser for Lusion's `.buf` binary geometry format, ported 1:1 from the
- * source bundle's BufItem._onLoad (legacy-mirror/_astro/hoisted.CRsATKbF.js;
+ * source bundle's BufItem._onLoad (mirror/_astro/hoisted.CRsATKbF.js;
  * see docs/engine-notes.md for the format spec).
  *
  * Layout: [uint32 LE headerLen][JSON header][attribute payloads in header order]

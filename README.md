@@ -2,7 +2,7 @@
 
 对 [oryzo.ai](https://oryzo.ai/)(Lusion 出品的创意营销单页,一个恶搞"AI 软木杯垫"的虚构产品站)的 **1:1 工程化复刻**。
 
-> ⚠️ **仅供个人学习研究。** 站点的模型、贴图、文案、品牌、字体授权全部归 Lusion 所有,本仓库不公开部署、不用于任何商业用途。`legacy-mirror/` 与 `public/` 中的资产均为学习用途的镜像副本。
+> ⚠️ **仅供个人学习研究。** 站点的模型、贴图、文案、品牌、字体授权全部归 Lusion 所有,本仓库不公开部署、不用于任何商业用途。`mirror/` 与 `public/` 中的资产均为学习用途的镜像副本。
 
 ## 为什么做这个
 
@@ -12,7 +12,7 @@ oryzo.ai 是近年少见的"教科书级"创意站:全屏 WebGL2 + 约 46,000px 
 
 ## 重建思路
 
-**1. 镜像。** 先完整抓取站点(HTML/CSS/JS/模型/贴图/Splats/Rive/字体),约 168 个文件存入 `legacy-mirror/`。后续发现三类"抓不到"的资产——worker 运行时才 fetch 的 WASM、懒加载的画廊图片、移动端专属变体——都在对应里程碑里从源站补录。
+**1. 镜像。** 先完整抓取站点(HTML/CSS/JS/模型/贴图/Splats/Rive/字体),约 168 个文件存入 `mirror/`。后续发现三类"抓不到"的资产——worker 运行时才 fetch 的 WASM、懒加载的画廊图片、移动端专属变体——都在对应里程碑里从源站补录。
 
 **2. 逆向。** 站点 JS 是压缩但未混淆的单 bundle(内联 Three.js r178 + Lusion 自研引擎层)。用 js-beautify 展开成 3 万行可读代码,从中逆向出:
 
@@ -76,7 +76,7 @@ npm run preview -- --port 4321
 ## 目录速览
 
 ```
-legacy-mirror/     源站完整镜像(逆向的原始依据)
+mirror/     源站完整镜像(逆向的原始依据)
 public/            运行时资产(模型/贴图/splats/字体/图片)
 src/engine/        引擎层:core(基建)/ scenes(场景)/ sections(DOM 驱动)/ post(后处理)/ glsl(逐字提取的 shader)
 src/components/    页面 DOM(按源站结构还原的 Astro 组件)

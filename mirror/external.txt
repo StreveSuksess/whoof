@@ -1,0 +1,20 @@
+# External-dependency decisions for the oryzo.ai mirror (M0 register).
+# Format: <DECISION> | <url or host> | why
+# Decisions: MIRROR (bytes are on disk — not an excuse), STUB, DEGRADE, CONTENT, NOTFILE.
+# Original decisions made 2026-07-21 (REBUILD_PLAN 阶段 0); re-registered here for verify-mirror.
+
+DEGRADE | use.typekit.net | Adobe Fonts kit pmn6ngx (Halyard Display/Text Variable). Commercial license forbids self-hosting; live reference kept, offline falls back to system fonts.
+DEGRADE | p.typekit.net | Adobe Fonts font-file host for the same kit; same decision as use.typekit.net.
+DEGRADE | unpkg.com | Rive WASM runtime (rive.wasm, @rive-app/canvas 2.37.0) fetched at runtime from unpkg by the bundle. Offline: Rive intro animation degrades; rebuild side pins the same version via npm instead.
+DEGRADE | player.vimeo.com | Vimeo player + video 1174820580 (VideoOverlay). Needs network; offline the overlay shows poster only.
+DEGRADE | i.vimeocdn.com | Vimeo thumbnail CDN for the same video.
+NOTFILE | lusion.us20.list-manage.com | Mailchimp newsletter form action — a POST endpoint, not a fetchable asset.
+STUB | static.cloudflareinsights.com | Cloudflare Web Analytics beacon — telemetry, deliberately not mirrored; serve.mjs --stub-ext-hosts answers it with an empty JS body.
+
+# Dead references on the ORIGIN itself (verified HTTP 404 live, 2026-08-24) — the
+# source site ships these references but never serves the files. Preserved as-is
+# (constitution #4: bugs are behaviour); nothing to fetch.
+LATENT | https://oryzo.ai/rive.wasm | Rive runtime's same-origin wasm fallback path inside the bundle; origin 404s, real wasm comes from unpkg (see DEGRADE above).
+LATENT | https://oryzo.ai/rive_fallback.wasm | Second Rive wasm fallback spelling in the bundle; origin 404s.
+LATENT | https://oryzo.ai/web-app-manifest-192x192.png | Declared in meta/site.webmanifest but origin 404s — source-site defect, mirrored faithfully.
+LATENT | https://oryzo.ai/web-app-manifest-512x512.png | Declared in meta/site.webmanifest but origin 404s — source-site defect, mirrored faithfully.

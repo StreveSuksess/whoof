@@ -1,4 +1,4 @@
-"""Phase 1: split legacy-mirror/index.html into Astro components.
+"""Phase 1: split mirror/index.html into Astro components.
 
 Conservative pretty-print: whitespace-only text between tags becomes
 newline+indent (rendering-equivalent under CSS whitespace collapsing);
@@ -7,7 +7,7 @@ non-whitespace text is kept byte-exact. Braces are entity-escaped for Astro.
 import re, os, sys
 
 ROOT = '/Users/boyang/Documents/GitHub/oryzo-rebuild'
-SRC = open(f'{ROOT}/legacy-mirror/index.html').read()
+SRC = open(f'{ROOT}/mirror/index.html').read()
 OUT = f'{ROOT}/src/components'
 
 VOID = {'img','br','input','meta','link','area','base','col','embed','hr','source','track','wbr'}

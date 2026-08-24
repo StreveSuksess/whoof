@@ -1,4 +1,4 @@
-// GLSL extracted verbatim from legacy-mirror/_astro/hoisted.CRsATKbF.js.
+// GLSL extracted verbatim from mirror/_astro/hoisted.CRsATKbF.js.
 // Do not edit by hand; names map to the source bundle's variables.
 
 export const getBlueNoise = `#define GLSLIFY 1

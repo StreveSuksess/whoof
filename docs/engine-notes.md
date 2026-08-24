@@ -1,8 +1,8 @@
 # 源站引擎逆向笔记(M2.0)
 
-> 来源:`legacy-mirror/_astro/hoisted.CRsATKbF.js`(压缩未混淆,可读)。
+> 来源:`mirror/_astro/hoisted.CRsATKbF.js`(压缩未混淆,可读)。
 > 行号引用基于 js-beautify 格式化后的版本(30,536 行);格式化命令:
-> `npx js-beautify legacy-mirror/_astro/hoisted.CRsATKbF.js -o bundle.pretty.js`
+> `npx js-beautify mirror/_astro/hoisted.CRsATKbF.js -o bundle.pretty.js`
 
 ## 总体架构
 
