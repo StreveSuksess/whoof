@@ -4,3 +4,4 @@ dist/
 .DS_Store
 DEPLOY.md
 scripts/deploy.sh
+scripts/deploy-cf.sh
