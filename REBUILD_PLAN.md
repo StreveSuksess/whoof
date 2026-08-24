@@ -358,3 +358,33 @@ src/      ③ 人写的工程(Astro + TS,自包含)
   与结构拆分(SecondOrderDynamicsScalar D-S1)全部逼出显式登记。
   **worker 复用**:SplatsWorker JS + splat_sorter wasm 是镜像字节的原样复用(D-R15),
   verify-coverage 以 sha256 断言双侧一致。
+- ✅ **R3 src 自包含化 + 门固化**(2026-08-24,commit e688fd9):Astro 工程整体迁入 `src/`
+  (自带 package.json;根目录只剩三层骨架)。自包含门:静态扫描零逃逸引用;`--full` 复制出仓、
+  离线安装、构建全过;**复制出去那份真跑起来对拍**——CLEAN 走查 + 像素巡航全绿(§4.3 要求)。
+  `src/public/ASSETS.md` 账本:203 资产 203/203 与镜像逐字节一致。`src/README.md` 写明
+  三段坐标系读法与注释归属(全部注释是我们写的,源站注释被构建剥光)。
+  **巡航门项目化**(scripts/verify-walk.mjs):fraction 检查点 + 一次性 scrollTo 在本站有两类
+  实测假红——①晚过预载的一侧吃到全高跳变,缓动滚动拍照时仍在途,整段错位(meanAbsDiff 26–42,
+  自比带宽仅 0.35);②wearable 0.4 偏移正落在自动播放视频上(媒体时钟在 shim 熵面外,自比带宽
+  17.97)。改为 **section 锚点 + 三相驱动**(等 #preloader display:none → 12 chunk 渐进逼近 →
+  连续 8 chunk 稳定才准拍),自比带宽全检查点 ≤0.2,跨侧最差 1.35(门限 4)。
+  **门册固化**(GATES.md + scripts/run-gates.mjs):每道门的命令入库,一键静态门 6/6;
+  运行时门协议对仓外副本与仓内构建各验一遍,数字一致。
+- 追加登记:D-R15(SplatsWorker JS+wasm 镜像字节原样复用,verify-coverage sha256 断言)、
+  D-O1..D-O4(未移植子系统,见 docs/rename-overrides.json)、D-S1(SecondOrderDynamics
+  标量分支拆类)。法务状态不变:私有 + noindex + 不公开部署(用户 2026-07 已决定,本次改造不改变)。
+
+### 6.3 收口状态
+
+三层结构 + 源码化改造完成。全部门(2026-08-24 实测):
+
+| 门 | 结果 |
+|---|---|
+| verify-mirror(五项+抽样回源 8) | PASS(闭包门补登 4 条源站自身死引用) |
+| extract-source --check | PASS(123 切片字节一致) |
+| verify-coverage | PASS(切片∪vendor 无缝铺满 30,537 行;worker 字节复用) |
+| verify-decls | PASS(前向 1059/1059,反向 868/868,单射,tier-2 抽查 12/12) |
+| verify-zerodep | PASS |
+| verify-standalone(静态+--full+真跑对拍) | PASS |
+| probe CLEAN --walk 14(双侧) | CLEAN |
+| verify-walk(6 section 锚点) | PASS(带宽 ≤0.2,跨侧最差 1.35 / 门限 4) |
