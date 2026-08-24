@@ -1,0 +1,289 @@
+#!/usr/bin/env node
+/**
+ * make-standalone.mjs — give src/ everything it needs to run somewhere else.
+ *
+ * ⛔ The no-copy policy REVERSES at this stage. Through M(n) the mirror is the
+ * one asset store and nothing duplicates it, because two copies of an asset is
+ * two things that can disagree with the evidence. The deliverable has the
+ * opposite requirement: copy src/ anywhere, run it, and the site comes up.
+ *
+ * ⚠ Copy what the built page REFERENCES, not the whole mirror. The mirror also
+ * holds forensic material — the beautified bundles, the ledgers, the origin's
+ * own bundle that this port replaces — and shipping those would put the thing
+ * the port replaced right back next to it.
+ *
+ *   node tools/make-standalone.mjs --shell site/airpods-pro/index.html --out src
+ */
+import { readFile, writeFile, mkdir, readdir, cp, stat } from "node:fs/promises";
+import path from "node:path";
+import { localRelPath, loadPolicy } from "../scripts/lib/urlpath.mjs";
+
+const args = process.argv.slice(2);
+const flag = (n, d) => { const i = args.indexOf("--" + n); return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : d; };
+// ⛔ NOT one page. A whole-site port has as many shells as it has routes, and a
+// default naming a previous project's page is how a tool teaches you the wrong
+// shape. --shell takes a FILE, a comma list, or a DIRECTORY (walked for .html).
+const SHELL = flag("shell", "site");
+const MIRROR = path.resolve(flag("mirror", "mirror"));
+const OUT = path.resolve(flag("out", "src"));
+// The origin bundle this port replaces. ⛔ It must not travel with the
+// deliverable: shipping the thing you replaced next to its replacement makes
+// "which one is running" a question the reader has to answer by experiment.
+const REPLACED = flag("replaced", "");
+// Paths this project PRODUCES rather than mirrors — the port's build output, and
+// anything else the shell config lists under `extras`. They are not expected in
+// the mirror and must not be reported as missing.
+// ⚠ Pass the same values the transform table writes. If the two drift apart,
+// this tool reports the port's own bundle as a hole in the deliverable.
+const OWN = flag("own", "").split(",").map((x) => x.trim()).filter(Boolean);
+// Where the deliverable's own build lands INSIDE public/, and what esbuild must
+// leave unresolved. Both are per-project facts; defaults suit a project whose
+// port is served at /app.js.
+const BUILD_OUT = flag("build-out", OWN[0] || "/app.js");
+const EXTERNALS = flag("externals", "").split(",").map((x) => x.trim()).filter(Boolean);
+const SERVE_PORT = flag("serve-port", "6190");
+const STUB_HOSTS = flag("stub-ext-hosts", "").split(",").map((x) => x.trim()).filter(Boolean);
+const EXT_HOSTS_FLAG = flag("ext-hosts", "").split(",").map((x) => x.trim()).filter(Boolean);
+const ORIGIN_HOST_FLAG = flag("origin-host", "");
+// The deliverable's own name: the project directory unless told otherwise.
+const NAME = flag("name", path.basename(process.cwd()).replace(/-rebuild$/, "") + "-src");
+const PUBLIC = path.join(OUT, "public");
+
+async function shellList(spec) {
+  const out = [];
+  for (const part of spec.split(",").map((x) => x.trim()).filter(Boolean)) {
+    const abs = path.resolve(part);
+    const st = await stat(abs).catch(() => null);
+    if (!st) { console.error(`FATAL: --shell names ${part}, which does not exist`); process.exit(2); }
+    if (st.isFile()) { out.push({ abs, root: path.dirname(abs) }); continue; }
+    const walk = async (d) => {
+      for (const e of await readdir(d, { withFileTypes: true })) {
+        const p2 = path.join(d, e.name);
+        if (e.isDirectory()) await walk(p2);
+        else if (e.name.endsWith(".html")) out.push({ abs: p2, root: abs });
+      }
+    };
+    await walk(abs);
+  }
+  return out;
+}
+const SHELLS = await shellList(SHELL);
+if (!SHELLS.length) { console.error(`FATAL: --shell ${SHELL} matched no .html`); process.exit(2); }
+console.log(`  ${SHELLS.length} shell(s) from ${SHELL}`);
+const htmls = await Promise.all(SHELLS.map((s2) => readFile(s2.abs, "utf8")));
+const html = htmls.join("\n");   // one view, for the reference report only
+
+// ⛔ COPY FROM THE LEDGER, NOT FROM THE DOCUMENT. Scanning the document's own
+// src/href/srcset finds what the HTML names — and misses everything a script
+// requests at runtime. Measured: the document scan copied 491 files and the
+// out-of-repo copy came up with 17 page errors while the in-repo build had 1.
+// "It built" said nothing, exactly as the gate warns.
+//
+// The ledger is the authority on completeness (asset-management.md §2.2), so the
+// deliverable takes every mirrored file except the forensic material — the
+// beautified bundles, the ledgers themselves, and the origin bundle this port
+// replaces, which must not travel back alongside its own replacement.
+const EXCLUDE = [/^_pretty\//, /^mirror-manifest\.json$/, /^inventory\.tsv$/, /^netcapture\.tsv$/, /^redirects\.tsv$/, /^urlpath-policy\.json$/, /^external\.txt$/];
+
+// The document's own references are still collected — not to decide what to
+// copy, but to report what it names that the mirror does not have.
+const refs = new Set();
+// ⛔ KEEP THE QUERY. The mirror's url->path mapping is query-aware
+// (lib/urlpath.mjs), so `/x.woff2?dpl=…` and `/x.woff2` are different files —
+// and dropping the query here reported 524 present fonts as missing, every one
+// of them sitting on disk under its query-suffixed name.
+for (const m of html.matchAll(/(?:src|href|content|data-[\w-]*)="(\/[^"#]+)/g)) refs.add(m[1]);
+for (const m of html.matchAll(/url\((["']?)(\/[^)"']+)/g)) refs.add(m[2]);
+for (const m of html.matchAll(/(?:srcset|data-srcset)="([^"]+)"/g)) {
+  for (const part of m[1].split(",")) {
+    const u = part.trim().split(/\s+/)[0];
+    if (u.startsWith("/")) refs.add(u);
+  }
+}
+
+// --- copy the ledger ---------------------------------------------------------
+const MANIFEST = JSON.parse(await readFile(path.join(MIRROR, "mirror-manifest.json"), "utf8").catch(() => "{}"));
+const ORIGIN_URL = (MANIFEST.origin || "https://example.invalid").replace(/\/$/, "") + "/";
+const ORIGIN_HOST = new URL(ORIGIN_URL).hostname;
+const POLICY = await loadPolicy(MIRROR);
+
+const ledger = (await readFile(path.join(MIRROR, "inventory.tsv"), "utf8"))
+  .split("\n").slice(1).filter(Boolean)
+  .map((l) => l.split("\t")[2]).filter(Boolean);
+
+let copied = 0, bytes = 0, skipped = 0;
+for (const rel of ledger) {
+  if (EXCLUDE.some((re) => re.test(rel))) { skipped++; continue; }
+  if (rel === REPLACED.replace(/^\//, "")) { skipped++; continue; }
+  const from = path.join(MIRROR, rel);
+  const st = await stat(from).catch(() => null);
+  if (!st || !st.isFile()) continue;
+  const to = path.join(PUBLIC, rel);
+  await mkdir(path.dirname(to), { recursive: true });
+  await cp(from, to);
+  copied++; bytes += st.size;
+}
+
+let missing = [];
+for (const ref of refs) {
+  // ⛔ NOT a hardcoded path. The first version skipped `/assets/js/` because that
+  // is where one project happened to put its build; on the next project, whose
+  // build lands in `/_next/static/chunks/`, the port's own output was reported
+  // as a missing ASSET — as a hole in the deliverable. It IS the deliverable.
+  // Anything this project emits is declared with --own.
+  if (OWN.some((o) => ref === o || ref.startsWith(o.endsWith("/") ? o : o + "/"))) continue;
+  // ⚠ A directory-style URL is a PAGE, not a missing file. `/at/airpods-pro/`
+  // resolves to that directory's index.html the way the crawler stored it, and
+  // treating it as absent reported 185 "missing" references that were mostly
+  // the locale switcher's hreflang alternates.
+  // ⭐ Resolve through the SAME mapping the crawler and the server use. A naive
+  // path join is a second implementation of url->path, and a second
+  // implementation is a disagreement waiting to be reported as a hole.
+  const mapped = (() => {
+    try { return localRelPath(new URL(ref, ORIGIN_URL).href, ORIGIN_HOST, POLICY); } catch { return null; }
+  })();
+  const bare = ref.split("?")[0].replace(/^\//, "");
+  // ⚠ `/ext/<host>/…` is the SERVING convention for a mirrored external host;
+  // on disk that host's files live under `assets/<host>/…`. The two spellings
+  // are the same asset, and only the server knew it — which is why 92 images
+  // that are present were reported as holes in the deliverable.
+  const extForm = /^ext\/([^/]+)\/(.*)$/.exec(bare);
+  const candidates = [
+    ...(mapped ? [path.join(MIRROR, mapped), path.join(MIRROR, mapped, "index.html")] : []),
+    ...(ref.endsWith("/") ? [path.join(MIRROR, bare, "index.html")]
+                          : [path.join(MIRROR, bare), path.join(MIRROR, bare, "index.html")]),
+    ...(extForm ? [path.join(MIRROR, "assets", extForm[1], extForm[2])] : []),
+  ].flatMap((c) => {
+    // ⚠ A reference is PERCENT-ENCODED; the file on disk is not. `Group%20633683.svg`
+    // and `Group 633683.svg` are the same asset, and 36 of them were reported
+    // missing purely for being spelled the way a URL must spell them.
+    let dec = null;
+    try { dec = decodeURIComponent(c); } catch {}
+    return dec && dec !== c ? [c, dec] : [c];
+  });
+  let from = null, st = null;
+  for (const c of candidates) {
+    const s2 = await stat(c).catch(() => null);
+    if (s2 && s2.isFile()) { from = c; st = s2; break; }
+  }
+  if (!from) { missing.push(ref); continue; }
+}
+
+// ⭐ When --shell named a DIRECTORY, that directory is the port's build output:
+// the shells AND whatever sits beside them (here, 23 verbatim chunks the shells
+// reference by name). Copying only the .html would ship a site whose every page
+// asks for a script that did not travel.
+for (const root of new Set(SHELLS.map((s2) => s2.root))) {
+  const st = await stat(root).catch(() => null);
+  if (!st || !st.isDirectory()) continue;
+  const walk = async (d) => {
+    for (const e of await readdir(d, { withFileTypes: true })) {
+      const p2 = path.join(d, e.name);
+      if (e.isDirectory()) { await walk(p2); continue; }
+      if (e.name.endsWith(".html")) continue;   // shells are written below, rewritten
+      const to = path.join(PUBLIC, path.relative(root, p2));
+      await mkdir(path.dirname(to), { recursive: true });
+      await cp(p2, to);
+      copied++; bytes += (await stat(p2)).size;
+    }
+  };
+  await walk(root);
+}
+
+// The shells themselves, at their own paths, with the port's bundle beside them.
+// ⛔ The rewrite below used to name `/assets/js/app.js` literally — the FOURTH
+// hardcoded previous-project path in this one file, three lines under a comment
+// complaining about the third. It is driven by --own now, like the others.
+await mkdir(PUBLIC, { recursive: true });
+for (let i = 0; i < SHELLS.length; i++) {
+  let doc = htmls[i];
+  for (const own of OWN) {
+    const esc = own.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    doc = doc.replace(new RegExp(`(<script\\b[^>]*\\bsrc=")${esc}(")`), `$1${BUILD_OUT.startsWith("/") ? BUILD_OUT : "/" + BUILD_OUT}$2`);
+  }
+  const rel = path.relative(SHELLS[i].root, SHELLS[i].abs) || "index.html";
+  const to = path.join(PUBLIC, rel);
+  await mkdir(path.dirname(to), { recursive: true });
+  await writeFile(to, doc);
+}
+
+await writeFile(path.join(OUT, "package.json"), JSON.stringify({
+  // ⛔ Derived, not carried over. A generated file that hardcodes the previous
+  // project's name is how a deliverable ends up introducing itself as something
+  // else — third instance of this in one stage, after the own-build path and the
+  // build script's outfile/externals.
+  name: NAME,
+  private: true,
+  version: "1.0.0",
+  type: "module",
+  description: "Readable source for an unofficial study rebuild. Private, noindex, never deployed.",
+  scripts: {
+    // ⛔ The output path and externals are THIS project's, not the last one's.
+    // A generated package.json carrying the first project's `public/app.js` and
+    // its `--external:@marcom/…` is a hardcoded value wearing the costume of a
+    // generated one — the same mistake as a hardcoded own-build path.
+    // ⛔ Only when there IS something to build. A whole-site port ships the
+    // packer's own chunks verbatim beside the shells — there is no entry module
+    // and no bundle step, and a `build` script naming an index.js that does not
+    // exist is the previous project's shape wearing this project's name. The
+    // deliverable declares its own output with --own; no --own, no build.
+    ...(OWN.length ? {
+      build: `esbuild index.js --bundle --format=iife --outfile=public${BUILD_OUT}` +
+        EXTERNALS.map((e) => ` --external:${e}`).join(""),
+    } : {}),
+    // ⭐ The deliverable ships its own server. readable-source.md §2.4: without a
+    // verification hook travelling with it, "it builds" is the whole of what can
+    // be said about a copy — and building is not running.
+    // ⛔ THE COPY'S SERVER MUST BE CONFIGURED LIKE THE PROJECT'S. serve.mjs is
+    // not a plain static server: --stub-ext-hosts is what answers a stubbed
+    // third-party script with an empty body instead of letting the page fetch
+    // it. Shipping the server without the flag produces a deliverable that
+    // makes outbound calls the in-repo copy does not — the same failure shape
+    // as shipping serve.mjs without probe-shim.js, one layer over.
+    serve: `node serve.mjs --root public --port ${SERVE_PORT}` +
+      (EXT_HOSTS_FLAG.length ? ` --ext-hosts ${EXT_HOSTS_FLAG.join(",")}` : "") +
+      (STUB_HOSTS.length ? ` --stub-ext-hosts ${STUB_HOSTS.join(",")}` : "") +
+      (ORIGIN_HOST_FLAG ? ` --origin-host ${ORIGIN_HOST_FLAG}` : ""),
+  },
+  ...(OWN.length ? { devDependencies: { esbuild: "^0.25.0" } } : {}),
+}, null, 2) + "\n");
+
+// The zero-dependency server travels with the deliverable, AND SO DOES THE
+// DETERMINISM SHIM. ⛔ serve.mjs injects probe-shim.js for `?__probe` requests
+// and looks for it beside itself; shipping the server without it produced a copy
+// that served fine and could not be MEASURED — nine checkpoints of
+// "window.__pump never appeared". A verification hook that travels half-way is
+// a verification hook that does not travel (readable-source.md §2.4).
+for (const f of ["serve.mjs", "probe-shim.js"]) await cp(path.resolve("scripts", f), path.join(OUT, f));
+await cp(path.resolve("scripts/lib"), path.join(OUT, "lib"), { recursive: true });
+
+console.log(`=== make-standalone ===`);
+console.log(`  ${copied} file(s) copied into ${path.relative(process.cwd(), PUBLIC)}  (${(bytes / 1048576).toFixed(1)} MB)`);
+if (OWN.length) console.log(`  own build path(s), excluded from the mirror check: ${OWN.join(", ")}`);
+console.log(`  ${skipped} ledger row(s) skipped: forensic material${REPLACED ? " + the replaced origin bundle" : ""}`);
+// ⛔ One undifferentiated "missing" list is unusable. The classes have different
+// meanings and only one of them is a defect:
+//   • a PAGE outside the declared scope is expected — the scope is a declared
+//     boundary, and a link crossing it is a link, not a hole;
+//   • an ASSET with no file is a real hole in the deliverable.
+// ⚠ `.html` is a page, extension or not. Testing only "has no extension" filed
+// a registered out-of-scope PAGE under missing ASSETS and produced a FAIL that
+// was really a naming mistake in the classifier.
+const isPage = (r) => r.endsWith("/") || /\.x?html?$/i.test(r) || !/\.[a-z0-9]{2,5}$/i.test(r);
+const pages = missing.filter(isPage);
+const assets = missing.filter((r) => !isPage(r));
+if (pages.length) {
+  console.log(`\n  ⚠ ${pages.length} PAGE link(s) point outside the mirrored scope (locale alternates,`);
+  console.log(`    site-wide nav, query-parameterised endpoints stored under encoded names).`);
+  console.log(`    Expected — but the scope they fall outside of must be stated in the plan:`);
+  for (const m of pages.slice(0, 5)) console.log(`      ${m}`);
+  if (pages.length > 5) console.log(`      … ${pages.length - 5} more`);
+}
+if (assets.length) {
+  console.log(`\n  FAIL ${assets.length} ASSET(s) referenced with no file in the mirror. Unlike a page`);
+  console.log(`    link, this is a hole in the deliverable — it will 404 wherever this is copied:`);
+  for (const m of assets.slice(0, 10)) console.log(`      ${m}`);
+}
+console.log(assets.length ? `\n  FAIL — ${assets.length} asset(s) missing.` : `\n  ok   every referenced ASSET is present.`);
+console.log(`\n  ⚠ This copies what the DOCUMENT references. Assets a script builds at runtime`);
+console.log(`    are invisible to it — walk the built copy with a probe before believing it.`);
