@@ -39,7 +39,7 @@ import { scanSrcDecls } from "./lib/decl-scan.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GEN = path.join(ROOT, "port/_gen/engine.gen.js");
-const SRC_ROOT = path.join(ROOT, "src/engine");
+const SRC_ROOT = path.join(ROOT, "src/src/engine");
 const MAP_PATH = path.join(ROOT, "docs/rename-map.json");
 
 let failures = 0;

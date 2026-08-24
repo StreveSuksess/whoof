@@ -1,0 +1,57 @@
+{
+  "kind": "self-band",
+  "sec-hero": {
+    "meanAbsDiff": 0.05,
+    "worstCellDiff": 10.7,
+    "worstCell": [
+      7,
+      29
+    ],
+    "similarityPct": 100
+  },
+  "sec-wearable": {
+    "meanAbsDiff": 0.2,
+    "worstCellDiff": 1.3,
+    "worstCell": [
+      25,
+      4
+    ],
+    "similarityPct": 99.9
+  },
+  "sec-features": {
+    "meanAbsDiff": 0,
+    "worstCellDiff": 0.7,
+    "worstCell": [
+      54,
+      1
+    ],
+    "similarityPct": 100
+  },
+  "sec-sustainability": {
+    "meanAbsDiff": 0,
+    "worstCellDiff": 0.7,
+    "worstCell": [
+      55,
+      1
+    ],
+    "similarityPct": 100
+  },
+  "sec-testimonies": {
+    "meanAbsDiff": 0.01,
+    "worstCellDiff": 1,
+    "worstCell": [
+      58,
+      1
+    ],
+    "similarityPct": 100
+  },
+  "sec-footer": {
+    "meanAbsDiff": 0,
+    "worstCellDiff": 1,
+    "worstCell": [
+      59,
+      1
+    ],
+    "similarityPct": 100
+  }
+}

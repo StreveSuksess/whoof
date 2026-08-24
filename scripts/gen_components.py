@@ -8,7 +8,7 @@ import re, os, sys
 
 ROOT = '/Users/boyang/Documents/GitHub/oryzo-rebuild'
 SRC = open(f'{ROOT}/mirror/index.html').read()
-OUT = f'{ROOT}/src/components'
+OUT = f'{ROOT}/src/src/components'
 
 VOID = {'img','br','input','meta','link','area','base','col','embed','hr','source','track','wbr'}
 

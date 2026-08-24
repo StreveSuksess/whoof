@@ -2,7 +2,7 @@
 
 对 [oryzo.ai](https://oryzo.ai/)(Lusion 出品的创意营销单页,一个恶搞"AI 软木杯垫"的虚构产品站)的 **1:1 工程化复刻**。
 
-> ⚠️ **仅供个人学习研究。** 站点的模型、贴图、文案、品牌、字体授权全部归 Lusion 所有,本仓库不公开部署、不用于任何商业用途。`mirror/` 与 `public/` 中的资产均为学习用途的镜像副本。
+> ⚠️ **仅供个人学习研究。** 站点的模型、贴图、文案、品牌、字体授权全部归 Lusion 所有,本仓库不公开部署、不用于任何商业用途。`mirror/` 与 `src/public/` 中的资产均为学习用途的镜像副本。
 
 ## 为什么做这个
 
@@ -45,9 +45,10 @@ oryzo.ai 是近年少见的"教科书级"创意站:全屏 WebGL2 + 约 46,000px 
 
 ## 本地部署
 
-依赖 Node 18+。
+依赖 Node 18+(验收门脚本需 Node 22+)。可运行工程整个住在 `src/`:
 
 ```bash
+cd src
 npm install
 npm run dev        # 开发模式,默认 http://localhost:4321
 ```
@@ -55,6 +56,7 @@ npm run dev        # 开发模式,默认 http://localhost:4321
 或构建后预览(更接近生产行为,推荐用这个看效果):
 
 ```bash
+cd src
 npm run build
 npm run preview -- --port 4321
 ```
@@ -73,12 +75,26 @@ npm run preview -- --port 4321
 - 引擎层 100% 对照源站自研实现:自定义 Loader/虚拟滚动/`.buf`/`.sog` 解析、后处理链、场景与 section 编排(`src/engine/`)
 - GSAP SplitText、Rive(开场动画)、Vimeo Player、three-msdf-text-utils(源站 vendored 的同一库)
 
-## 目录速览
+## 目录速览(三层结构,单向依赖:证据 → 移植 → 源码)
+
+2026-08 起按 [website-rebuild skill](.claude/skills/website-rebuild/SKILL.md) 的三层契约重整:
 
 ```
-mirror/     源站完整镜像(逆向的原始依据)
-public/            运行时资产(模型/贴图/splats/字体/图片)
-src/engine/        引擎层:core(基建)/ scenes(场景)/ sections(DOM 驱动)/ post(后处理)/ glsl(逐字提取的 shader)
-src/components/    页面 DOM(按源站结构还原的 Astro 组件)
-REBUILD_PLAN.md    逆向笔记 + 里程碑日志
+mirror/                ① 只读证据:源站字节级镜像(206 文件)+ 四本账(manifest/inventory/policy/external)
+  _pretty/             行号坐标系:js-beautify@1.15.1 展开的 bundle(30,536 行,全部溯源引用指向这里)
+port/                  ② 逐字移植:extract-source 按切片表从 _pretty 逐字切出的参照层(--check 守字节一致,永不手改)
+src/                   ③ 人写的工程(自包含,见 src/README.md):
+  src/engine/          引擎层:core(基建)/ scenes(场景)/ sections(DOM 驱动)/ post(后处理)/ glsl(逐字提取的 shader)
+  src/components/      页面 DOM(按源站结构还原的 Astro 组件)
+  public/              运行时资产 + ASSETS.md 账本(203 文件,与镜像逐字节一致)
+docs/                  rename-map.json(port↔src 符号分类映射)/ engine-notes.md(逆向笔记)/ compare/(对拍留证)
+scripts/               零依赖判据(验收门)与工序;全部门命令固化在 GATES.md
+tools/                 源码化阶段的构建器(rename-map 生成等)
+REBUILD_PLAN.md        逆向笔记 + 里程碑日志 + 偏差登记表
+GATES.md               验收门册(每一道门的可复制命令与已知噪声源)
 ```
+
+验收门现状(2026-08-24 实测全绿):镜像五项断言 + 线上抽样回源、port 字节一致、
+port↔src 分类映射双向闭合(1059 港侧 / 868 源侧声明)、bundle 覆盖账无缝、零依赖分界、
+自包含(复制出仓断网安装构建 + 真跑对拍)、双侧 CLEAN、section 锚点像素巡航 6/6
+(自比带宽 ≤0.2,跨侧最差 1.35)。
