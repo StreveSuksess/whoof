@@ -67,7 +67,7 @@ export class LifeGallery {
     if(!reduced&&this.lastReduced)this.playbackAllowed=true;
     this.lastReduced=reduced;
     const local=scroll-this.start/this.height;
-    const state=getGalleryState(local,reduced);this.cover=state.cover;
+    const state=getGalleryState(local,reduced,this.root.hasAttribute('data-gallery-exit'));this.cover=state.cover;
     this.stage.style.visibility=state.visible?'visible':'hidden';
     this.stage.setAttribute('aria-hidden',String(!state.visible));
     this.stage.inert=state.cover<.95;

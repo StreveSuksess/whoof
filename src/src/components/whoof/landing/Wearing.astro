@@ -1,0 +1,23 @@
+---
+import LifeGallery from '../LifeGallery.astro';
+const facts=[
+ {id:'weight',value:'≈ 8',unit:'г',caption:'Трекер без ремешка'},
+ {id:'battery',value:'До 7',unit:'дней',caption:'Заявленная автономность · зависит от использования'},
+ {id:'activity',value:'42 × 22 × 12',unit:'мм',caption:'Размер устройства без ремешка'},
+];
+---
+<section id="wearing" data-block="7" data-tone="light" aria-labelledby="wearing-title">
+  <div id="details" aria-label="Размер, вес и автономность Whoof">
+    <div class="details-ui">
+      <img class="wearing-model-fallback" src="/whoof/reference-full.png" alt="Ошейник Whoof с трекером" width="1100" height="1100" loading="lazy"/>
+      <div class="wearing-stage-heading"><span class="small-label">В его повседневности</span><h2 id="wearing-title">Маленькая деталь.<br/> На каждый день.</h2></div>
+      <div class="detail-facts">{facts.map((f,i)=><article class={'detail-fact detail-fact-'+f.id} data-property={i}><h3 class="detail-value" aria-label={f.value+' '+f.unit}>{f.value}<span class="detail-unit"> {f.unit}</span></h3><p class="detail-caption">{f.caption}</p></article>)}</div>
+      <nav class="detail-steps" aria-label="Характеристики устройства">{facts.map((f,i)=><button data-step={i} aria-label={f.value+' '+f.unit+' — '+f.caption}><span>{'0'+(i+1)}</span><i aria-hidden="true"></i></button>)}</nav>
+    </div>
+  </div>
+  <div class="wearing-notes editorial-section">
+    <div class="section-heading"><h3 data-reveal>Комфорт —<br/> в деталях ношения.</h3><p data-reveal>Ремешок регулируется по обхвату шеи. Датчику не нужен контакт с кожей — важно удобное, устойчивое положение.</p></div>
+    <dl class="wearing-specs"><div><dt>Крепление</dt><dd>Ремешок для трекера — не для поводка. Для прогулки используйте отдельный ошейник или шлейку.</dd></div><div><dt>Зарядка</dt><dd>В материалах указан ориентир 1,5–2 часа. Регулярность зарядки зависит от режима использования.</dd></div><div><dt>Вода</dt><dd>Заявлена защита IP68: до 1 метра, до 30 минут. Соблюдайте условия эксплуатации.</dd></div><div><dt>Подойдёт ли вашей собаке?</dt><dd>Уточните размер ремешка и крепление перед заказом. Для очень маленькой собаки или при заболеваниях шеи обсудите ношение с ветеринаром.</dd></div></dl>
+  </div>
+  <LifeGallery exit kicker="Маленький трекер." word="Рядом." />
+</section>

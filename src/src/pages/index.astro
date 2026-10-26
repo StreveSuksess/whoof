@@ -1,11 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Opening from '../components/whoof/Opening.astro';
+import Landing from '../components/whoof/landing/Landing.astro';
 ---
 <Layout>
-  <Opening />
+  <Landing />
   <script>
-    import { bootOpening } from '../engine/whoof/Opening';
-    bootOpening();
+    import {bootLanding} from '../engine/whoof/landing/Landing';
+    bootLanding();
   </script>
 </Layout>

@@ -6,7 +6,7 @@ import { fit } from '../core/math';
 export class HeroCard {
   private card=document.querySelector<HTMLElement>('.hero-glass')!;
   private divider=this.card.querySelector<HTMLElement>('.dashed-rule')!;
-  private title=SplitText.create(this.card.querySelector('h2')!,{type:'lines',mask:'lines',autoSplit:false});
+  private title=SplitText.create(this.card.querySelector('h1,h2')!,{type:'lines',mask:'lines',autoSplit:false});
   private description=SplitText.create(this.card.querySelector('p')!,{type:'lines',mask:'lines',autoSplit:false});
   resize(){this.title.split({type:'lines',mask:'lines',autoSplit:false});this.description.split({type:'lines',mask:'lines',autoSplit:false});}
   render(scroll:number,elapsed:number,ready:boolean,reduced:boolean){

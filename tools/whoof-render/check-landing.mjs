@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {build} from '../../src/node_modules/esbuild/lib/main.js';
+const app=resolve(import.meta.dirname,'../../src');
+const markup=readFileSync(resolve(app,'dist/index.html'),'utf8');
+const blocks=[...markup.matchAll(/data-block="(\d+)"/g)].map(m=>Number(m[1]));
+assert.deepEqual(blocks,[1,2,3,4,5,6,7,8,9],'nine semantic blocks in approved order');
+assert.equal((markup.match(/<h1\b/g)||[]).length,1);
+assert.equal((markup.match(/class="life-card"/g)||[]).length,7,'seven genuine video cards retained');
+assert.ok(markup.includes('data-gallery-exit'),'gallery must release the later offer and FAQ');
+assert.ok(!markup.includes('app-profile.webp'),'do not reintroduce unsupported pulse mockup');
+assert.ok(markup.includes('14 990')&&markup.includes('19 990')&&markup.includes('6 000'));
+assert.ok(markup.includes('предзаказ')&&markup.includes('Bluetooth'));
+assert.ok(!markup.includes('life-prev')&&!markup.includes('life-dots'));
+assert.ok(existsSync(resolve(app,'../../saved-versions/whoof-v26-2026-10-27/site/index.html')),'independent v26 build exists');
+for(const [,path] of markup.matchAll(/(?:src|poster)="(\/whoof\/[^"?#]+)"/g))assert.ok(existsSync(resolve(app,'public'+path)),path+' exists');
+const {outputFiles}=await build({entryPoints:[resolve(app,'src/engine/whoof/life/GalleryMotion.ts')],bundle:true,write:false,format:'esm',platform:'node'});
+const {getGalleryState,cardStops}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
+const last=cardStops.at(-1);
+assert.equal(getGalleryState(last+.5,false,true).cover,1,'last scene has a reading hold');
+assert.equal(getGalleryState(last+1.6,false,true).cover,0,'offer is no longer covered');
+assert.equal(getGalleryState(last+1.6,false,true).visible,false);
+assert.equal(getGalleryState(last,false,true).cover,1,'reverse restores the last video');
+assert.equal(getGalleryState(100,false).cover,1,'legacy gallery behavior is retained by default');
+for(let t=last+.6;t<last+1.6;t+=.03){const s=getGalleryState(t,false,true);assert.ok(s.cover>=0&&s.cover<=1);assert.deepEqual(s,getGalleryState(t,false,true));}
+console.log('Landing: nine-block order, seven real videos, saved baseline, asset paths, truthful mockup exclusions and reversible gallery exit passed.');
