@@ -1,0 +1,69 @@
+import { AgXToneMapping, Euler, Group, Object3D, PerspectiveCamera, Quaternion, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
+import { FrameAnimation } from '../FrameAnimation';
+import { loadBuf } from '../BufLoader';
+import { ease } from '../core/ease';
+import { createProductCollar } from './ProductCollar';
+import { matchOpeningMaterials, openingColorLook, openingEnvironment } from './OpeningLighting';
+import {collarLift} from './OpeningTransition';
+const clamp=(n:number)=>Math.max(0,Math.min(1,n));
+
+/** Live continuation of the offline first frame. Camera starts at the baked pose. */
+export class OpeningScene {
+  renderer:WebGLRenderer;
+  scene=new Scene();camera=new PerspectiveCamera(27,1,.1,60);
+  product=new Group();model=new Group();
+  sourceCamera=new Object3D();sourceProduct=new Object3D();
+  cameraTrack=new FrameAnimation();productTrack=new FrameAnimation();
+  originCamera=new Quaternion();originProduct=new Quaternion();motion=new Quaternion();
+  heroRotation=new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-.28);
+  finalRotation=new Quaternion().setFromEuler(new Euler(-.25,-.3,.17));
+  studioEnvironment?:WebGLRenderTarget;
+  width=1;height=1;mobile=false;portrait=false;
+  constructor(container:HTMLElement){
+    this.renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
+    this.renderer.setClearColor(0,0);this.renderer.outputColorSpace=SRGBColorSpace;this.renderer.toneMapping=AgXToneMapping;this.renderer.toneMappingExposure=1;
+    container.append(this.renderer.domElement);this.renderer.domElement.setAttribute('aria-hidden','true');
+    this.product.add(this.model);this.scene.add(this.product);
+
+  }
+  async load(onProgress:(n:number)=>void){
+    onProgress(18);
+    await Promise.all([
+      // The captured table already blocks lower-hemisphere light. Do not apply
+      // the review studio's stronger inner-band occlusion on top of that.
+      Promise.all([createProductCollar(true,.78),openingColorLook()]).then(([c,look])=>{matchOpeningMaterials(c.group,look);this.model.add(c.group);onProgress(74);}),
+      openingEnvironment(this.renderer).then(target=>{this.studioEnvironment=target;this.scene.environment=target.texture;}),
+      loadBuf('/models/hero_camera.buf').then(g=>{this.cameraTrack.setTarget(this.sourceCamera);this.cameraTrack.setGeometry(g);this.cameraTrack.applyTransform(0);this.originCamera.copy(this.sourceCamera.quaternion);}),
+      loadBuf('/models/coaster_hero_animation.buf').then(g=>{this.productTrack.setTarget(this.sourceProduct);this.productTrack.setGeometry(g);this.productTrack.applyTransform(0);this.originProduct.copy(this.sourceProduct.quaternion).invert();})
+    ]);onProgress(100);
+  }
+  resize(width:number,height:number){
+    this.width=width;this.height=height;this.mobile=width<=600;this.portrait=width/height<=1;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,this.mobile?1.5:1.8));this.renderer.setSize(width,height);
+  }
+  render(scroll:number,px:number,py:number,reduced:boolean){
+    const leave=collarLift(scroll),p=clamp((scroll-.45)/3);
+    this.cameraTrack.applyTransform(reduced?0:p*68);this.productTrack.applyTransform(reduced?0:p*68);
+    this.motion.copy(this.originCamera).multiply(this.sourceCamera.quaternion.clone().invert()).multiply(this.sourceProduct.quaternion).multiply(this.originProduct);
+    this.product.quaternion.copy(this.heroRotation).multiply(this.motion);
+    if(!reduced)this.product.quaternion.slerp(this.finalRotation,ease.cubicInOut(clamp((p-.80)/.20)));
+    const stacked=this.width/this.height<=1.2;
+    const scale=1.2+((this.mobile?1.48:stacked?1.68:1.88)-1.2)*leave;
+    this.product.scale.setScalar(scale*(1+.03*Math.sin(p*Math.PI)));
+    this.product.position.set(0,.305*(1-leave)+(.45+(this.sourceProduct.position.y-.748364)*1.8)*leave,0);
+    if(this.mobile)this.product.position.y+=.54*leave;
+    this.camera.position.set(px*.10*leave,9+.4*leave+py*.06*leave,6.1-.5*leave);this.camera.lookAt(0,0,0);
+    // Exactly the offline plate's sensor crop, gradually returning to full viewport.
+    const baseW=this.portrait?1600:2560,baseH=this.portrait?2286:1600;
+    const cover=Math.max(this.width/baseW,this.height/baseH),fullW=baseW*cover,fullH=baseH*cover;
+    const shift=this.portrait?-.14:-.025;
+    this.camera.fov=(this.portrait?31.5:27)*(1-leave)+(this.mobile?39:32)*leave;
+    // Reference FeaturesSection shifts the product away from its text column.
+    // Keep the source rotation and lights; only the composition changes here.
+    const side=1-2*ease.cubicInOut(clamp((scroll-1.50)/.50))+2*ease.cubicInOut(clamp((scroll-2.60)/.50));
+    const detailX=stacked?0:-this.width*.12*side;
+    const detailY=stacked?this.height*(this.mobile?.025:.09):0;
+    this.camera.setViewOffset(fullW+(this.width-fullW)*leave,fullH+(this.height-fullH)*leave,(fullW-this.width)/2*(1-leave)+detailX*leave,((fullH-this.height)/2-shift*fullH)*(1-leave)+detailY*leave,this.width,this.height);
+    this.renderer.render(this.scene,this.camera);
+  }
+}

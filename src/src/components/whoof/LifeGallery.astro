@@ -1,0 +1,26 @@
+---
+import { lifeScenes as scenes } from '../../engine/whoof/life/LifeScenes';
+---
+<section id="life" aria-labelledby="life-title" style={`--scene-count:${scenes.length}`}>
+  <div class="life-stage">
+    <h2 id="life-title" aria-label="Его день. Понятнее."><span class="life-title-kicker">Его день.</span><span class="life-lettering"><span class="life-lettering-core">Понятнее.</span><span class="life-lettering-glow life-lettering-glow-near" aria-hidden="true">Понятнее.</span><span class="life-lettering-glow life-lettering-glow-far" aria-hidden="true">Понятнее.</span></span></h2>
+    <div class="life-title-anchor" aria-hidden="true"></div>
+    <div class="life-composition">
+      <div class="life-thumbs life-thumbs-left" aria-hidden="true"><div class="life-thumbs-rail">{scenes.map(scene=><div class="life-thumb"><img src={`${scene.media}.webp`} alt="" loading="lazy" width="720" height="932"/></div>)}</div></div>
+      <div class="life-frame" role="group" aria-roledescription="галерея" aria-label="Активность, сон и привычный ритм. Листайте страницу или используйте стрелки на клавиатуре." tabindex="0">
+        <div class="life-rail">
+          {scenes.map((scene,i)=><figure class="life-card" data-scene={i} aria-label={`${i+1} из ${scenes.length}. ${scene.category}`}>
+            <div class="life-card-media"><video muted loop playsinline preload="none" poster={`${scene.media}.webp`} src={`${scene.media}.mp4`} aria-label={scene.alt} controls/></div>
+            <figcaption class="life-story">
+              <p class="life-story-category" data-life-copy>{scene.category}</p>
+              <h3 data-life-copy>{scene.title.map((line,j)=><>{j>0&&<><br/>{' '}</>}{line}</>)}</h3>
+              <p class="life-story-description" data-life-copy>{scene.description}</p>
+            </figcaption>
+          </figure>)}
+        </div>
+        <button class="life-start" type="button" hidden aria-label="Воспроизвести видео"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z" fill="currentColor"/></svg></button>
+      </div>
+      <div class="life-thumbs life-thumbs-right" aria-hidden="true"><div class="life-thumbs-rail">{scenes.map(scene=><div class="life-thumb"><img src={`${scene.media}.webp`} alt="" loading="lazy" width="720" height="932"/></div>)}</div></div>
+    </div>
+  </div>
+</section>

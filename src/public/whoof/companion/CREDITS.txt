@@ -1,0 +1,10 @@
+Labrador Dog — kenchoo
+https://sketchfab.com/3d-models/labrador-dog-1f56cfbab07e4fe49b5d9e521c82073a
+Based on Dog — all of life
+https://skfb.ly/oHLVz
+License: Creative Commons Attribution 4.0
+https://creativecommons.org/licenses/by/4.0/
+
+Whoof adaptation: authored seated pose and rest rig, directional short guard hairs,
+material response, restrained head following, facial animation, Whoof collar fitting.
+Original model downloaded through Sketchfab's official download on 2026-10-10.

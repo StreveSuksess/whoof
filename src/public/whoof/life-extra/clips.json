@@ -1,0 +1,42 @@
+[
+  {
+    "id": "daytime",
+    "source": "reference-slides.mp4",
+    "firstFrame": 195,
+    "endExclusive": 309,
+    "crop": [
+      700,
+      120,
+      1520,
+      1182
+    ],
+    "fps": 30,
+    "frames": 114,
+    "duration": 3.8,
+    "size": [
+      720,
+      932
+    ],
+    "bytes": 974464
+  },
+  {
+    "id": "routine",
+    "source": "reference-slides.mp4",
+    "firstFrame": 330,
+    "endExclusive": 453,
+    "crop": [
+      1490,
+      120,
+      2310,
+      1182
+    ],
+    "fps": 30,
+    "frames": 123,
+    "duration": 4.1,
+    "size": [
+      720,
+      932
+    ],
+    "bytes": 817600
+  }
+]

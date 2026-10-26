@@ -1,0 +1,1019 @@
+{
+  "camera": {
+    "position": [
+      0,
+      9,
+      6.1
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "fov": 27,
+    "shiftY": -0.02500000037252903
+  },
+  "product": {
+    "position": [
+      0,
+      0.305,
+      0
+    ],
+    "rotationY": -0.28,
+    "scale": 1.2
+  },
+  "width": 2560,
+  "height": 1600,
+  "renderer": "Blender 4.5.9 Cycles",
+  "samples": 96,
+  "source": "ProductCollar.ts and supplied device.stl",
+  "layers": {
+    "collar": {
+      "x": 0.4935573488473892,
+      "y": 0.45414257049560547,
+      "width": 0.3468991219997406,
+      "height": 0.47394073009490967
+    },
+    "leash": {
+      "x": 0.7799412608146667,
+      "y": 0.22969448566436768,
+      "width": 0.24754858016967773,
+      "height": 0.45645391941070557
+    },
+    "keys": {
+      "x": 0.19662799686193466,
+      "y": 0.38375324010849,
+      "width": 0.14990384876728058,
+      "height": 0.2541154623031616
+    },
+    "ball": {
+      "x": 0.9410990476608276,
+      "y": 0.6926616504788399,
+      "width": 0.12575221061706543,
+      "height": 0.18619723618030548
+    }
+  },
+  "walkProps": "Grounded hinges/rolling; inextensible lead bend and rigid terminal swivel",
+  "motion": {
+    "keys": {
+      "rect": [
+        0.080078125,
+        0.21625,
+        0.24179687500000002,
+        0.345625
+      ],
+      "frames": [
+        "landscape-keys-00.webp",
+        "landscape-keys-01.webp",
+        "landscape-keys-02.webp",
+        "landscape-keys-03.webp",
+        "landscape-keys-04.webp",
+        "landscape-keys-05.webp",
+        "landscape-keys-06.webp",
+        "landscape-keys-07.webp",
+        "landscape-keys-08.webp",
+        "landscape-keys-09.webp",
+        "landscape-keys-10.webp",
+        "landscape-keys-11.webp",
+        "landscape-keys-12.webp",
+        "landscape-keys-13.webp",
+        "landscape-keys-14.webp",
+        "landscape-keys-15.webp",
+        "landscape-keys-16.webp",
+        "landscape-keys-17.webp",
+        "landscape-keys-18.webp",
+        "landscape-keys-19.webp",
+        "landscape-keys-20.webp",
+        "landscape-keys-21.webp",
+        "landscape-keys-22.webp",
+        "landscape-keys-23.webp",
+        "landscape-keys-24.webp",
+        "landscape-keys-25.webp",
+        "landscape-keys-26.webp",
+        "landscape-keys-27.webp",
+        "landscape-keys-28.webp",
+        "landscape-keys-29.webp",
+        "landscape-keys-30.webp",
+        "landscape-keys-31.webp",
+        "landscape-keys-32.webp",
+        "landscape-keys-33.webp",
+        "landscape-keys-34.webp",
+        "landscape-keys-35.webp",
+        "landscape-keys-36.webp",
+        "landscape-keys-37.webp",
+        "landscape-keys-38.webp",
+        "landscape-keys-39.webp",
+        "landscape-keys-40.webp",
+        "landscape-keys-41.webp",
+        "landscape-keys-42.webp",
+        "landscape-keys-43.webp",
+        "landscape-keys-44.webp",
+        "landscape-keys-45.webp",
+        "landscape-keys-46.webp",
+        "landscape-keys-47.webp",
+        "landscape-keys-48.webp",
+        "landscape-keys-49.webp",
+        "landscape-keys-50.webp",
+        "landscape-keys-51.webp",
+        "landscape-keys-52.webp",
+        "landscape-keys-53.webp",
+        "landscape-keys-54.webp",
+        "landscape-keys-55.webp",
+        "landscape-keys-56.webp",
+        "landscape-keys-57.webp",
+        "landscape-keys-58.webp",
+        "landscape-keys-59.webp",
+        "landscape-keys-60.webp",
+        "landscape-keys-61.webp",
+        "landscape-keys-62.webp",
+        "landscape-keys-63.webp",
+        "landscape-keys-64.webp"
+      ],
+      "pivot": [
+        0.19833001494407654,
+        0.394944429397583
+      ],
+      "axis": [
+        1.0,
+        0.0
+      ],
+      "reach": 0.15246927738189697,
+      "segments": [
+        [
+          [
+            0.18867738544940948,
+            0.4032335877418518
+          ],
+          [
+            0.14058546721935272,
+            0.4841761589050293
+          ]
+        ],
+        [
+          [
+            0.20976123213768005,
+            0.3994552493095398
+          ],
+          [
+            0.2259155958890915,
+            0.49457794427871704
+          ]
+        ]
+      ],
+      "radius": 0.021
+    },
+    "leash": {
+      "rect": [
+        0.62109375,
+        0.0,
+        0.34257812499999996,
+        0.511875
+      ],
+      "frames": [
+        "landscape-leash-00.webp",
+        "landscape-leash-01.webp",
+        "landscape-leash-02.webp",
+        "landscape-leash-03.webp",
+        "landscape-leash-04.webp",
+        "landscape-leash-05.webp",
+        "landscape-leash-06.webp",
+        "landscape-leash-07.webp",
+        "landscape-leash-08.webp",
+        "landscape-leash-09.webp",
+        "landscape-leash-10.webp",
+        "landscape-leash-11.webp",
+        "landscape-leash-12.webp",
+        "landscape-leash-13.webp",
+        "landscape-leash-14.webp",
+        "landscape-leash-15.webp",
+        "landscape-leash-16.webp",
+        "landscape-leash-17.webp",
+        "landscape-leash-18.webp",
+        "landscape-leash-19.webp",
+        "landscape-leash-20.webp",
+        "landscape-leash-21.webp",
+        "landscape-leash-22.webp",
+        "landscape-leash-23.webp",
+        "landscape-leash-24.webp",
+        "landscape-leash-25.webp",
+        "landscape-leash-26.webp",
+        "landscape-leash-27.webp",
+        "landscape-leash-28.webp",
+        "landscape-leash-29.webp",
+        "landscape-leash-30.webp",
+        "landscape-leash-31.webp",
+        "landscape-leash-32.webp",
+        "landscape-leash-33.webp",
+        "landscape-leash-34.webp",
+        "landscape-leash-35.webp",
+        "landscape-leash-36.webp",
+        "landscape-leash-37.webp",
+        "landscape-leash-38.webp",
+        "landscape-leash-39.webp",
+        "landscape-leash-40.webp",
+        "landscape-leash-41.webp",
+        "landscape-leash-42.webp",
+        "landscape-leash-43.webp",
+        "landscape-leash-44.webp",
+        "landscape-leash-45.webp",
+        "landscape-leash-46.webp",
+        "landscape-leash-47.webp",
+        "landscape-leash-48.webp",
+        "landscape-leash-49.webp",
+        "landscape-leash-50.webp",
+        "landscape-leash-51.webp",
+        "landscape-leash-52.webp",
+        "landscape-leash-53.webp",
+        "landscape-leash-54.webp",
+        "landscape-leash-55.webp",
+        "landscape-leash-56.webp",
+        "landscape-leash-57.webp",
+        "landscape-leash-58.webp",
+        "landscape-leash-59.webp",
+        "landscape-leash-60.webp",
+        "landscape-leash-61.webp",
+        "landscape-leash-62.webp",
+        "landscape-leash-63.webp",
+        "landscape-leash-64.webp"
+      ],
+      "pivot": [
+        0.8347154855728149,
+        0.3169103264808655
+      ],
+      "axis": [
+        0.11679250001907349,
+        0.03468215465545654
+      ],
+      "reach": 0.2738723516464233,
+      "segments": [],
+      "radius": 0.012,
+      "contacts": [
+        {
+          "negative": [
+            [
+              0.7216123938560486,
+              0.2767713665962219
+            ],
+            [
+              0.7192294597625732,
+              0.29929763078689575
+            ]
+          ],
+          "rest": [
+            [
+              0.7216203212738037,
+              0.27677488327026367
+            ],
+            [
+              0.7192946076393127,
+              0.29931461811065674
+            ]
+          ],
+          "positive": [
+            [
+              0.7216282486915588,
+              0.2767784595489502
+            ],
+            [
+              0.7193597555160522,
+              0.2993313670158386
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.7192294597625732,
+              0.29929763078689575
+            ],
+            [
+              0.7241202592849731,
+              0.3280177116394043
+            ]
+          ],
+          "rest": [
+            [
+              0.7192946076393127,
+              0.29931461811065674
+            ],
+            [
+              0.7243906855583191,
+              0.3279989957809448
+            ]
+          ],
+          "positive": [
+            [
+              0.7193597555160522,
+              0.2993313670158386
+            ],
+            [
+              0.7246606349945068,
+              0.3279774785041809
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.7241202592849731,
+              0.3280177116394043
+            ],
+            [
+              0.7349430918693542,
+              0.361558198928833
+            ]
+          ],
+          "rest": [
+            [
+              0.7243906855583191,
+              0.3279989957809448
+            ],
+            [
+              0.7357307076454163,
+              0.361308217048645
+            ]
+          ],
+          "positive": [
+            [
+              0.7246606349945068,
+              0.3279774785041809
+            ],
+            [
+              0.7365124821662903,
+              0.36104124784469604
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.7349430918693542,
+              0.361558198928833
+            ],
+            [
+              0.752090573310852,
+              0.37592363357543945
+            ]
+          ],
+          "rest": [
+            [
+              0.7357307076454163,
+              0.361308217048645
+            ],
+            [
+              0.7531710267066956,
+              0.3749430179595947
+            ]
+          ],
+          "positive": [
+            [
+              0.7365124821662903,
+              0.36104124784469604
+            ],
+            [
+              0.7542233467102051,
+              0.37393176555633545
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.752090573310852,
+              0.37592363357543945
+            ],
+            [
+              0.7790321707725525,
+              0.3667336106300354
+            ]
+          ],
+          "rest": [
+            [
+              0.7531710267066956,
+              0.3749430179595947
+            ],
+            [
+              0.7795034050941467,
+              0.3639528155326843
+            ]
+          ],
+          "positive": [
+            [
+              0.7542233467102051,
+              0.37393176555633545
+            ],
+            [
+              0.779876172542572,
+              0.3611783981323242
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.7790321707725525,
+              0.3667336106300354
+            ],
+            [
+              0.8043249845504761,
+              0.34552693367004395
+            ]
+          ],
+          "rest": [
+            [
+              0.7795034050941467,
+              0.3639528155326843
+            ],
+            [
+              0.8031482696533203,
+              0.340237021446228
+            ]
+          ],
+          "positive": [
+            [
+              0.779876172542572,
+              0.3611783981323242
+            ],
+            [
+              0.8017444014549255,
+              0.3351081609725952
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8043249845504761,
+              0.34552693367004395
+            ],
+            [
+              0.8180808424949646,
+              0.31141477823257446
+            ]
+          ],
+          "rest": [
+            [
+              0.8031482696533203,
+              0.340237021446228
+            ],
+            [
+              0.8137654662132263,
+              0.30421823263168335
+            ]
+          ],
+          "positive": [
+            [
+              0.8017444014549255,
+              0.3351081609725952
+            ],
+            [
+              0.8091349005699158,
+              0.2975882291793823
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8180808424949646,
+              0.31141477823257446
+            ],
+            [
+              0.827785313129425,
+              0.27227187156677246
+            ]
+          ],
+          "rest": [
+            [
+              0.8137654662132263,
+              0.30421823263168335
+            ],
+            [
+              0.8189874291419983,
+              0.2633025646209717
+            ]
+          ],
+          "positive": [
+            [
+              0.8091349005699158,
+              0.2975882291793823
+            ],
+            [
+              0.8098166584968567,
+              0.25563108921051025
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.827785313129425,
+              0.27227187156677246
+            ],
+            [
+              0.8409122824668884,
+              0.25187909603118896
+            ]
+          ],
+          "rest": [
+            [
+              0.8189874291419983,
+              0.2633025646209717
+            ],
+            [
+              0.8290295004844666,
+              0.24028348922729492
+            ]
+          ],
+          "positive": [
+            [
+              0.8098166584968567,
+              0.25563108921051025
+            ],
+            [
+              0.8165629506111145,
+              0.23057085275650024
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8409122824668884,
+              0.25187909603118896
+            ],
+            [
+              0.8561809062957764,
+              0.24598175287246704
+            ]
+          ],
+          "rest": [
+            [
+              0.8290295004844666,
+              0.24028348922729492
+            ],
+            [
+              0.8427955508232117,
+              0.2311435341835022
+            ]
+          ],
+          "positive": [
+            [
+              0.8165629506111145,
+              0.23057085275650024
+            ],
+            [
+              0.8284599184989929,
+              0.21850484609603882
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8561809062957764,
+              0.24598175287246704
+            ],
+            [
+              0.8694745898246765,
+              0.25101345777511597
+            ]
+          ],
+          "rest": [
+            [
+              0.8427955508232117,
+              0.2311435341835022
+            ],
+            [
+              0.8561730980873108,
+              0.23320060968399048
+            ]
+          ],
+          "positive": [
+            [
+              0.8284599184989929,
+              0.21850484609603882
+            ],
+            [
+              0.8415003418922424,
+              0.2175801396369934
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8694745898246765,
+              0.25101345777511597
+            ],
+            [
+              0.8815905451774597,
+              0.27017027139663696
+            ]
+          ],
+          "rest": [
+            [
+              0.8561730980873108,
+              0.23320060968399048
+            ],
+            [
+              0.8706164360046387,
+              0.24947768449783325
+            ]
+          ],
+          "positive": [
+            [
+              0.8415003418922424,
+              0.2175801396369934
+            ],
+            [
+              0.8577210307121277,
+              0.23045271635055542
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8815905451774597,
+              0.27017027139663696
+            ],
+            [
+              0.8886154294013977,
+              0.2949322462081909
+            ]
+          ],
+          "rest": [
+            [
+              0.8706164360046387,
+              0.24947768449783325
+            ],
+            [
+              0.8812884092330933,
+              0.27243566513061523
+            ]
+          ],
+          "positive": [
+            [
+              0.8577210307121277,
+              0.23045271635055542
+            ],
+            [
+              0.8715426921844482,
+              0.25071609020233154
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8886154294013977,
+              0.2949322462081909
+            ],
+            [
+              0.8832739591598511,
+              0.315502405166626
+            ]
+          ],
+          "rest": [
+            [
+              0.8812884092330933,
+              0.27243566513061523
+            ],
+            [
+              0.8797985911369324,
+              0.2943524122238159
+            ]
+          ],
+          "positive": [
+            [
+              0.8715426921844482,
+              0.25071609020233154
+            ],
+            [
+              0.8738936185836792,
+              0.2729598879814148
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8832739591598511,
+              0.315502405166626
+            ],
+            [
+              0.8693299293518066,
+              0.3346468210220337
+            ]
+          ],
+          "rest": [
+            [
+              0.8797985911369324,
+              0.2943524122238159
+            ],
+            [
+              0.8701000809669495,
+              0.3172106146812439
+            ]
+          ],
+          "positive": [
+            [
+              0.8738936185836792,
+              0.2729598879814148
+            ],
+            [
+              0.8688202500343323,
+              0.2983464002609253
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8693299293518066,
+              0.3346468210220337
+            ],
+            [
+              0.862248957157135,
+              0.3443722724914551
+            ]
+          ],
+          "rest": [
+            [
+              0.8701000809669495,
+              0.3172106146812439
+            ],
+            [
+              0.865185022354126,
+              0.32885950803756714
+            ]
+          ],
+          "positive": [
+            [
+              0.8688202500343323,
+              0.2983464002609253
+            ],
+            [
+              0.8662774562835693,
+              0.3113037347793579
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.862248957157135,
+              0.3443722724914551
+            ],
+            [
+              0.8485484719276428,
+              0.38296860456466675
+            ]
+          ],
+          "rest": [
+            [
+              0.865185022354126,
+              0.32885950803756714
+            ],
+            [
+              0.8598842620849609,
+              0.3714677095413208
+            ]
+          ],
+          "positive": [
+            [
+              0.8662774562835693,
+              0.3113037347793579
+            ],
+            [
+              0.8695761561393738,
+              0.3555210828781128
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8485484719276428,
+              0.38296860456466675
+            ],
+            [
+              0.844238817691803,
+              0.4122239947319031
+            ]
+          ],
+          "rest": [
+            [
+              0.8598842620849609,
+              0.3714677095413208
+            ],
+            [
+              0.8596506714820862,
+              0.40153324604034424
+            ]
+          ],
+          "positive": [
+            [
+              0.8695761561393738,
+              0.3555210828781128
+            ],
+            [
+              0.8733125925064087,
+              0.38520532846450806
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.844238817691803,
+              0.4122239947319031
+            ],
+            [
+              0.8271722197532654,
+              0.42892909049987793
+            ]
+          ],
+          "rest": [
+            [
+              0.8596506714820862,
+              0.40153324604034424
+            ],
+            [
+              0.8465560674667358,
+              0.42308998107910156
+            ]
+          ],
+          "positive": [
+            [
+              0.8733125925064087,
+              0.38520532846450806
+            ],
+            [
+              0.8648545742034912,
+              0.41042131185531616
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8271722197532654,
+              0.42892909049987793
+            ],
+            [
+              0.8314123153686523,
+              0.45267683267593384
+            ]
+          ],
+          "rest": [
+            [
+              0.8465560674667358,
+              0.42308998107910156
+            ],
+            [
+              0.854741632938385,
+              0.44569337368011475
+            ]
+          ],
+          "positive": [
+            [
+              0.8648545742034912,
+              0.41042131185531616
+            ],
+            [
+              0.8765151500701904,
+              0.4307044744491577
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8314123153686523,
+              0.45267683267593384
+            ],
+            [
+              0.8466506004333496,
+              0.44557464122772217
+            ]
+          ],
+          "rest": [
+            [
+              0.854741632938385,
+              0.44569337368011475
+            ],
+            [
+              0.8677978515625,
+              0.4342377781867981
+            ]
+          ],
+          "positive": [
+            [
+              0.8765151500701904,
+              0.4307044744491577
+            ],
+            [
+              0.8866981863975525,
+              0.4155741333961487
+            ]
+          ]
+        }
+      ]
+    },
+    "ball": {
+      "rect": [
+        0.826953125,
+        0.548125,
+        0.17304687500000004,
+        0.2975
+      ],
+      "frames": [
+        "landscape-ball-00.webp",
+        "landscape-ball-01.webp",
+        "landscape-ball-02.webp",
+        "landscape-ball-03.webp",
+        "landscape-ball-04.webp",
+        "landscape-ball-05.webp",
+        "landscape-ball-06.webp",
+        "landscape-ball-07.webp",
+        "landscape-ball-08.webp",
+        "landscape-ball-09.webp",
+        "landscape-ball-10.webp",
+        "landscape-ball-11.webp",
+        "landscape-ball-12.webp",
+        "landscape-ball-13.webp",
+        "landscape-ball-14.webp",
+        "landscape-ball-15.webp",
+        "landscape-ball-16.webp",
+        "landscape-ball-17.webp",
+        "landscape-ball-18.webp",
+        "landscape-ball-19.webp",
+        "landscape-ball-20.webp",
+        "landscape-ball-21.webp",
+        "landscape-ball-22.webp",
+        "landscape-ball-23.webp",
+        "landscape-ball-24.webp",
+        "landscape-ball-25.webp",
+        "landscape-ball-26.webp",
+        "landscape-ball-27.webp",
+        "landscape-ball-28.webp",
+        "landscape-ball-29.webp",
+        "landscape-ball-30.webp",
+        "landscape-ball-31.webp",
+        "landscape-ball-32.webp",
+        "landscape-ball-33.webp",
+        "landscape-ball-34.webp",
+        "landscape-ball-35.webp",
+        "landscape-ball-36.webp",
+        "landscape-ball-37.webp",
+        "landscape-ball-38.webp",
+        "landscape-ball-39.webp",
+        "landscape-ball-40.webp",
+        "landscape-ball-41.webp",
+        "landscape-ball-42.webp",
+        "landscape-ball-43.webp",
+        "landscape-ball-44.webp",
+        "landscape-ball-45.webp",
+        "landscape-ball-46.webp",
+        "landscape-ball-47.webp",
+        "landscape-ball-48.webp",
+        "landscape-ball-49.webp",
+        "landscape-ball-50.webp",
+        "landscape-ball-51.webp",
+        "landscape-ball-52.webp",
+        "landscape-ball-53.webp",
+        "landscape-ball-54.webp",
+        "landscape-ball-55.webp",
+        "landscape-ball-56.webp",
+        "landscape-ball-57.webp",
+        "landscape-ball-58.webp",
+        "landscape-ball-59.webp",
+        "landscape-ball-60.webp",
+        "landscape-ball-61.webp",
+        "landscape-ball-62.webp",
+        "landscape-ball-63.webp",
+        "landscape-ball-64.webp"
+      ],
+      "pivot": [
+        0.9382307529449463,
+        0.6934772729873657
+      ],
+      "axis": [
+        0.1336069107055664,
+        0.0
+      ],
+      "reach": 0.11171834170818329,
+      "segments": [],
+      "radius": 0.01
+    }
+  },
+  "poseSamples": 64,
+  "poseResolutionScale": 0.75,
+  "motionSampling": {
+    "keys": 65,
+    "ball": 65,
+    "leash": 65
+  }
+}

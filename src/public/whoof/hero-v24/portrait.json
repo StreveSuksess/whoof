@@ -1,0 +1,1019 @@
+{
+  "camera": {
+    "position": [
+      0,
+      9,
+      6.1
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "fov": 31.5,
+    "shiftY": -0.14000000059604645
+  },
+  "product": {
+    "position": [
+      0,
+      0.305,
+      0
+    ],
+    "rotationY": -0.28,
+    "scale": 1.2
+  },
+  "width": 1600,
+  "height": 2286,
+  "renderer": "Blender 4.5.9 Cycles",
+  "samples": 96,
+  "source": "ProductCollar.ts and supplied device.stl",
+  "layers": {
+    "collar": {
+      "x": 0.4874628037214279,
+      "y": 0.34224502742290497,
+      "width": 0.6750549376010895,
+      "height": 0.4034443795681
+    },
+    "leash": {
+      "x": 0.9586594998836517,
+      "y": 0.15118244290351868,
+      "width": 0.4898067116737366,
+      "height": 0.38855868577957153
+    },
+    "keys": {
+      "x": 0.09280244074761868,
+      "y": 0.28345945477485657,
+      "width": 0.25297578051686287,
+      "height": 0.21858447790145874
+    },
+    "ball": {
+      "x": 1.0717742145061493,
+      "y": 0.5452855974435806,
+      "width": 0.21856266260147095,
+      "height": 0.1585012972354889
+    }
+  },
+  "walkProps": "Grounded hinges/rolling; inextensible lead bend and rigid terminal swivel",
+  "motion": {
+    "keys": {
+      "rect": [
+        0.0,
+        0.13385826771653545,
+        0.269375,
+        0.3092738407699037
+      ],
+      "frames": [
+        "portrait-keys-00.webp",
+        "portrait-keys-01.webp",
+        "portrait-keys-02.webp",
+        "portrait-keys-03.webp",
+        "portrait-keys-04.webp",
+        "portrait-keys-05.webp",
+        "portrait-keys-06.webp",
+        "portrait-keys-07.webp",
+        "portrait-keys-08.webp",
+        "portrait-keys-09.webp",
+        "portrait-keys-10.webp",
+        "portrait-keys-11.webp",
+        "portrait-keys-12.webp",
+        "portrait-keys-13.webp",
+        "portrait-keys-14.webp",
+        "portrait-keys-15.webp",
+        "portrait-keys-16.webp",
+        "portrait-keys-17.webp",
+        "portrait-keys-18.webp",
+        "portrait-keys-19.webp",
+        "portrait-keys-20.webp",
+        "portrait-keys-21.webp",
+        "portrait-keys-22.webp",
+        "portrait-keys-23.webp",
+        "portrait-keys-24.webp",
+        "portrait-keys-25.webp",
+        "portrait-keys-26.webp",
+        "portrait-keys-27.webp",
+        "portrait-keys-28.webp",
+        "portrait-keys-29.webp",
+        "portrait-keys-30.webp",
+        "portrait-keys-31.webp",
+        "portrait-keys-32.webp",
+        "portrait-keys-33.webp",
+        "portrait-keys-34.webp",
+        "portrait-keys-35.webp",
+        "portrait-keys-36.webp",
+        "portrait-keys-37.webp",
+        "portrait-keys-38.webp",
+        "portrait-keys-39.webp",
+        "portrait-keys-40.webp",
+        "portrait-keys-41.webp",
+        "portrait-keys-42.webp",
+        "portrait-keys-43.webp",
+        "portrait-keys-44.webp",
+        "portrait-keys-45.webp",
+        "portrait-keys-46.webp",
+        "portrait-keys-47.webp",
+        "portrait-keys-48.webp",
+        "portrait-keys-49.webp",
+        "portrait-keys-50.webp",
+        "portrait-keys-51.webp",
+        "portrait-keys-52.webp",
+        "portrait-keys-53.webp",
+        "portrait-keys-54.webp",
+        "portrait-keys-55.webp",
+        "portrait-keys-56.webp",
+        "portrait-keys-57.webp",
+        "portrait-keys-58.webp",
+        "portrait-keys-59.webp",
+        "portrait-keys-60.webp",
+        "portrait-keys-61.webp",
+        "portrait-keys-62.webp",
+        "portrait-keys-63.webp",
+        "portrait-keys-64.webp"
+      ],
+      "pivot": [
+        0.08133547753095627,
+        0.29185229539871216
+      ],
+      "axis": [
+        1.0,
+        0.0
+      ],
+      "reach": 0.13115068674087524,
+      "segments": [
+        [
+          [
+            0.06307307630777359,
+            0.2989084720611572
+          ],
+          [
+            0.005328659899532795,
+            0.37719762325286865
+          ]
+        ],
+        [
+          [
+            0.10456302762031555,
+            0.2956921458244324
+          ],
+          [
+            0.11068877577781677,
+            0.38056665658950806
+          ]
+        ]
+      ],
+      "radius": 0.021
+    },
+    "leash": {
+      "rect": [
+        0.67875,
+        0.0,
+        0.32125000000000004,
+        0.3985126859142607
+      ],
+      "frames": [
+        "portrait-leash-00.webp",
+        "portrait-leash-01.webp",
+        "portrait-leash-02.webp",
+        "portrait-leash-03.webp",
+        "portrait-leash-04.webp",
+        "portrait-leash-05.webp",
+        "portrait-leash-06.webp",
+        "portrait-leash-07.webp",
+        "portrait-leash-08.webp",
+        "portrait-leash-09.webp",
+        "portrait-leash-10.webp",
+        "portrait-leash-11.webp",
+        "portrait-leash-12.webp",
+        "portrait-leash-13.webp",
+        "portrait-leash-14.webp",
+        "portrait-leash-15.webp",
+        "portrait-leash-16.webp",
+        "portrait-leash-17.webp",
+        "portrait-leash-18.webp",
+        "portrait-leash-19.webp",
+        "portrait-leash-20.webp",
+        "portrait-leash-21.webp",
+        "portrait-leash-22.webp",
+        "portrait-leash-23.webp",
+        "portrait-leash-24.webp",
+        "portrait-leash-25.webp",
+        "portrait-leash-26.webp",
+        "portrait-leash-27.webp",
+        "portrait-leash-28.webp",
+        "portrait-leash-29.webp",
+        "portrait-leash-30.webp",
+        "portrait-leash-31.webp",
+        "portrait-leash-32.webp",
+        "portrait-leash-33.webp",
+        "portrait-leash-34.webp",
+        "portrait-leash-35.webp",
+        "portrait-leash-36.webp",
+        "portrait-leash-37.webp",
+        "portrait-leash-38.webp",
+        "portrait-leash-39.webp",
+        "portrait-leash-40.webp",
+        "portrait-leash-41.webp",
+        "portrait-leash-42.webp",
+        "portrait-leash-43.webp",
+        "portrait-leash-44.webp",
+        "portrait-leash-45.webp",
+        "portrait-leash-46.webp",
+        "portrait-leash-47.webp",
+        "portrait-leash-48.webp",
+        "portrait-leash-49.webp",
+        "portrait-leash-50.webp",
+        "portrait-leash-51.webp",
+        "portrait-leash-52.webp",
+        "portrait-leash-53.webp",
+        "portrait-leash-54.webp",
+        "portrait-leash-55.webp",
+        "portrait-leash-56.webp",
+        "portrait-leash-57.webp",
+        "portrait-leash-58.webp",
+        "portrait-leash-59.webp",
+        "portrait-leash-60.webp",
+        "portrait-leash-61.webp",
+        "portrait-leash-62.webp",
+        "portrait-leash-63.webp",
+        "portrait-leash-64.webp"
+      ],
+      "pivot": [
+        1.0620083808898926,
+        0.2254253625869751
+      ],
+      "axis": [
+        0.22621142864227295,
+        0.029523372650146484
+      ],
+      "reach": 0.2331352114677429,
+      "segments": [],
+      "radius": 0.012,
+      "contacts": [
+        {
+          "negative": [
+            [
+              0.8431336283683777,
+              0.19125688076019287
+            ],
+            [
+              0.8378060460090637,
+              0.21043246984481812
+            ]
+          ],
+          "rest": [
+            [
+              0.843148946762085,
+              0.19125992059707642
+            ],
+            [
+              0.8379322290420532,
+              0.21044695377349854
+            ]
+          ],
+          "positive": [
+            [
+              0.843164324760437,
+              0.19126296043395996
+            ],
+            [
+              0.8380585312843323,
+              0.21046119928359985
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8378060460090637,
+              0.21043246984481812
+            ],
+            [
+              0.8464428186416626,
+              0.23488062620162964
+            ]
+          ],
+          "rest": [
+            [
+              0.8379322290420532,
+              0.21044695377349854
+            ],
+            [
+              0.846969723701477,
+              0.23486465215682983
+            ]
+          ],
+          "positive": [
+            [
+              0.8380585312843323,
+              0.21046119928359985
+            ],
+            [
+              0.8474957346916199,
+              0.2348463535308838
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8464428186416626,
+              0.23488062620162964
+            ],
+            [
+              0.8664757609367371,
+              0.2634320855140686
+            ]
+          ],
+          "rest": [
+            [
+              0.846969723701477,
+              0.23486465215682983
+            ],
+            [
+              0.8680161237716675,
+              0.26321929693222046
+            ]
+          ],
+          "positive": [
+            [
+              0.8474957346916199,
+              0.2348463535308838
+            ],
+            [
+              0.8695455193519592,
+              0.26299208402633667
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8664757609367371,
+              0.2634320855140686
+            ],
+            [
+              0.8994038701057434,
+              0.2756606936454773
+            ]
+          ],
+          "rest": [
+            [
+              0.8680161237716675,
+              0.26321929693222046
+            ],
+            [
+              0.9015364050865173,
+              0.2748259902000427
+            ]
+          ],
+          "positive": [
+            [
+              0.8695455193519592,
+              0.26299208402633667
+            ],
+            [
+              0.9036151766777039,
+              0.27396517992019653
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.8994038701057434,
+              0.2756606936454773
+            ],
+            [
+              0.9521129131317139,
+              0.2678377032279968
+            ]
+          ],
+          "rest": [
+            [
+              0.9015364050865173,
+              0.2748259902000427
+            ],
+            [
+              0.9531151652336121,
+              0.26547056436538696
+            ]
+          ],
+          "positive": [
+            [
+              0.9036151766777039,
+              0.27396517992019653
+            ],
+            [
+              0.953925609588623,
+              0.2631087899208069
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              0.9521129131317139,
+              0.2678377032279968
+            ],
+            [
+              1.0019820928573608,
+              0.2497854232788086
+            ]
+          ],
+          "rest": [
+            [
+              0.9531151652336121,
+              0.26547056436538696
+            ],
+            [
+              0.9998545050621033,
+              0.2452823519706726
+            ]
+          ],
+          "positive": [
+            [
+              0.953925609588623,
+              0.2631087899208069
+            ],
+            [
+              0.9972797632217407,
+              0.24091637134552002
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0019820928573608,
+              0.2497854232788086
+            ],
+            [
+              1.0297962427139282,
+              0.22074729204177856
+            ]
+          ],
+          "rest": [
+            [
+              0.9998545050621033,
+              0.2452823519706726
+            ],
+            [
+              1.0216193199157715,
+              0.2146211862564087
+            ]
+          ],
+          "positive": [
+            [
+              0.9972797632217407,
+              0.24091637134552002
+            ],
+            [
+              1.0128116607666016,
+              0.2089773416519165
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0297962427139282,
+              0.22074729204177856
+            ],
+            [
+              1.049880862236023,
+              0.18742668628692627
+            ]
+          ],
+          "rest": [
+            [
+              1.0216193199157715,
+              0.2146211862564087
+            ],
+            [
+              1.0330352783203125,
+              0.17979145050048828
+            ]
+          ],
+          "positive": [
+            [
+              1.0128116607666016,
+              0.2089773416519165
+            ],
+            [
+              1.0154244899749756,
+              0.1732611060142517
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.049880862236023,
+              0.18742668628692627
+            ],
+            [
+              1.0760506391525269,
+              0.1700671911239624
+            ]
+          ],
+          "rest": [
+            [
+              1.0330352783203125,
+              0.17979145050048828
+            ],
+            [
+              1.0532824993133545,
+              0.16019636392593384
+            ]
+          ],
+          "positive": [
+            [
+              1.0154244899749756,
+              0.1732611060142517
+            ],
+            [
+              1.0293205976486206,
+              0.15192848443984985
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0760506391525269,
+              0.1700671911239624
+            ],
+            [
+              1.1059436798095703,
+              0.16504710912704468
+            ]
+          ],
+          "rest": [
+            [
+              1.0532824993133545,
+              0.16019636392593384
+            ],
+            [
+              1.0803509950637817,
+              0.152415931224823
+            ]
+          ],
+          "positive": [
+            [
+              1.0293205976486206,
+              0.15192848443984985
+            ],
+            [
+              1.0528417825698853,
+              0.14165723323822021
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1059436798095703,
+              0.16504710912704468
+            ],
+            [
+              1.1316585540771484,
+              0.16933035850524902
+            ]
+          ],
+          "rest": [
+            [
+              1.0803509950637817,
+              0.152415931224823
+            ],
+            [
+              1.1063202619552612,
+              0.15416699647903442
+            ]
+          ],
+          "positive": [
+            [
+              1.0528417825698853,
+              0.14165723323822021
+            ],
+            [
+              1.0782463550567627,
+              0.1408700942993164
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1316585540771484,
+              0.16933035850524902
+            ],
+            [
+              1.1546484231948853,
+              0.18563765287399292
+            ]
+          ],
+          "rest": [
+            [
+              1.1063202619552612,
+              0.15416699647903442
+            ],
+            [
+              1.133927583694458,
+              0.1680229902267456
+            ]
+          ],
+          "positive": [
+            [
+              1.0782463550567627,
+              0.1408700942993164
+            ],
+            [
+              1.1094168424606323,
+              0.151827871799469
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1546484231948853,
+              0.18563765287399292
+            ],
+            [
+              1.1675597429275513,
+              0.2067164182662964
+            ]
+          ],
+          "rest": [
+            [
+              1.133927583694458,
+              0.1680229902267456
+            ],
+            [
+              1.1539911031723022,
+              0.1875661015510559
+            ]
+          ],
+          "positive": [
+            [
+              1.1094168424606323,
+              0.151827871799469
+            ],
+            [
+              1.1356921195983887,
+              0.16907721757888794
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1675597429275513,
+              0.2067164182662964
+            ],
+            [
+              1.1565346717834473,
+              0.22422683238983154
+            ]
+          ],
+          "rest": [
+            [
+              1.1539911031723022,
+              0.1875661015510559
+            ],
+            [
+              1.150420069694519,
+              0.20622283220291138
+            ]
+          ],
+          "positive": [
+            [
+              1.1356921195983887,
+              0.16907721757888794
+            ],
+            [
+              1.1395851373672485,
+              0.18801236152648926
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1565346717834473,
+              0.22422683238983154
+            ],
+            [
+              1.1288132667541504,
+              0.24052369594573975
+            ]
+          ],
+          "rest": [
+            [
+              1.150420069694519,
+              0.20622283220291138
+            ],
+            [
+              1.130846381187439,
+              0.22568100690841675
+            ]
+          ],
+          "positive": [
+            [
+              1.1395851373672485,
+              0.18801236152648926
+            ],
+            [
+              1.1289342641830444,
+              0.20962274074554443
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1288132667541504,
+              0.24052369594573975
+            ],
+            [
+              1.1147358417510986,
+              0.24880248308181763
+            ]
+          ],
+          "rest": [
+            [
+              1.130846381187439,
+              0.22568100690841675
+            ],
+            [
+              1.1209248304367065,
+              0.23559719324111938
+            ]
+          ],
+          "positive": [
+            [
+              1.1289342641830444,
+              0.20962274074554443
+            ],
+            [
+              1.1235888004302979,
+              0.2206527590751648
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.1147358417510986,
+              0.24880248308181763
+            ],
+            [
+              1.0865519046783447,
+              0.2816578149795532
+            ]
+          ],
+          "rest": [
+            [
+              1.1209248304367065,
+              0.23559719324111938
+            ],
+            [
+              1.1089649200439453,
+              0.27186763286590576
+            ]
+          ],
+          "positive": [
+            [
+              1.1235888004302979,
+              0.2206527590751648
+            ],
+            [
+              1.1283156871795654,
+              0.2582929730415344
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0865519046783447,
+              0.2816578149795532
+            ],
+            [
+              1.0778977870941162,
+              0.3065616488456726
+            ]
+          ],
+          "rest": [
+            [
+              1.1089649200439453,
+              0.27186763286590576
+            ],
+            [
+              1.108215570449829,
+              0.29746103286743164
+            ]
+          ],
+          "positive": [
+            [
+              1.1283156871795654,
+              0.2582929730415344
+            ],
+            [
+              1.1353002786636353,
+              0.2835618257522583
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0778977870941162,
+              0.3065616488456726
+            ],
+            [
+              1.0441762208938599,
+              0.320781946182251
+            ]
+          ],
+          "rest": [
+            [
+              1.108215570449829,
+              0.29746103286743164
+            ],
+            [
+              1.0820752382278442,
+              0.3158113956451416
+            ]
+          ],
+          "positive": [
+            [
+              1.1353002786636353,
+              0.2835618257522583
+            ],
+            [
+              1.1180706024169922,
+              0.3050270676612854
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0441762208938599,
+              0.320781946182251
+            ],
+            [
+              1.0517017841339111,
+              0.3409973382949829
+            ]
+          ],
+          "rest": [
+            [
+              1.0820752382278442,
+              0.3158113956451416
+            ],
+            [
+              1.0973132848739624,
+              0.33505260944366455
+            ]
+          ],
+          "positive": [
+            [
+              1.1180706024169922,
+              0.3050270676612854
+            ],
+            [
+              1.1401418447494507,
+              0.322293221950531
+            ]
+          ]
+        },
+        {
+          "negative": [
+            [
+              1.0517017841339111,
+              0.3409973382949829
+            ],
+            [
+              1.0815720558166504,
+              0.3349515199661255
+            ]
+          ],
+          "rest": [
+            [
+              1.0973132848739624,
+              0.33505260944366455
+            ],
+            [
+              1.123070240020752,
+              0.32530099153518677
+            ]
+          ],
+          "positive": [
+            [
+              1.1401418447494507,
+              0.322293221950531
+            ],
+            [
+              1.1604201793670654,
+              0.30941349267959595
+            ]
+          ]
+        }
+      ]
+    },
+    "ball": {
+      "rect": [
+        0.884375,
+        0.41601049868766404,
+        0.11562499999999998,
+        0.26684164479440065
+      ],
+      "frames": [
+        "portrait-ball-00.webp",
+        "portrait-ball-01.webp",
+        "portrait-ball-02.webp",
+        "portrait-ball-03.webp",
+        "portrait-ball-04.webp",
+        "portrait-ball-05.webp",
+        "portrait-ball-06.webp",
+        "portrait-ball-07.webp",
+        "portrait-ball-08.webp",
+        "portrait-ball-09.webp",
+        "portrait-ball-10.webp",
+        "portrait-ball-11.webp",
+        "portrait-ball-12.webp",
+        "portrait-ball-13.webp",
+        "portrait-ball-14.webp",
+        "portrait-ball-15.webp",
+        "portrait-ball-16.webp",
+        "portrait-ball-17.webp",
+        "portrait-ball-18.webp",
+        "portrait-ball-19.webp",
+        "portrait-ball-20.webp",
+        "portrait-ball-21.webp",
+        "portrait-ball-22.webp",
+        "portrait-ball-23.webp",
+        "portrait-ball-24.webp",
+        "portrait-ball-25.webp",
+        "portrait-ball-26.webp",
+        "portrait-ball-27.webp",
+        "portrait-ball-28.webp",
+        "portrait-ball-29.webp",
+        "portrait-ball-30.webp",
+        "portrait-ball-31.webp",
+        "portrait-ball-32.webp",
+        "portrait-ball-33.webp",
+        "portrait-ball-34.webp",
+        "portrait-ball-35.webp",
+        "portrait-ball-36.webp",
+        "portrait-ball-37.webp",
+        "portrait-ball-38.webp",
+        "portrait-ball-39.webp",
+        "portrait-ball-40.webp",
+        "portrait-ball-41.webp",
+        "portrait-ball-42.webp",
+        "portrait-ball-43.webp",
+        "portrait-ball-44.webp",
+        "portrait-ball-45.webp",
+        "portrait-ball-46.webp",
+        "portrait-ball-47.webp",
+        "portrait-ball-48.webp",
+        "portrait-ball-49.webp",
+        "portrait-ball-50.webp",
+        "portrait-ball-51.webp",
+        "portrait-ball-52.webp",
+        "portrait-ball-53.webp",
+        "portrait-ball-54.webp",
+        "portrait-ball-55.webp",
+        "portrait-ball-56.webp",
+        "portrait-ball-57.webp",
+        "portrait-ball-58.webp",
+        "portrait-ball-59.webp",
+        "portrait-ball-60.webp",
+        "portrait-ball-61.webp",
+        "portrait-ball-62.webp",
+        "portrait-ball-63.webp",
+        "portrait-ball-64.webp"
+      ],
+      "pivot": [
+        1.0667890310287476,
+        0.5459798872470856
+      ],
+      "axis": [
+        0.2599949836730957,
+        0.0
+      ],
+      "reach": 0.09510077834129334,
+      "segments": [],
+      "radius": 0.01
+    }
+  },
+  "poseSamples": 64,
+  "poseResolutionScale": 0.75,
+  "motionSampling": {
+    "keys": 65,
+    "ball": 65,
+    "leash": 65
+  }
+}

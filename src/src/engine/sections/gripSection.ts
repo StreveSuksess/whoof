@@ -231,7 +231,7 @@ export class GripSection {
     const coeffHash = hash(Math.floor(_zoomBoxX * 1e3 + 0.5));
     if (_coeffRand !== coeffHash) {
       _coeffRand = coeffHash;
-      _domCoeff.textContent = fit(coeffHash, 0, 1, 0.8, 0.93).toFixed(2);
+      _domCoeff.textContent = 'WHOOF';
     }
     if (isVisible) {
       _accumulatedOffsetX += Math.abs(_zoomBoxX - _prevZoomBoxX);

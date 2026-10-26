@@ -12,12 +12,12 @@ import { siteHeader } from '../SiteHeader';
 import { Section } from './Section';
 
 class TestimoniesStars {
-  svg: SVGElement;
-  list: NodeListOf<SVGUseElement>;
+  svg: SVGElement | null;
+  list: SVGUseElement[];
 
-  constructor(svg: SVGElement) {
+  constructor(svg: SVGElement | null) {
     this.svg = svg;
-    this.list = this.svg.querySelectorAll('use');
+    this.list = Array.from(this.svg?.querySelectorAll('use') ?? []);
   }
 
   update(_dt: number): void {}

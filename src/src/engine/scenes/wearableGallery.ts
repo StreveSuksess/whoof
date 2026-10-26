@@ -147,8 +147,9 @@ export class WearableGalleryItem {
     this.id = domItem.dataset.id!;
     this.type = domItem.dataset.type!;
     const file = domItem.dataset.file!;
-    this.fullFile = settings.IMAGE_PATH + 'wearable-gallery/' + file;
-    this.thumbFile = settings.IMAGE_PATH + 'wearable-gallery/thumbs/' + file;
+    const media: Record<string, string> = { intro: 'film-poster.webp', yoga: 'product-film.mp4', shoulder: 'device-photo.jpg', bikini: 'app-day.webp', glasses: 'app-dynamics.webp', bite: 'product-film.mp4', pocket: 'app-profile.webp', outro: 'film-poster.webp' };
+    this.fullFile = '/whoof/' + (media[this.id] ?? 'film-poster.webp');
+    this.thumbFile = this.type === 'video' ? '/whoof/film-poster.webp' : this.fullFile;
     this.domLeftThumb = document.createElement('div');
     this.domLeftThumb.className = 'wearable-gallery-thumb-item';
     leftThumbsContainer.appendChild(this.domLeftThumb);
@@ -179,7 +180,7 @@ export class WearableGalleryItem {
 
   private _addImage(url: string, parent: HTMLElement, autoMobile = false): HTMLImageElement {
     const img = new Image();
-    url = autoMobile && properties.isMobile ? properties.getMobileUrl(url) : url;
+    url = autoMobile && properties.isMobile && !url.startsWith('/whoof/') ? properties.getMobileUrl(url) : url;
     img.src = url;
     parent.appendChild(img);
     return img;

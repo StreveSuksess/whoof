@@ -19,14 +19,15 @@ import { wearableGallery } from './scenes/wearableGallery';
 import { webglApp, _pp } from './webgl';
 
 function detectMobile(): boolean {
-  return matchMedia('(pointer: coarse)').matches && matchMedia('(max-width: 820px)').matches;
+  return matchMedia('(max-width: 767.98px)').matches;
 }
 
 function setStateClasses(): void {
   const root = document.documentElement;
   root.classList.remove('no-js');
   properties.isMobile = properties.useMobileLayout = detectMobile();
-  root.classList.add(properties.isMobile ? 'is-mobile' : 'is-desktop');
+  root.classList.toggle('is-mobile', properties.useMobileLayout);
+  root.classList.toggle('is-desktop', !properties.useMobileLayout);
 }
 
 function preInit(): void {
@@ -106,6 +107,9 @@ function bootStage2(): void {
   const onResize = (): void => {
     properties.viewportWidth = window.innerWidth;
     properties.viewportHeight = window.innerHeight;
+    properties.useMobileLayout = detectMobile();
+    document.documentElement.classList.toggle('is-mobile', properties.useMobileLayout);
+    document.documentElement.classList.toggle('is-desktop', !properties.useMobileLayout);
     scrollManager.resize(window.innerWidth, window.innerHeight);
     preloader.resize(window.innerWidth, window.innerHeight);
     siteHeader.resize(window.innerWidth, window.innerHeight);

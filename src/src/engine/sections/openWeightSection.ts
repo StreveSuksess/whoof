@@ -17,6 +17,9 @@ export class OpenWeightSection extends Section {
 
   init(): void {
     super.init();
+    for (const item of _domContainer.querySelectorAll('details')) {
+      item.addEventListener('toggle', () => window.dispatchEvent(new Event('resize')));
+    }
   }
 
   resize(width: number, height: number): void {

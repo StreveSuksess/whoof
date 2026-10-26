@@ -1,0 +1,31 @@
+/* The companion has its own negative space; copy never sits over its face. */
+#companion{height:200svh;position:relative}
+.companion-ui{position:fixed;inset:0;z-index:5;visibility:hidden;pointer-events:none;color:var(--detail-ink)}
+.companion-copy{position:absolute;left:7.5%;top:36%;width:35%;max-width:640px}
+.companion-copy h2{font-size:clamp(42px,5.3vw,84px);font-weight:500;line-height:1.03;letter-spacing:-.065em;margin:0}
+.companion-copy h2>div{padding-bottom:.12em;margin-bottom:-.12em}
+.companion-order{position:absolute;left:7.5%;bottom:8%;display:inline-flex;align-items:center;gap:30px;padding:12px 0;border-bottom:1px solid #26272c55;font-size:14px;letter-spacing:-.035em;pointer-events:auto}
+.companion-order span{font-size:20px}
+.companion-order:focus-visible{outline-color:var(--detail-ink)}
+@media(max-aspect-ratio:6/5){
+ .companion-copy{top:auto;bottom:14%;left:8%;width:84%;max-width:none}
+ .companion-copy h2{font-size:clamp(40px,7vw,72px);line-height:1.06}
+ .companion-order{left:8%;bottom:5%}
+}
+@media(max-width:600px){
+ .companion-copy{left:var(--hero-pad);width:calc(100% - var(--hero-pad)*2);bottom:17%}
+ .companion-copy h2{font-size:clamp(35px,10.8vw,56px)}
+ .companion-order{left:var(--hero-pad);bottom:5%;font-size:13px}
+}
+.no-js #companion{height:auto;min-height:100svh}
+.no-js .companion-ui{position:relative;visibility:visible;min-height:100svh}
+.no-js .companion-order{pointer-events:auto}
+
+.companion-credit{position:absolute;bottom:15px;right:var(--hero-pad);font-size:9px;letter-spacing:0;color:#70706e;z-index:5}
+.companion-static{display:none}
+.no-webgl .companion-static,.companion-fallback .companion-static,.no-js .companion-static{display:block;position:absolute;inset:0;padding-top:100svh;text-align:center;z-index:3;color:var(--detail-ink)}
+.companion-static img{width:min(70vw,650px);height:60svh;object-fit:contain}
+.companion-static p{font-size:28px}
+.companion-fallback .companion-ui,.no-webgl .companion-ui,.no-js .companion-ui{display:none}
+
+.companion-backdrop{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at 70% 20%,#faf9f6 0%,#efede8 58%,#e1ddd7 100%);pointer-events:none}

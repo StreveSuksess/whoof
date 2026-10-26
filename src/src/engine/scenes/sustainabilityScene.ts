@@ -46,6 +46,7 @@ import { screenPaint } from '../post/ScreenPaint';
 import { TAAMesh } from '../post/TAAMesh';
 import { coaster } from './coaster';
 import { gobo } from './gobo';
+import { createWhoofLettering } from './whoofLettering';
 
 // ------------------------------------------------------- sustainability bg
 
@@ -179,12 +180,9 @@ export class SustainabilityText {
   };
 
   preInit(): void {
-    loader.add(settings.MODEL_PATH + 'sustainability_text.buf', {
-      onLoad: (content) => this._onLoad(content as BufferGeometry),
-    });
-    loader.add(settings.MODEL_PATH + 'sustainability_text_outline.buf', {
-      onLoad: (content) => this._onLoadOutline(content as BufferGeometry),
-    });
+    const lettering = createWhoofLettering();
+    this._onLoad(lettering.fill);
+    this._onLoadOutline(lettering.outline);
   }
 
   private _onLoad(geometry: BufferGeometry): void {

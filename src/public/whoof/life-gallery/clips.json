@@ -1,0 +1,44 @@
+[
+  {
+    "id": "detail",
+    "source": "drop_without offer.mp4",
+    "sourceStartFrame": 2,
+    "sourceEndFrameExclusive": 71,
+    "sourceStart": 0.08333333333333333,
+    "sourceEnd": 2.9583333333333335,
+    "frames": 69,
+    "duration": 2.875,
+    "fps": 24,
+    "width": 720,
+    "height": 1280,
+    "bytes": 751511
+  },
+  {
+    "id": "on-dog",
+    "source": "drop_without offer.mp4",
+    "sourceStartFrame": 144,
+    "sourceEndFrameExclusive": 219,
+    "sourceStart": 6.0,
+    "sourceEnd": 9.125,
+    "frames": 75,
+    "duration": 3.125,
+    "fps": 24,
+    "width": 720,
+    "height": 1280,
+    "bytes": 2267372
+  },
+  {
+    "id": "outside",
+    "source": "drop_without offer.mp4",
+    "sourceStartFrame": 222,
+    "sourceEndFrameExclusive": 313,
+    "sourceStart": 9.25,
+    "sourceEnd": 13.041666666666666,
+    "frames": 91,
+    "duration": 3.7916666666666665,
+    "fps": 24,
+    "width": 720,
+    "height": 1280,
+    "bytes": 1010832
+  }
+]

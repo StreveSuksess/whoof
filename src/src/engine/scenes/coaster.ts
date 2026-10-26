@@ -1,3 +1,4 @@
+import { parseWhoofHousing, whoofHousingFrag } from './whoofProduct';
 // Port of the source Coaster (pretty line 20463-20668): materialDefault,
 // materialEncryption (SDF soft-shadow back face with the MSDF engraving) and
 // the stack material trio (mesh + meshPro + meshProMax sharing coasterStackFrag
@@ -18,7 +19,6 @@ import {
 import type { BufferGeometry, IUniform, Texture, WebGLRenderTarget } from 'three';
 import { blueNoise } from '../core/blueNoise';
 import { cameraControls } from '../core/cameraControls';
-import { ease } from '../core/ease';
 import { fboHelper } from '../core/fboHelper';
 import { loader } from '../core/Loader';
 import { fit } from '../core/math';
@@ -131,7 +131,8 @@ class Coaster {
       },
       fragmentShader: coasterBlendFrag,
     }) as unknown as ShaderMaterial;
-    loader.add(settings.MODEL_PATH + 'coaster.buf', {
+    loader.registerParser('stl', parseWhoofHousing);
+    loader.add('/whoof/device.stl', {
       onLoad: (content) => {
         this._onCoasterLoaded(content as BufferGeometry);
       },
@@ -150,7 +151,7 @@ class Coaster {
     const { heroScene } = _heroSceneRef;
     this.materialDefault = new ShaderMaterial({
       vertexShader: coasterVert,
-      fragmentShader: coasterFrag,
+      fragmentShader: whoofHousingFrag,
       uniforms: Object.assign(
         {
           u_heroRatio: heroScene.sharedUniforms.u_activeRatio,
@@ -171,7 +172,7 @@ class Coaster {
     });
     this.materialEncryption = new ShaderMaterial({
       vertexShader: coasterVert,
-      fragmentShader: coasterEncryptionFrag,
+      fragmentShader: whoofHousingFrag,
       uniforms: Object.assign(
         {
           u_giColor: { value: new Color('#69987c') },
@@ -206,7 +207,7 @@ class Coaster {
   getMaterialStack(): ShaderMaterial {
     return new ShaderMaterial({
       vertexShader: coasterVert,
-      fragmentShader: coasterStackFrag,
+      fragmentShader: whoofHousingFrag,
       uniforms: Object.assign(
         {
           u_opacity: { value: 1 },
@@ -291,33 +292,9 @@ class Coaster {
     this.coffeeInvMatrix.copy(tableCoffee.container.matrixWorld).invert();
     _v0.set(0, 0, 0).applyMatrix4(this.innerContainer.matrixWorld).project(properties.camera);
     (this.sharedUniforms.u_zoomCenter.value as Vector2).set(_v0.x, _v0.y);
-    const proIn = ease.quartInOut(this.oryzoProRatio);
-    const proOut = ease.quartInOut(1 - this.oryzoProRatio);
-    const proMaxIn = ease.quartInOut(this.oryzoProMaxRatio);
-    const proMaxOut = ease.quartInOut(1 - this.oryzoProMaxRatio);
-    const step = 0.016;
-    const gap = 0.005;
-    const lift = 0.35;
-    this.mesh.position.y += lift * step * proIn;
-    this.mesh.position.y += lift * step * proMaxIn;
+    // Content tabs describe one Whoof device; there are no Pro/Max tiers.
     this.meshPro.visible = false;
     this.meshProMax.visible = false;
-    if (this.areStackMeshesActive) {
-      this.meshPro.position.copy(this.mesh.position);
-      this.meshPro.position.y -= step;
-      this.meshProMax.position.copy(this.mesh.position);
-      this.meshProMax.position.y -= 2 * step;
-      this.meshPro.visible = this.oryzoProRatio > 0;
-      this.meshPro.position.y -= proOut * gap;
-      (this.meshPro.material as ShaderMaterial).uniforms.u_opacity.value = proIn;
-      (this.mesh.material as ShaderMaterial).uniforms.u_neighboorBottomAo.value = proIn;
-      (this.meshPro.material as ShaderMaterial).uniforms.u_neighboorTopAo.value = proIn;
-      this.meshProMax.visible = this.oryzoProMaxRatio > 0;
-      this.meshProMax.position.y -= proMaxOut * gap;
-      (this.meshProMax.material as ShaderMaterial).uniforms.u_opacity.value = proMaxIn;
-      (this.meshPro.material as ShaderMaterial).uniforms.u_neighboorBottomAo.value = proMaxIn;
-      (this.meshProMax.material as ShaderMaterial).uniforms.u_neighboorTopAo.value = proMaxIn;
-    }
     this.materialEncryption.uniforms.u_textOpacity.value = this.isFeatureEncryptionSectionActive
       ? 1
       : 0;

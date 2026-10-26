@@ -185,9 +185,9 @@ export class TableScene {
     let frame = fit(t, 1.5, 3, 0, 44);
     frame = fit(t, 3, 4, frame, 89);
     frame = fit(t, 5, 5.5, frame, 209);
-    tableCoffee.shadowStrength = fit(frame, 68, 80, 0, 1);
+    tableCoffee.shadowStrength = 0;
     tableCoffee.alphaMultiplier = fit(frame, 30, 60, 0.1, 1);
-    coaster.coffeeShadowStrength = fit(frame, 45, 80, 0, 1) * fit(frame, 181, 187, 1, 0);
+    coaster.coffeeShadowStrength = 0;
     tableBase.preUpdate(dt);
     tableCoffee.preUpdate(dt);
     if (t >= 6.5) {
@@ -212,7 +212,7 @@ export class TableScene {
       }
     }
     tableCoffee.cupTime = fit(frame, 45, 87, 0, 1);
-    tableCoffee.isActive = frame < 195;
+    tableCoffee.isActive = false;
     tableBase.hdTextureShift = fit(t, 8.5, 8.55, 0, 1);
     let lookStrength = properties.cameraLookStrength;
     lookStrength = fit(t, 2, 3, lookStrength, 0.05);

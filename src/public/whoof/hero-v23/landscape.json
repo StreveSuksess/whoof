@@ -1,0 +1,418 @@
+{
+  "camera": {
+    "position": [
+      0,
+      9,
+      6.1
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "fov": 27,
+    "shiftY": -0.02500000037252903
+  },
+  "product": {
+    "position": [
+      0,
+      0.305,
+      0
+    ],
+    "rotationY": -0.28,
+    "scale": 1.2
+  },
+  "width": 2560,
+  "height": 1600,
+  "renderer": "Blender 4.5.9 Cycles",
+  "samples": 96,
+  "source": "ProductCollar.ts and supplied device.stl",
+  "layers": {
+    "collar": {
+      "x": 0.4935573488473892,
+      "y": 0.45414257049560547,
+      "width": 0.3468991219997406,
+      "height": 0.47394073009490967
+    },
+    "leash": {
+      "x": 0.7799412608146667,
+      "y": 0.22969448566436768,
+      "width": 0.24754858016967773,
+      "height": 0.45645391941070557
+    },
+    "keys": {
+      "x": 0.19662799686193466,
+      "y": 0.38375324010849,
+      "width": 0.14990384876728058,
+      "height": 0.2541154623031616
+    },
+    "ball": {
+      "x": 0.9410990476608276,
+      "y": 0.6926616504788399,
+      "width": 0.12575221061706543,
+      "height": 0.18619723618030548
+    }
+  },
+  "walkProps": "Threaded key ring, hinged keys, closed lead eyes, grounded constrained motion",
+  "motion": {
+    "keys": {
+      "rect": [
+        0.080078125,
+        0.21625,
+        0.24179687500000002,
+        0.345625
+      ],
+      "frames": [
+        "landscape-keys-00.webp",
+        "landscape-keys-01.webp",
+        "landscape-keys-02.webp",
+        "landscape-keys-03.webp",
+        "landscape-keys-04.webp",
+        "landscape-keys-05.webp",
+        "landscape-keys-06.webp",
+        "landscape-keys-07.webp",
+        "landscape-keys-08.webp",
+        "landscape-keys-09.webp",
+        "landscape-keys-10.webp",
+        "landscape-keys-11.webp",
+        "landscape-keys-12.webp",
+        "landscape-keys-13.webp",
+        "landscape-keys-14.webp",
+        "landscape-keys-15.webp",
+        "landscape-keys-16.webp",
+        "landscape-keys-17.webp",
+        "landscape-keys-18.webp",
+        "landscape-keys-19.webp",
+        "landscape-keys-20.webp",
+        "landscape-keys-21.webp",
+        "landscape-keys-22.webp",
+        "landscape-keys-23.webp",
+        "landscape-keys-24.webp",
+        "landscape-keys-25.webp",
+        "landscape-keys-26.webp",
+        "landscape-keys-27.webp",
+        "landscape-keys-28.webp",
+        "landscape-keys-29.webp",
+        "landscape-keys-30.webp",
+        "landscape-keys-31.webp",
+        "landscape-keys-32.webp",
+        "landscape-keys-33.webp",
+        "landscape-keys-34.webp",
+        "landscape-keys-35.webp",
+        "landscape-keys-36.webp",
+        "landscape-keys-37.webp",
+        "landscape-keys-38.webp",
+        "landscape-keys-39.webp",
+        "landscape-keys-40.webp",
+        "landscape-keys-41.webp",
+        "landscape-keys-42.webp",
+        "landscape-keys-43.webp",
+        "landscape-keys-44.webp",
+        "landscape-keys-45.webp",
+        "landscape-keys-46.webp",
+        "landscape-keys-47.webp",
+        "landscape-keys-48.webp",
+        "landscape-keys-49.webp",
+        "landscape-keys-50.webp",
+        "landscape-keys-51.webp",
+        "landscape-keys-52.webp",
+        "landscape-keys-53.webp",
+        "landscape-keys-54.webp",
+        "landscape-keys-55.webp",
+        "landscape-keys-56.webp",
+        "landscape-keys-57.webp",
+        "landscape-keys-58.webp",
+        "landscape-keys-59.webp",
+        "landscape-keys-60.webp",
+        "landscape-keys-61.webp",
+        "landscape-keys-62.webp",
+        "landscape-keys-63.webp",
+        "landscape-keys-64.webp"
+      ],
+      "pivot": [
+        0.19833001494407654,
+        0.394944429397583
+      ],
+      "axis": [
+        1.0,
+        0.0
+      ],
+      "reach": 0.15246927738189697,
+      "segments": [
+        [
+          [
+            0.18867738544940948,
+            0.4032335877418518
+          ],
+          [
+            0.14058546721935272,
+            0.4841761589050293
+          ]
+        ],
+        [
+          [
+            0.20976123213768005,
+            0.3994552493095398
+          ],
+          [
+            0.2259155958890915,
+            0.49457794427871704
+          ]
+        ]
+      ],
+      "radius": 0.021
+    },
+    "leash": {
+      "rect": [
+        0.62109375,
+        0.0,
+        0.34257812499999996,
+        0.511875
+      ],
+      "frames": [
+        "landscape-leash-00.webp",
+        "landscape-leash-01.webp",
+        "landscape-leash-02.webp",
+        "landscape-leash-03.webp",
+        "landscape-leash-04.webp",
+        "landscape-leash-05.webp",
+        "landscape-leash-06.webp",
+        "landscape-leash-07.webp",
+        "landscape-leash-08.webp",
+        "landscape-leash-09.webp",
+        "landscape-leash-10.webp",
+        "landscape-leash-11.webp",
+        "landscape-leash-12.webp",
+        "landscape-leash-13.webp",
+        "landscape-leash-14.webp",
+        "landscape-leash-15.webp",
+        "landscape-leash-16.webp"
+      ],
+      "pivot": [
+        0.8347154855728149,
+        0.3169103264808655
+      ],
+      "axis": [
+        0.11679250001907349,
+        0.03468215465545654
+      ],
+      "reach": 0.2738723516464233,
+      "segments": [
+        [
+          [
+            0.7991762757301331,
+            0.08210599422454834
+          ],
+          [
+            0.7917786836624146,
+            0.14482545852661133
+          ]
+        ],
+        [
+          [
+            0.7917786836624146,
+            0.14482545852661133
+          ],
+          [
+            0.734684407711029,
+            0.2137761116027832
+          ]
+        ],
+        [
+          [
+            0.734684407711029,
+            0.2137761116027832
+          ],
+          [
+            0.7263159155845642,
+            0.25512588024139404
+          ]
+        ],
+        [
+          [
+            0.7263159155845642,
+            0.25512588024139404
+          ],
+          [
+            0.7201017737388611,
+            0.3070489764213562
+          ]
+        ],
+        [
+          [
+            0.7201017737388611,
+            0.3070489764213562
+          ],
+          [
+            0.7470211982727051,
+            0.37408530712127686
+          ]
+        ],
+        [
+          [
+            0.7470211982727051,
+            0.37408530712127686
+          ],
+          [
+            0.8044657111167908,
+            0.33813774585723877
+          ]
+        ],
+        [
+          [
+            0.8044657111167908,
+            0.33813774585723877
+          ],
+          [
+            0.8227452039718628,
+            0.2501845359802246
+          ]
+        ],
+        [
+          [
+            0.8227452039718628,
+            0.2501845359802246
+          ],
+          [
+            0.8541346788406372,
+            0.23206299543380737
+          ]
+        ],
+        [
+          [
+            0.8541346788406372,
+            0.23206299543380737
+          ],
+          [
+            0.8822029232978821,
+            0.27714383602142334
+          ]
+        ],
+        [
+          [
+            0.8822029232978821,
+            0.27714383602142334
+          ],
+          [
+            0.8652286529541016,
+            0.3287286162376404
+          ]
+        ],
+        [
+          [
+            0.8652286529541016,
+            0.3287286162376404
+          ],
+          [
+            0.8601804375648499,
+            0.3755471110343933
+          ]
+        ],
+        [
+          [
+            0.8601804375648499,
+            0.3755471110343933
+          ],
+          [
+            0.8582292795181274,
+            0.42313575744628906
+          ]
+        ]
+      ],
+      "radius": 0.012
+    },
+    "ball": {
+      "rect": [
+        0.826953125,
+        0.548125,
+        0.17304687500000004,
+        0.2975
+      ],
+      "frames": [
+        "landscape-ball-00.webp",
+        "landscape-ball-01.webp",
+        "landscape-ball-02.webp",
+        "landscape-ball-03.webp",
+        "landscape-ball-04.webp",
+        "landscape-ball-05.webp",
+        "landscape-ball-06.webp",
+        "landscape-ball-07.webp",
+        "landscape-ball-08.webp",
+        "landscape-ball-09.webp",
+        "landscape-ball-10.webp",
+        "landscape-ball-11.webp",
+        "landscape-ball-12.webp",
+        "landscape-ball-13.webp",
+        "landscape-ball-14.webp",
+        "landscape-ball-15.webp",
+        "landscape-ball-16.webp",
+        "landscape-ball-17.webp",
+        "landscape-ball-18.webp",
+        "landscape-ball-19.webp",
+        "landscape-ball-20.webp",
+        "landscape-ball-21.webp",
+        "landscape-ball-22.webp",
+        "landscape-ball-23.webp",
+        "landscape-ball-24.webp",
+        "landscape-ball-25.webp",
+        "landscape-ball-26.webp",
+        "landscape-ball-27.webp",
+        "landscape-ball-28.webp",
+        "landscape-ball-29.webp",
+        "landscape-ball-30.webp",
+        "landscape-ball-31.webp",
+        "landscape-ball-32.webp",
+        "landscape-ball-33.webp",
+        "landscape-ball-34.webp",
+        "landscape-ball-35.webp",
+        "landscape-ball-36.webp",
+        "landscape-ball-37.webp",
+        "landscape-ball-38.webp",
+        "landscape-ball-39.webp",
+        "landscape-ball-40.webp",
+        "landscape-ball-41.webp",
+        "landscape-ball-42.webp",
+        "landscape-ball-43.webp",
+        "landscape-ball-44.webp",
+        "landscape-ball-45.webp",
+        "landscape-ball-46.webp",
+        "landscape-ball-47.webp",
+        "landscape-ball-48.webp",
+        "landscape-ball-49.webp",
+        "landscape-ball-50.webp",
+        "landscape-ball-51.webp",
+        "landscape-ball-52.webp",
+        "landscape-ball-53.webp",
+        "landscape-ball-54.webp",
+        "landscape-ball-55.webp",
+        "landscape-ball-56.webp",
+        "landscape-ball-57.webp",
+        "landscape-ball-58.webp",
+        "landscape-ball-59.webp",
+        "landscape-ball-60.webp",
+        "landscape-ball-61.webp",
+        "landscape-ball-62.webp",
+        "landscape-ball-63.webp",
+        "landscape-ball-64.webp"
+      ],
+      "pivot": [
+        0.9382307529449463,
+        0.6934772729873657
+      ],
+      "axis": [
+        0.1336069107055664,
+        0.0
+      ],
+      "reach": 0.11171834170818329,
+      "segments": [],
+      "radius": 0.01
+    }
+  },
+  "poseSamples": 64,
+  "poseResolutionScale": 0.75,
+  "motionSampling": {
+    "keys": 65,
+    "ball": 65,
+    "leash": 17
+  }
+}

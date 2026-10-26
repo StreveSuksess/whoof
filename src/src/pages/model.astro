@@ -1,0 +1,21 @@
+---
+---
+<!doctype html>
+<html lang="ru">
+  <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Whoof — сверка ошейника</title></head>
+  <body>
+    <header><a href="/">← К лендингу</a><span>WHOOF · МОДЕЛЬ ОШЕЙНИКА</span><span id="model-status">Загрузка модели…</span></header>
+    <main>
+      <div class="toolbar"><h1>Сверяем с оригиналом.</h1><div role="group" aria-label="Ракурс"><button data-view="full" aria-pressed="true">Целиком</button><button data-view="macro" aria-pressed="false">Крупный план</button><button data-view="front" aria-pressed="false">Спереди</button></div></div>
+      <div class="comparison">
+        <figure><div class="frame reference"><img id="reference-frame" src="/whoof/reference-full.png" alt="Ошейник в оригинальном видео, 3,2 секунды"/></div><figcaption><span id="reference-label">КАДР ИЗ ВИДЕО · 3,2 С</span><span>Исходный материал</span></figcaption></figure>
+        <figure><div class="frame" id="collar-review" aria-label="Интерактивная модель ошейника"></div><figcaption><span>3D-МОДЕЛЬ</span><span>Тяните, чтобы вращать · колесо — масштаб</span></figcaption></figure>
+      </div>
+      <p>Одна и та же модель здесь и в лендинге. Размеры восстановлены по видимым пропорциям; реальные размеры в миллиметрах по видео не проверяются.</p>
+    </main>
+    <script>import { bootCollarReview } from '../engine/whoof/CollarReview'; bootCollarReview();</script>
+  </body>
+</html>
+<style is:global>
+  @font-face{font-family:Inter;src:url('/whoof/inter-regular.ttf')}*{box-sizing:border-box}body{margin:0;background:#eeeae4;color:#202323;font:14px Inter,Arial,sans-serif}header{padding:24px 4vw;border-bottom:1px solid #cfccc5;display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:11px;letter-spacing:.06em}a{color:inherit;text-decoration:none}main{max-width:1440px;margin:auto;padding:36px 4vw 24px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px}h1{font-size:26px;font-weight:400;letter-spacing:-.04em;margin:0}.toolbar>div{display:flex;gap:6px}button{font:12px Inter,sans-serif;padding:11px 17px;border:1px solid #c3c2bc;background:transparent;border-radius:25px;cursor:pointer;color:inherit}button[aria-pressed=true]{background:#242626;color:#fff;border-color:#242626}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0;min-width:0}.frame{width:100%;aspect-ratio:1/1.04;background:linear-gradient(#afafae,#dddcd9);overflow:hidden;border-radius:3px;position:relative}.frame canvas{display:block;width:100%;height:100%;touch-action:none}.reference img{width:100%;height:100%;object-fit:cover;object-position:50% 54%}.reference.macro{background:#000}.reference.macro img{object-position:50% 60%}.reference.front img{object-fit:contain;background:#fafafa}figcaption{display:flex;justify-content:space-between;gap:12px;font-size:10px;padding-top:13px;letter-spacing:.06em}figcaption span:last-child{color:#747570;letter-spacing:0}main>p{font-size:11px;color:#797a74;line-height:1.6;max-width:650px;margin-top:27px}@media(max-width:700px){header{padding:18px 20px}header>span:first-of-type{display:none}main{padding:24px 20px}.toolbar{display:block}h1{font-size:24px;margin-bottom:20px}.comparison{gap:18px;grid-template-columns:1fr}.frame{aspect-ratio:1/1}figcaption{font-size:9px}.toolbar>div{gap:4px}button{padding:10px 14px}}
+</style>

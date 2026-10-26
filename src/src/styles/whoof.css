@@ -1,0 +1,36 @@
+/* Small adaptation layer; Oryzo layout, palette and scroll choreography remain the base. */
+@font-face{font-family:Whoof Inter;src:url('/whoof/inter-regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:Whoof Inter;src:url('/whoof/inter-medium.ttf') format('truetype');font-weight:500 900;font-display:swap}
+:root{--display-font:'Whoof Inter';--text-font:'Whoof Inter'}
+#site-header-nav{font-size:calc(13 * var(--screen-unit))}
+#hero-copy{font-size:calc(38 * var(--screen-unit));line-height:1.1}
+#hero-card-header{font-size:calc(37 * var(--screen-unit))}
+#ai-title{font-size:calc(130 * var(--screen-unit));letter-spacing:-.07em}
+#features-extra-wrapper svg,.testimonies-table-rating{display:none}
+#testimonies-table-header-center{opacity:.6}
+.testimonies-table-item-image-wrapper img{width:100%;height:100%;object-fit:cover;border-radius:2px}
+.whoof-order{padding:3em 0!important;pointer-events:auto}
+.whoof-order h2{margin:.4em 0}.whoof-order p{margin:1.5em 0}.whoof-order a{display:inline-block;text-decoration:none}
+.whoof-faq{font-family:var(--text-font)!important;white-space:normal!important;background:transparent!important;padding:1.5em 0!important}
+.whoof-faq details{border-top:1px dashed #ffedd640;padding:1em 0}.whoof-faq summary{cursor:pointer;font-size:var(--body2);line-height:1.3}.whoof-faq p{font-size:var(--body3);line-height:1.6;opacity:.7;margin:1em 0}
+#footer-lusion-logo:before,#footer-lusion-logo:after{display:none}#footer-lusion-logo img{width:180%;filter:invert(1);max-width:none}
+#footer-lusion-link{width:auto;min-width:var(--grid-span-3);margin-left:var(--grid-span-12)}
+#hero-video-thumbnail{object-fit:cover;object-position:center 35%;height:100%}
+#whoof-film{border:1px solid #ffedd650;background:#101611;color:#ffedd6;padding:0;max-width:90vw;max-height:90vh;border-radius:14px}
+#whoof-film::backdrop{background:#0b100eef;backdrop-filter:blur(10px)}
+#whoof-film video{display:block;max-height:88vh;max-width:90vw}
+#whoof-film-close{position:absolute;right:12px;top:12px;z-index:2;border:0;width:40px;height:40px;border-radius:50%;background:#ffedd6;color:#18201b;cursor:pointer}
+#encryption-field-input{pointer-events:none}
+@media(max-width:767.98px){#hero-copy{font-size:calc(30 * var(--screen-unit))}#hero-card-header{font-size:calc(28 * var(--screen-unit))}#ai-title{font-size:calc(52 * var(--screen-unit))}#footer-lusion-link{margin-inline:auto;min-width:55%}.whoof-order{width:100%!important}.whoof-faq p{font-size:15px}.whoof-faq summary{font-size:18px}}
+
+.social-content-item-bg{background:#eee7d7}.social-content-item-bg img{height:100%;object-fit:cover}.whoof-social-app .social-content-item-bg img{object-fit:contain;padding:10%}.social-content-item-title,.social-content-item-note{color:#17291f!important;text-shadow:0 1px 14px #fff9}.social-content-item-title{padding:0 1em;white-space:normal!important}.social-content-item-note{max-width:80%;white-space:normal!important}.social-content-item-cover{display:none}
+
+#wearable-magazine-idea-num,#wearable-magazine-num{visibility:hidden}.wearable-gallery-item-inner{background:#efeadf}.wearable-gallery-item-inner>img,.wearable-gallery-item-inner>video{width:100%;height:100%;object-fit:contain!important}#wearable-gallery-bikini-overlay{background:#efeadf}#wearable-gallery-bikini-overlay img{object-fit:contain!important}
+
+@media(max-width:767.98px){
+  #site-header-nav{display:none!important}
+  #hero-copy{left:var(--site-padding-x);width:calc(100% - var(--site-padding-x)*2);font-size:22px;line-height:1.15;margin-top:18px}
+  #hero-card-header{font-size:15px;line-height:1.12;width:100%;overflow-wrap:normal}
+  #hero-card-desc{font-size:11px;line-height:1.3}
+  #hero-card-inner{gap:8px;padding:14px}
+}

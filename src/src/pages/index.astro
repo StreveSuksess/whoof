@@ -1,55 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SvgDefs from '../components/SvgDefs.astro';
-import SiteHeader from '../components/SiteHeader.astro';
-import SiteFooter from '../components/SiteFooter.astro';
-import ScrollIndicator from '../components/ScrollIndicator.astro';
-import Preloader from '../components/Preloader.astro';
-import VideoOverlay from '../components/VideoOverlay.astro';
-import Hero from '../components/sections/Hero.astro';
-import Ai from '../components/sections/Ai.astro';
-import Wearable from '../components/sections/Wearable.astro';
-import Features from '../components/sections/Features.astro';
-import Encryption from '../components/sections/Encryption.astro';
-import Grip from '../components/sections/Grip.astro';
-import Sustainability from '../components/sections/Sustainability.astro';
-import Testimonies from '../components/sections/Testimonies.astro';
-import SocialContent from '../components/sections/SocialContent.astro';
-import Product from '../components/sections/Product.astro';
-import OpenWeight from '../components/sections/OpenWeight.astro';
-import Footer from '../components/sections/Footer.astro';
+import Opening from '../components/whoof/Opening.astro';
 ---
-
 <Layout>
-  <canvas id="canvas"></canvas>
-  <SvgDefs />
-  <div id="ui">
-    <div id="site-content">
-      <div id="pages-container">
-        <div id="home" class="page">
-          <Hero />
-          <Ai />
-          <Wearable />
-          <Features />
-          <Encryption />
-          <Grip />
-          <Sustainability />
-          <Testimonies />
-          <SocialContent />
-          <Product />
-          <OpenWeight />
-          <Footer />
-        </div>
-      </div>
-    </div>
-    <SiteHeader />
-    <SiteFooter />
-    <ScrollIndicator />
-    <Preloader />
-  </div>
-  <VideoOverlay />
+  <Opening />
   <script>
-    import { boot } from '../engine/main';
-    boot();
+    import { bootOpening } from '../engine/whoof/Opening';
+    bootOpening();
   </script>
 </Layout>

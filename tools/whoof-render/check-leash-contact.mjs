@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {build} from '../../src/node_modules/esbuild/lib/main.js';
+const source=await build({entryPoints:['src/src/engine/whoof/LeashContact.ts'],bundle:true,write:false,platform:'node',format:'esm'});
+const {leashImpulse}=await import(`data:text/javascript;base64,${Buffer.from(source.outputFiles[0].text).toString('base64')}`);
+const view={width:1000,height:500,left:0,top:0};
+const contacts=[{negative:[[.2,.18],[.4,.18]],rest:[[.2,.2],[.4,.2]],positive:[[.2,.22],[.4,.22]]}];
+const push=(q,mouse,delta)=>leashImpulse(contacts,q,mouse,delta,view,5);
+assert.equal(push(0,[300,100],[10,0]),0,'Across the allowed direction, no sideways drift');
+assert.ok(push(0,[300,100],[0,10])>0);
+assert.equal(push(0,[300,100],[0,-10]),-push(0,[300,100],[0,10]));
+assert.equal(push(0,[300,300],[0,10]),0,'Empty loop space is not a contact');
+assert.equal(push(1,[300,100],[0,10]),0,'Hit region must follow the displaced cord');
+assert.ok(push(1,[300,110],[0,10])>0);
+assert.equal(push(0,[300,100],[0,0]),0,'Stationary cursor adds no force');
+assert.equal(leashImpulse([{negative:contacts[0].rest,rest:contacts[0].rest,positive:contacts[0].rest}],0,[300,100],[20,20],view,5),0,'Fixed handle cannot push remote rope');
+console.log('Leash contact: local direction, pose tracking, fixed parts, rest and empty-space checks pass');

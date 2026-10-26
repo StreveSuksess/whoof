@@ -3,7 +3,6 @@
 // split-text with theme color transition, per-item char reveals, Rive
 // harvesting/text illustration canvases with in/out-view start/reset.
 
-import { Alignment, Fit, Layout, Rive } from '@rive-app/canvas';
 import { SplitText } from 'gsap/SplitText';
 import { Color } from 'three';
 import { ease } from '../core/ease';
@@ -18,54 +17,31 @@ import {
   sustainabilityText,
 } from '../scenes/sustainabilityScene';
 
-// Source RiveAnimation (pretty 28000-28036), on the standard rive canvas API.
+// Keep the original section lifecycle, replacing Oryzo's baked Rive claims.
 export class RiveAnimation {
-  rive: Rive | null = null;
-  canvas: HTMLCanvasElement;
-  artboard: string;
-  src: string;
-
-  constructor(src: string, artboard: string, canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
-    this.artboard = artboard;
-    this.src = src;
-  }
-
-  init(): void {
-    this.rive = new Rive({
-      src: this.src,
-      canvas: this.canvas,
-      artboard: this.artboard,
-      stateMachines: 'State Machine 1',
-      autoplay: false,
-      enableRiveAssetCDN: true,
-      shouldDisableRiveListeners: false,
-      isTouchScrollEnabled: false,
-      layout: new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
-      onLoad: () => {
-        this.rive!.resizeDrawingSurfaceToCanvas();
-      },
-    });
-  }
-
-  startAnimation(): void {
-    this.rive!.play('State Machine 1');
-  }
-
+  constructor(_src: string, public artboard: string, public canvas: HTMLCanvasElement) {}
+  init(): void { this.onResize(); }
+  startAnimation(): void { this.onResize(); }
   onResize(): void {
-    this.rive!.resizeDrawingSurfaceToCanvas();
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const width = this.canvas.clientWidth || 300;
+    const height = this.canvas.clientHeight || 180;
+    this.canvas.width = width * ratio;
+    this.canvas.height = height * ratio;
+    const ctx = this.canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.scale(ratio, ratio);
+    ctx.strokeStyle = '#253b2c';
+    ctx.fillStyle = '#253b2c';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.strokeRect(1, 1, width - 2, height - 2);
+    ctx.font = `500 ${Math.min(height * .55, width * .3)}px "Whoof Inter", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.artboard === 'harvesting' ? '8 г' : 'BLE', width / 2, height / 2);
   }
-
-  reset(): void {
-    this.rive?.cleanup();
-    (this.canvas.getContext('2d') as CanvasRenderingContext2D).clearRect(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height,
-    );
-    this.init();
-  }
+  reset(): void { this.onResize(); }
 }
 
 const bodyStyles = window.getComputedStyle(document.body);

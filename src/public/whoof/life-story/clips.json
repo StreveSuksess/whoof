@@ -1,0 +1,62 @@
+[
+  {
+    "id": "activity",
+    "source": "drop_without offer.mp4",
+    "firstFrame": 144,
+    "endExclusive": 219,
+    "crop": [
+      0,
+      0,
+      1080,
+      1920
+    ],
+    "fps": 24,
+    "frames": 75,
+    "duration": 3.125,
+    "size": [
+      720,
+      1280
+    ],
+    "bytes": 2267372
+  },
+  {
+    "id": "rest",
+    "source": "reference-slides.mp4",
+    "firstFrame": 9,
+    "endExclusive": 147,
+    "crop": [
+      1550,
+      120,
+      2370,
+      1182
+    ],
+    "fps": 30,
+    "frames": 138,
+    "duration": 4.6,
+    "size": [
+      720,
+      932
+    ],
+    "bytes": 945645
+  },
+  {
+    "id": "together",
+    "source": "reference-slides.mp4",
+    "firstFrame": 468,
+    "endExclusive": 555,
+    "crop": [
+      1330,
+      120,
+      2150,
+      1182
+    ],
+    "fps": 30,
+    "frames": 87,
+    "duration": 2.9,
+    "size": [
+      720,
+      932
+    ],
+    "bytes": 440437
+  }
+]
