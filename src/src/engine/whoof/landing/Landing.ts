@@ -105,7 +105,7 @@ export function bootLanding(){
     steps.forEach((button,i)=>button.toggleAttribute('aria-current',i===(virtual<1.78?0:virtual<2.88?1:2)));
     logo.style.transform='scale('+(1-.48*ease.cubicInOut(range(scroll,.02,.8)))+')';
     const backdrop=themeRanges.find(item=>scrollY+60>=item.top&&scrollY+60<item.bottom);
-    const tone=gallery.cover>.5?'dark':inWear||(scroll>.68&&scroll<storyEnd)?'light':backdrop?.tone||'dark';
+    const tone=gallery.cover>.5?'dark':inWear?'light':scroll>.68&&scroll<storyEnd?'dark':backdrop?.tone||'dark';
     document.documentElement.dataset.headerTone=tone;
     header.classList.toggle('is-scrolled',actual>.8);
     type.render(scroll*height,height,reduced.matches);

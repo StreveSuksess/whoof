@@ -6,6 +6,7 @@ import { createProductCollar } from './ProductCollar';
 import { matchOpeningMaterials, openingColorLook, openingEnvironment } from './OpeningLighting';
 import {collarLift} from './OpeningTransition';
 import {getStoryState,getStoryFraming} from './landing/StoryMotion';
+import type {StoryLighting} from './landing/StoryLighting';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -21,6 +22,7 @@ export class OpeningScene {
   storyRotation=new Quaternion().setFromEuler(new Euler(.12,-.28,-.09));
   tableRotation=new Quaternion();
   studioEnvironment?:WebGLRenderTarget;
+  storyLights?:StoryLighting;
   width=1;height=1;mobile=false;portrait=false;
   constructor(container:HTMLElement){
     this.renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -36,6 +38,7 @@ export class OpeningScene {
       // the review studio's stronger inner-band occlusion on top of that.
       Promise.all([createProductCollar(true,.78),openingColorLook()]).then(([c,look])=>{matchOpeningMaterials(c.group,look);this.model.add(c.group);onProgress(74);}),
       openingEnvironment(this.renderer).then(target=>{this.studioEnvironment=target;this.scene.environment=target.texture;}),
+      import('./landing/StoryLighting').then(({StoryLighting})=>{this.storyLights=new StoryLighting(this.scene);}),
       loadBuf('/models/hero_camera.buf').then(g=>{this.cameraTrack.setTarget(this.sourceCamera);this.cameraTrack.setGeometry(g);this.cameraTrack.applyTransform(0);this.originCamera.copy(this.sourceCamera.quaternion);}),
       loadBuf('/models/coaster_hero_animation.buf').then(g=>{this.productTrack.setTarget(this.sourceProduct);this.productTrack.setGeometry(g);this.productTrack.applyTransform(0);this.originProduct.copy(this.sourceProduct.quaternion).invert();})
     ]);onProgress(100);
@@ -46,7 +49,8 @@ export class OpeningScene {
   }
   /** Same camera crop and light as the table; settles into the Testimonies framing. */
   renderOpening(scroll:number,px:number,py:number,reduced:boolean,sectionEnd=2){
-    const {lift,exit,table,turn}=getStoryState(scroll,sectionEnd);
+    const {lift,exit,table,turn,studio}=getStoryState(scroll,sectionEnd);
+    this.storyLights?.setStrength(studio);
     this.product.quaternion.copy(this.heroRotation).slerp(this.storyRotation,lift);
     this.tableRotation.setFromEuler(new Euler(-.30,.10+(reduced?0:turn*.28),-.28));
     this.product.quaternion.slerp(this.tableRotation,table);
@@ -67,6 +71,7 @@ export class OpeningScene {
     this.renderer.render(this.scene,this.camera);
   }
   render(scroll:number,px:number,py:number,reduced:boolean){
+    this.storyLights?.setStrength(0);
     const leave=collarLift(scroll),p=clamp((scroll-.45)/3);
     this.cameraTrack.applyTransform(reduced?0:p*68);this.productTrack.applyTransform(reduced?0:p*68);
     this.motion.copy(this.originCamera).multiply(this.sourceCamera.quaternion.clone().invert()).multiply(this.sourceProduct.quaternion).multiply(this.originProduct);

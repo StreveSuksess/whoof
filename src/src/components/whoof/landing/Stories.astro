@@ -7,7 +7,7 @@ const situations=[
   {id:'conversation',label:'Перед разговором со специалистом',title:'«Кажется, что-то изменилось». А когда именно?',benefit:'Обсудить наблюдения',detail:'История движений добавляет контекст. Она не определяет причину изменений и не ставит диагноз.',media:'/whoof/life-story/together.webp',video:false,alt:'Собака рядом с человеком дома',interface:false},
 ];
 ---
-<section id="situations" class="situations" data-block="2" data-tone="light" aria-labelledby="situations-title">
+<section id="situations" class="situations" data-block="2" data-tone="dark" aria-labelledby="situations-title">
   <div class="situations-intro">
     <h2 id="situations-title">Прогулка —<br/>только часть<br/>его дня.</h2>
     <div class="situations-description">
@@ -24,7 +24,7 @@ const situations=[
         <h4 id={'situation-title-'+item.id} data-story-title>{item.title}</h4>
         <div class="story-row-meta" data-story-meta><strong>{item.benefit}</strong><p>{item.detail}</p></div>
       </div>
-      <figure class:list={['story-row-visual',{'is-interface':item.interface}]} data-story-visual>
+      <figure class:list={['story-row-visual',{'is-interface':item.interface},'story-media-'+item.id]} data-story-visual>
         {item.video?<video data-inline-video muted playsinline loop preload="none" src={item.media+'.mp4'} poster={item.media+'.webp'} aria-label={item.alt}></video>:<img src={item.media} alt={item.alt} width="640" height="480" loading="lazy"/>}
         {item.interface&&<figcaption>Пример интерфейса</figcaption>}
       </figure>

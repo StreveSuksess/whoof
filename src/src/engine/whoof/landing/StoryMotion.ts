@@ -7,6 +7,7 @@ export function getStoryState(scroll:number,sectionEnd=2){
   return {
     lift:collarLift(scroll),
     atmosphere:range(scroll,.32,.82),
+    studio:ease.cubicInOut(range(scroll,.62,1.28)),
     table:ease.cubicInOut(range(scroll,1.25,2)),
     turn:range(scroll,1.7,Math.max(2,sectionEnd-.75)),
     exit:range(scroll,Math.max(1,sectionEnd-.75),sectionEnd),
@@ -26,7 +27,11 @@ export function getStoryFraming(width:number,height:number,table=0){
   return {diameter,centerX};
 }
 
+export const STORY_VISIBILITY={character:.56,content:.72,meta:.78,media:.96,scale:.96} as const;
 export function getStoryRowState(center:number,reduced=false){
   const show=reduced?1:range(center,.15,.45);
-  return {show,meta:reduced?1:.2+.8*show,fade:reduced?1:1-.8*range(center,.55,.85),scale:reduced?1:.8+.2*show};
+  return {show,meta:STORY_VISIBILITY.meta+(1-STORY_VISIBILITY.meta)*show,
+    media:STORY_VISIBILITY.media+(1-STORY_VISIBILITY.media)*show,
+    fade:reduced?1:1-(1-STORY_VISIBILITY.content)*range(center,.55,.85),
+    scale:STORY_VISIBILITY.scale+(1-STORY_VISIBILITY.scale)*show};
 }
