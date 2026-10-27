@@ -58,7 +58,7 @@ export class OpeningScene {
   }
   get offerReady(){return this.offerSketches?.isReady||false;}
   get offerNeedsFrame(){return this.offerSketches?.needsFrame||false;}
-  renderOffer(progress:number,px:number,py:number,dt:number,reduced:boolean,coarse:boolean){
+  renderOffer(progress:number,px:number,py:number,dt:number,reduced:boolean,coarse:boolean,rawX=px,rawY=py){
     const state=getOfferState(progress*this.height,this.height,this.mobile,reduced);
     this.storyLights?.setStrength(1);
     this.product.quaternion.setFromEuler(new Euler(-.40+(reduced?0:py)*.045,state.yaw+(reduced?0:px)*.045,-.14));
@@ -67,9 +67,9 @@ export class OpeningScene {
     this.product.scale.setScalar(diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
     this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.fov=32;
     this.camera.setViewOffset(this.width,this.height,0,this.height*.5-state.modelY,this.width,this.height);
-    this.renderer.autoClear=true;this.offerSketches?.update(dt,px,py,reduced?1:progress,reduced,coarse);
+    this.renderer.autoClear=true;this.offerSketches?.update(dt,px,py,reduced?1:progress,reduced,coarse,rawX,rawY);
     this.renderer.setRenderTarget(null);this.renderer.clear();this.renderer.autoClear=false;
-    if(this.offerSketches?.isReady)this.renderer.render(this.offerSketches.scene,this.offerSketches.camera);
+    if(this.offerSketches?.isReady)this.offerSketches.render();
     this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
   }
   /** Same camera crop and light as the table; settles into the Testimonies framing. */

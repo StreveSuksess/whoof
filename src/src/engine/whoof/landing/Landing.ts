@@ -114,7 +114,7 @@ export function bootLanding(){
     if(worldReady&&Math.abs(offer.distance)<height*2.5)void world?.prepareOffer();
     if(!renderWorld)lastRender=-100;
     if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world.offerNeedsFrame)){
-      if(inOffer)world.renderOffer(offer.progress,reduced.matches?0:mouseX,reduced.matches?0:mouseY,dt,reduced.matches,coarse.matches);
+      if(inOffer)world.renderOffer(offer.progress,reduced.matches?0:mouseX,reduced.matches?0:mouseY,dt,reduced.matches,coarse.matches,targetX,targetY);
       else if(inWear)world.render(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
       else world.renderOpening(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches,storyEnd);
       lastRender=sceneScroll;
