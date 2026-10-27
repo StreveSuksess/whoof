@@ -2,14 +2,30 @@ import assert from 'node:assert/strict';
 import {resolve} from 'node:path';
 import {build} from '../../src/node_modules/esbuild/lib/main.js';
 const base=resolve(import.meta.dirname,'../../src/src/engine/whoof');
-const {outputFiles}=await build({stdin:{contents:`export {getStoryState,getStoryFraming,getStoryRowState,STORY_VISIBILITY} from '${base}/landing/StoryMotion.ts';export {collarContact} from '${base}/OpeningTransition.ts';`,resolveDir:base,loader:'ts'},bundle:true,write:false,format:'esm',platform:'node'});
-const {getStoryState,getStoryFraming,getStoryRowState,STORY_VISIBILITY,collarContact}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
+const {outputFiles}=await build({stdin:{contents:`export {getStoryState,getStorySpin,getStoryFraming,getStoryRowState,STORY_VISIBILITY} from '${base}/landing/StoryMotion.ts';export {collarContact} from '${base}/OpeningTransition.ts';export {Quaternion,Vector3} from 'three';`,resolveDir:base,loader:'ts'},bundle:true,write:false,format:'esm',platform:'node'});
+const {getStoryState,getStorySpin,getStoryFraming,getStoryRowState,STORY_VISIBILITY,collarContact,Quaternion,Vector3}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
 assert.equal(getStoryState(0).lift,0);
 assert.equal(getStoryState(.32).lift,0,'table pose retained until release');
 assert.equal(getStoryState(.86).lift,1,'final pose reached before full section');
 assert.equal(getStoryState(1).lift,1);
-assert.ok(getStoryState(3.9,4).turn>getStoryState(3.8,4).turn,'rotation continues while the first poster crosses the collar');
-assert.ok(getStoryState(4,4).turn<1,'rotation does not clamp before the collar is covered');
+assert.equal(getStorySpin(.82,4),0,'ground release retains the original pose');
+assert.ok(Math.abs(getStorySpin(4,4))>Math.PI*2,'more than a full turn replaces the old sixteen-degree drift');
+assert.ok(getStorySpin(3.9,4)<getStorySpin(3.8,4),'rotation continues while the first poster crosses the collar');
+assert.equal(getStorySpin(5,4),-Math.PI*2*1.25);
+const axis=new Vector3(1,1,1).normalize(),orientations=[.12,.28,.44,.60,.76].map(p=>new Quaternion().setFromAxisAngle(axis,getStorySpin(.82+p*(4.16-.82),4)));
+for(let i=0;i<orientations.length;i++)for(let j=i+1;j<orientations.length;j++)assert.ok(orientations[i].angleTo(orientations[j])>.3,'five clearly different intermediate views');
+for(const end of [2.85,4,5.8]){
+ let prior=0;const angles=[];
+ for(let i=0;i<=Math.ceil((end+.3)*1000);i++){
+  const at=i/1000,angle=getStorySpin(at,end);angles.push(angle);
+  assert.ok(Number.isFinite(angle)&&angle<=prior&&angle>=-Math.PI*2*1.25);
+  assert.ok(Math.abs(angle-prior)<.01,'continuous angular speed at fine scroll increments');
+  assert.equal(getStorySpin(at,end,true),0,'reduced motion suppresses the full turn');prior=angle;
+ }
+ for(let i=angles.length-1;i>=0;i--)assert.equal(getStorySpin(i/1000,end),angles[i],'reverse scroll restores exactly the same angle');
+ const ramp=.12,duration=end+.16-.82,speed=p=>(getStorySpin(.82+(p+.00001)*duration,end)-getStorySpin(.82+(p-.00001)*duration,end))/.00002;
+ for(const join of [ramp,1-ramp])assert.ok(Math.abs(speed(join-.0001)-speed(join+.0001))<.02,'no velocity jump at cruise boundaries');
+}
 assert.equal(getStoryState(2,4).table,1,'table receives its centered pose');
 assert.equal(getStoryState(.58).title,0,'story title does not cross the exiting hero card');
 assert.equal(getStoryState(.92).title,1);
@@ -22,7 +38,7 @@ let previous=getStoryState(0);
 const forward=[];
 for(let i=0;i<=5000;i++){
  const s=i/1000,state=getStoryState(s,4);forward.push(state);
- for(const key of ['lift','atmosphere','title','description','table','turn','studio'])assert.ok(state[key]>=0&&state[key]<=1&&state[key]>=previous[key]);
+ for(const key of ['lift','atmosphere','title','description','table','studio'])assert.ok(state[key]>=0&&state[key]<=1&&state[key]>=previous[key]);
  assert.ok(Math.abs(state.lift-previous.lift)<.006,'no pose jump');
  assert.ok(Math.abs(state.studio-previous.studio)<.005,'no lighting jump');
  if(state.lift>=.06)assert.equal(collarContact(s),0,'no grounded shadow on a flying collar');

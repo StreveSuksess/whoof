@@ -9,11 +9,19 @@ export function getStoryState(scroll:number,sectionEnd=2){
     atmosphere:range(scroll,.32,.82),
     studio:ease.cubicInOut(range(scroll,.62,1.28)),
     table:ease.cubicInOut(range(scroll,1.25,2)),
-    turn:range(scroll,1.7,Math.max(2,sectionEnd+.1)),
     // This intro directly follows the table; its title waits for HeroCard's .61 exit.
     title:range(scroll,.58,.92),
     description:range(scroll,.5,1),
   };
+}
+
+/** StackScene's diagonal tumble, with continuous speed through the visible rows. */
+export function getStorySpin(scroll:number,sectionEnd=2,reduced=false){
+  const p=range(scroll,.82,Math.max(1.82,sectionEnd+.16));
+  if(reduced||p===0)return 0;
+  const ramp=.12;
+  const travel=p<ramp?p*p/(2*ramp)/(1-ramp):p>1-ramp?1-(1-p)*(1-p)/(2*ramp)/(1-ramp):(p-ramp/2)/(1-ramp);
+  return -Math.PI*2*1.25*travel;
 }
 
 /** Reserve the source's right copy column when a wide collar meets a tall screen. */

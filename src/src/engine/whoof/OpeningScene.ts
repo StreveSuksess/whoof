@@ -5,7 +5,7 @@ import { ease } from '../core/ease';
 import { createProductCollar } from './ProductCollar';
 import { matchOpeningMaterials, openingColorLook, openingEnvironment } from './OpeningLighting';
 import {collarLift} from './OpeningTransition';
-import {getStoryState,getStoryFraming} from './landing/StoryMotion';
+import {getStoryState,getStorySpin,getStoryFraming} from './landing/StoryMotion';
 import type {StoryLighting} from './landing/StoryLighting';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
@@ -21,6 +21,7 @@ export class OpeningScene {
   finalRotation=new Quaternion().setFromEuler(new Euler(-.25,-.3,.17));
   storyRotation=new Quaternion().setFromEuler(new Euler(.12,-.28,-.09));
   tableRotation=new Quaternion();
+  storySpinRotation=new Quaternion();storySpinAxis=new Vector3(1,1,1).normalize();
   studioEnvironment?:WebGLRenderTarget;
   storyLights?:StoryLighting;
   width=1;height=1;mobile=false;portrait=false;
@@ -49,17 +50,20 @@ export class OpeningScene {
   }
   /** Same camera crop and light as the table; settles into the Testimonies framing. */
   renderOpening(scroll:number,px:number,py:number,reduced:boolean,sectionEnd=2){
-    const {lift,table,turn,studio}=getStoryState(scroll,sectionEnd);
+    const {lift,table,studio}=getStoryState(scroll,sectionEnd);
     this.storyLights?.setStrength(studio);
     this.product.quaternion.copy(this.heroRotation).slerp(this.storyRotation,lift);
-    this.tableRotation.setFromEuler(new Euler(-.30,.10+(reduced?0:turn*.28),-.28));
+    this.tableRotation.setFromEuler(new Euler(-.30,.10,-.28));
     this.product.quaternion.slerp(this.tableRotation,table);
+    this.storySpinRotation.setFromAxisAngle(this.storySpinAxis,getStorySpin(scroll,sectionEnd,reduced));
+    this.product.quaternion.premultiply(this.storySpinRotation);
     this.product.position.set(0,.305+.55*lift,0);
     this.camera.position.set((reduced?0:px)*.06*lift,9+1.255*lift+(reduced?0:py)*.04*lift,6.1-.5*lift);
     this.camera.lookAt(0,.855*lift,0);
     const fov=(this.portrait?31.5:27)*(1-lift)+32*lift;
     const {diameter,centerX}=getStoryFraming(this.width,this.height,this.mobile?0:table);
-    const finalScale=diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*1.96);
+    // A rotating ring exposes its full silhouette; leave clearance to both copy columns.
+    const finalScale=diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*(1.96+.16*table));
     this.product.scale.setScalar(1.2+(finalScale-1.2)*lift);
     const baseW=this.portrait?1600:2560,baseH=this.portrait?2286:1600;
     const cover=Math.max(this.width/baseW,this.height/baseH),fullW=baseW*cover,fullH=baseH*cover;
