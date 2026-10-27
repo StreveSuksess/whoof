@@ -5,6 +5,7 @@ import { ease } from '../core/ease';
 import { createProductCollar } from './ProductCollar';
 import { matchOpeningMaterials, openingColorLook, openingEnvironment } from './OpeningLighting';
 import {collarLift} from './OpeningTransition';
+import {getStoryState,getStoryFraming} from './landing/StoryMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -17,6 +18,7 @@ export class OpeningScene {
   originCamera=new Quaternion();originProduct=new Quaternion();motion=new Quaternion();
   heroRotation=new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-.28);
   finalRotation=new Quaternion().setFromEuler(new Euler(-.25,-.3,.17));
+  storyRotation=new Quaternion().setFromEuler(new Euler(.12,-.28,-.09));
   studioEnvironment?:WebGLRenderTarget;
   width=1;height=1;mobile=false;portrait=false;
   constructor(container:HTMLElement){
@@ -40,6 +42,26 @@ export class OpeningScene {
   resize(width:number,height:number){
     this.width=width;this.height=height;this.mobile=width<=600;this.portrait=width/height<=1;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,this.mobile?1.5:1.8));this.renderer.setSize(width,height);
+  }
+  /** Same camera crop and light as the table; settles into the Testimonies framing. */
+  renderOpening(scroll:number,px:number,py:number,reduced:boolean){
+    const {lift,exit}=getStoryState(scroll);
+    this.product.quaternion.copy(this.heroRotation).slerp(this.storyRotation,lift);
+    this.product.position.set(0,.305+.55*lift,0);
+    this.camera.position.set((reduced?0:px)*.06*lift,9+1.255*lift+(reduced?0:py)*.04*lift,6.1-.5*lift);
+    this.camera.lookAt(0,.855*lift,0);
+    const fov=(this.portrait?31.5:27)*(1-lift)+32*lift;
+    const {diameter,centerX}=getStoryFraming(this.width,this.height);
+    const finalScale=diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*1.96);
+    this.product.scale.setScalar(1.2+(finalScale-1.2)*lift);
+    const baseW=this.portrait?1600:2560,baseH=this.portrait?2286:1600;
+    const cover=Math.max(this.width/baseW,this.height/baseH),fullW=baseW*cover,fullH=baseH*cover;
+    const shift=this.portrait?-.14:-.025;
+    this.camera.fov=fov;
+    this.camera.setViewOffset(fullW+(this.width-fullW)*lift,fullH+(this.height-fullH)*lift,
+      (fullW-this.width)/2*(1-lift)+(this.width*.5-centerX)*lift,
+      ((fullH-this.height)/2-shift*fullH)*(1-lift)+this.height*(-.01*lift+exit),this.width,this.height);
+    this.renderer.render(this.scene,this.camera);
   }
   render(scroll:number,px:number,py:number,reduced:boolean){
     const leave=collarLift(scroll),p=clamp((scroll-.45)/3);

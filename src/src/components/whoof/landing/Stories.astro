@@ -1,13 +1,8 @@
----
-const stories=[
- {id:'daytime',media:'/whoof/life-extra/daytime',title:'Восстановить день.',copy:'Вы были заняты. Собака — своими делами. После синхронизации посмотрите, как чередовались движение и покой.',alt:'Собака отдыхает дома на лежанке'},
- {id:'outside',media:'/whoof/life-gallery/outside',title:'Увидеть перемены.',copy:'Вчера — длинная прогулка, сегодня — спокойный день. Сравнивайте собаку с её собственным ритмом, а не с чужими рекордами.',alt:'Собака на прогулке поднимает голову'},
- {id:'together',media:'/whoof/life-story/together',title:'Не держать всё в памяти.',copy:'История движений дополняет ваши наблюдения. К ней можно вернуться, когда хочется разобраться, что изменилось.',alt:'Девочка играет с собакой дома'},
-];
----
-<section id="situations" class="editorial-section situations" data-block="2" data-tone="light" aria-labelledby="situations-title">
-  <div class="section-kicker"><span>Whoof в вашей жизни</span><a href="#app">К примеру в приложении <span aria-hidden="true">↗</span></a></div>
-  <div class="section-heading"><h2 id="situations-title" data-reveal>Прогулка —<br/> только часть дня.</h2><p data-reveal>Вы уже знаете свою собаку.<br/> Whoof добавляет историю движений — в том числе за время, когда вы не наблюдали за ней лично.</p></div>
-  <div class="situation-scenes">{stories.map((s,i)=><article class="situation-scene"><div class="situation-video"><video data-inline-video muted playsinline loop preload="none" poster={s.media+'.webp'} src={s.media+'.mp4'} aria-label={s.alt}></video><span aria-hidden="true">{'0'+(i+1)}</span></div><h3 data-reveal>{s.title}</h3><p data-reveal>{s.copy}</p></article>)}</div>
-  <p class="source-note">Данные появляются после связи с телефоном и обработки. Whoof не передаёт их из дома в реальном времени сам по себе.</p>
+<section id="situations" class="situations" data-block="2" data-tone="light" aria-labelledby="situations-title">
+  <h2 id="situations-title">Прогулка —<br/>только часть<br/>его дня.</h2>
+  <div class="situations-description">
+    <p id="situations-copy">История движения и покоя. Чтобы восстановить день и заметить перемены.</p>
+    <p class="situations-sync">В приложении после синхронизации с телефоном.</p>
+  </div>
+  <img class="situations-fallback" src="/whoof/hero-v24/portrait-collar.webp" alt="Ошейник с трекером Whoof" loading="lazy" width="1600" height="2286"/>
 </section>

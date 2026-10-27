@@ -7,6 +7,8 @@ import {LifeGallery} from '../life/LifeGallery';
 import {GalleryVideo} from '../life/GalleryVideo';
 import {SectionMotion} from './SectionMotion';
 import {AppExample} from './AppExample';
+import {StoryText} from './StoryText';
+import {getStoryState} from './StoryMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
@@ -16,6 +18,7 @@ export function bootLanding(){
   document.body.classList.add('is-ready');
   const root=$('.landing-v27'),hero=$('.hero-ui'),worldRoot=$('.opening-world'),details=$('.details-ui'),header=$('.opening-header'),logo=$('.opening-logo');
   const plate=new HeroPlate(),card=new HeroCard(),detailText=new DetailsText(),gallery=new LifeGallery($('#life')),type=new SectionMotion(root);
+  const storyText=new StoryText(),atmosphere=$('.situations-atmosphere');
   const app=new AppExample($('#app'),()=>{type.resize();measure();gallery.resize();});
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const steps=[...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
@@ -41,7 +44,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;card.resize();detailText.resize();type.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;card.resize();detailText.resize();type.resize();storyText.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -53,7 +56,7 @@ export function bootLanding(){
     let top=target.getBoundingClientRect().top+scrollY;
     if(anchor.hash==='#wearing')top=(wearStart+DETAIL_STOPS[0]-.64)*height;
     else if(anchor.hash==='#life')top+=.35*height;
-    else if(anchor.hash!=='#intro')top-=70;
+    else if(anchor.hash!=='#intro'&&anchor.hash!=='#situations')top-=70;
     const url=new URL(location.href);url.hash=anchor.hash;history.replaceState(null,'',url);
     const direct=reduced.matches||Math.abs(top-scrollY)>height*2.5;
     if(direct)scroll=top/height;
@@ -72,6 +75,8 @@ export function bootLanding(){
     const inHero=scroll<1.05,heroOpacity=1-range(scroll,.05,.6);
     hero.style.opacity=String(heroOpacity);hero.style.visibility=heroOpacity>.001?'visible':'hidden';hero.inert=heroOpacity<.1;
     card.render(scroll,(now-started)/1000,true,reduced.matches);
+    storyText.render(scroll,reduced.matches);
+    atmosphere.style.opacity=String(scroll<2?getStoryState(scroll).atmosphere:0);
     if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
     const virtual=scroll-wearStart+.64,inWear=scroll>wearStart-.28&&scroll<wearEnd+.12;
@@ -79,23 +84,25 @@ export function bootLanding(){
     details.style.visibility=detailOpacity>.001?'visible':'hidden';details.style.opacity=String(detailOpacity);details.inert=detailOpacity<.9;
     detailText.render(virtual,reduced.matches);
     gallery.render(scroll,reduced.matches);
-    const heroWorld=(1-range(scroll,.65,1.05)),wearWorld=inWear?detailOpacity:0;
+    const heroWorld=scroll<2?1:0,wearWorld=inWear?detailOpacity:0;
     const worldOpacity=Math.max(heroWorld,wearWorld)*(1-gallery.cover);
     worldRoot.style.opacity=String(worldOpacity);worldRoot.style.visibility=worldOpacity>.001?'visible':'hidden';
     $('.hero-vignette').style.opacity=String(1-range(scroll,0,.8));
-    const sceneScroll=inWear?virtual:Math.min(scroll,1);
+    const sceneScroll=inWear?virtual:scroll;
     const canvasOpacity=worldReady?(inWear?1:range(scroll,.08,.32)):0;
     if(world)world.renderer.domElement.style.opacity=String(canvasOpacity);
-    const renderWorld=worldOpacity>.001&&(inWear||(scroll>.08&&inHero));
-    if((scroll>.02&&inHero)||Math.abs(wearStart-scroll)<2.5)void loadWorld();
+    const renderWorld=worldOpacity>.001&&(inWear||(scroll>.08&&scroll<2));
+    if((scroll>.02&&scroll<2)||Math.abs(wearStart-scroll)<2.5)void loadWorld();
     if(!renderWorld)lastRender=-100;
     if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001)){
-      world.render(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);lastRender=sceneScroll;
+      if(inWear)world.render(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
+      else world.renderOpening(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
+      lastRender=sceneScroll;
     }
     steps.forEach((button,i)=>button.toggleAttribute('aria-current',i===(virtual<1.78?0:virtual<2.88?1:2)));
     logo.style.transform='scale('+(1-.48*ease.cubicInOut(range(scroll,.02,.8)))+')';
     const backdrop=themeRanges.find(item=>scrollY+60>=item.top&&scrollY+60<item.bottom);
-    const tone=gallery.cover>.5?'dark':inWear?'light':backdrop?.tone||'dark';
+    const tone=gallery.cover>.5?'dark':inWear||(scroll>.68&&scroll<2)?'light':backdrop?.tone||'dark';
     document.documentElement.dataset.headerTone=tone;
     header.classList.toggle('is-scrolled',actual>.8);
     type.render(scroll*height,height,reduced.matches);
@@ -109,5 +116,5 @@ export function bootLanding(){
   resize();void document.fonts.ready.then(resize);
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();app.dispose();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();app.dispose();clips.forEach(c=>c.media.dispose());};
 }
