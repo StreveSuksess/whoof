@@ -1,10 +1,10 @@
 ---
 const situations=[
-  {id:'day',label:'Пока вас нет рядом',title:'Вы были заняты. Он — своими делами.',benefit:'Восстановить день',detail:'После синхронизации посмотрите, как чередовались движение и покой.',media:'/whoof/life-extra/daytime',video:true,alt:'Собака отдыхает дома',interface:false},
-  {id:'rhythm',label:'Необычно спокойный день',title:'Сегодня двигался меньше. А обычно — как?',benefit:'Сравнить с его ритмом',detail:'История помогает сравнивать одну и ту же собаку в разные дни.',media:'/whoof/app-dynamics.webp',video:false,alt:'Пример интерфейса Whoof с динамикой активности',interface:true},
-  {id:'history',label:'Когда дни похожи',title:'Вчера помните. А что было неделю назад?',benefit:'Сохранить историю',detail:'Возвращайтесь к данным за прошлые дни — не нужно держать всё в памяти.',media:'/whoof/app-day.webp',video:false,alt:'Пример интерфейса Whoof с картой движений за день',interface:true},
-  {id:'context',label:'Другая прогулка. Другой день.',title:'В выходные — поездка. В будни — привычный маршрут.',benefit:'Добавить контекст',detail:'Учитывайте события дня, когда разбираетесь, почему изменилось движение.',media:'/whoof/life-gallery/outside',video:true,alt:'Собака на прогулке',interface:false},
-  {id:'conversation',label:'Перед разговором со специалистом',title:'«Кажется, что-то изменилось». А когда именно?',benefit:'Обсудить наблюдения',detail:'История движений добавляет контекст. Она не определяет причину изменений и не ставит диагноз.',media:'/whoof/life-story/together.webp',video:false,alt:'Собака рядом с человеком дома',interface:false},
+  {id:'day',title:'Вы были заняты. Он — своими делами.',benefit:'Восстановить день',detail:'После синхронизации посмотрите, как чередовались движение и покой.',media:'/whoof/life-extra/daytime',video:true,alt:'Собака отдыхает дома',interface:false},
+  {id:'rhythm',title:'Сегодня двигался меньше. А обычно — как?',benefit:'Сравнить с его ритмом',detail:'История помогает сравнивать одну и ту же собаку в разные дни.',media:'/whoof/app-dynamics.webp',video:false,alt:'Пример интерфейса Whoof с динамикой активности',interface:true},
+  {id:'history',title:'Вчера помните. А что было неделю назад?',benefit:'Сохранить историю',detail:'Возвращайтесь к данным за прошлые дни — не нужно держать всё в памяти.',media:'/whoof/app-day.webp',video:false,alt:'Пример интерфейса Whoof с картой движений за день',interface:true},
+  {id:'context',title:'В выходные — поездка. В будни — привычный маршрут.',benefit:'Добавить контекст',detail:'Учитывайте события дня, когда разбираетесь, почему изменилось движение.',media:'/whoof/life-gallery/outside',video:true,alt:'Собака на прогулке',interface:false},
+  {id:'conversation',title:'«Кажется, что-то изменилось». А когда именно?',benefit:'Обсудить наблюдения',detail:'История движений добавляет контекст. Она не определяет причину изменений и не ставит диагноз.',media:'/whoof/life-story/together.webp',video:false,alt:'Собака рядом с человеком дома',interface:false},
 ];
 ---
 <section id="situations" class="situations" data-block="2" data-tone="dark" aria-labelledby="situations-title">
@@ -17,10 +17,9 @@ const situations=[
     <img class="situations-fallback" src="/whoof/hero-v24/portrait-collar.webp" alt="Ошейник с трекером Whoof" loading="lazy" width="1600" height="2286"/>
   </div>
   <div id="situations-table" class="story-table" aria-labelledby="situations-table-title">
-    <div class="story-table-header"><h3 id="situations-table-title">Знакомые ситуации</h3><span class="story-table-header-center">Что добавляет Whoof <span aria-hidden="true">[ 01 — 05 ]</span></span><span>Данные и жизнь</span></div>
-    {situations.map((item,index)=><article class="story-row" data-story-row id={'situation-'+item.id} aria-labelledby={'situation-title-'+item.id}>
+    <div class="story-table-header"><h3 id="situations-table-title">Знакомые ситуации</h3><span class="story-table-header-center">Что добавляет Whoof</span><span>Данные и жизнь</span></div>
+    {situations.map(item=><article class="story-row" data-story-row id={'situation-'+item.id} aria-labelledby={'situation-title-'+item.id}>
       <div class="story-row-content">
-        <span class="story-row-label">{'0'+(index+1)} / {item.label}</span>
         <h4 id={'situation-title-'+item.id} data-story-title>{item.title}</h4>
         <div class="story-row-meta" data-story-meta><strong>{item.benefit}</strong><p>{item.detail}</p></div>
       </div>

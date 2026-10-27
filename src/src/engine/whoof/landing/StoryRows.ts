@@ -1,13 +1,13 @@
 import {SplitText} from 'gsap/SplitText';
 import {getStoryRowState,STORY_VISIBILITY} from './StoryMotion';
 const splitOptions={type:'words,chars',autoSplit:false} as const;
-type Row={element:HTMLElement;content:HTMLElement;split:SplitText;label:HTMLElement;meta:HTMLElement;visual:HTMLElement;top:number;height:number;show:number;fade:number};
+type Row={element:HTMLElement;content:HTMLElement;split:SplitText;meta:HTMLElement;visual:HTMLElement;top:number;height:number;show:number;fade:number};
 
 /** TestimoniesTableItem's measured scroll reveal, applied to actual owner situations. */
 export class StoryRows {
   private rows:Row[]=[...document.querySelectorAll<HTMLElement>('[data-story-row]')].map(element=>({
     element,content:element.querySelector<HTMLElement>('.story-row-content')!,split:SplitText.create(element.querySelector<HTMLElement>('[data-story-title]')!,splitOptions),
-    label:element.querySelector<HTMLElement>('.story-row-label')!,meta:element.querySelector<HTMLElement>('[data-story-meta]')!,
+    meta:element.querySelector<HTMLElement>('[data-story-meta]')!,
     visual:element.querySelector<HTMLElement>('[data-story-visual]')!,top:0,height:0,show:-100,fade:-100,
   }));
   private mobile=false;
@@ -25,7 +25,7 @@ export class StoryRows {
         const ratio=index/Math.max(1,row.split.chars.length-1);
         (char as HTMLElement).style.opacity=String(reduced?1:STORY_VISIBILITY.character+(1-STORY_VISIBILITY.character)*Math.max(0,Math.min(1,(state.show-ratio*.5)/.5)));
       });
-      row.label.style.opacity=row.meta.style.opacity=String(state.meta);
+      row.meta.style.opacity=String(state.meta);
       row.visual.style.opacity=String(state.media);
       row.visual.style.transform=this.mobile?'none':`scale(${state.scale})`;
     }
