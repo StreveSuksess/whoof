@@ -1,0 +1,43 @@
+{
+  "generated": true,
+  "purpose": "Illustrative owner motives, not actual interviewee photographs",
+  "scenes": [
+    {
+      "name": "puppy",
+      "size": [
+        1536,
+        1024
+      ],
+      "web": "puppy.webp",
+      "sha256": "6ef4f05084d6c62bc4a2709333f8ba30c66fb31fc0522219ecb190c47c7925e4"
+    },
+    {
+      "name": "shared",
+      "size": [
+        1536,
+        1024
+      ],
+      "web": "shared.webp",
+      "sha256": "95b4af33b33fc70fd0a5596c121113e9cc57f3491c34fcfe4b7a1a86fab4b471"
+    },
+    {
+      "name": "history",
+      "size": [
+        1536,
+        1024
+      ],
+      "web": "history.webp",
+      "sha256": "eba5d8d15eaf5e5f79cc492256bfca46dbb47398453577f8ed33cc83785fd054"
+    },
+    {
+      "name": "puppy-v2",
+      "size": [
+        1536,
+        1024
+      ],
+      "web": "puppy-v2.webp",
+      "sha256": "dc5a0c8c0243300219c9ca29ec5f2c34e045bf6aada6c59266286823d2062a85",
+      "reason": "Refined composition keeps puppy face in initial viewport"
+    }
+  ]
+}

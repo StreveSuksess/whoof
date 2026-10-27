@@ -1,13 +1,24 @@
 ---
-const motives=[
- {label:'До появления щенка',title:['Подготовиться.','И разобраться.'],text:'Будущей хозяйке интересно наблюдать за активностью щенка и понимать изменения по мере его взросления.',source:'Мотив из интервью о предзаказе: будущая владелица щенка.'},
- {label:'Когда заботу делят двое',title:['Меньше догадок','о прогулках.'],text:'Владелице двух собак хочется знать больше об их движении — особенно когда гуляет другой человек.',source:'Мотив из интервью о предзаказе: владелица двух взрослых собак.'},
- {label:'Когда важна динамика',title:['Помнить','не один день.'],text:'Владельцу важно сохранять историю наблюдений, чтобы обсуждать изменения с ветеринарным специалистом.',source:'Мотив из интервью о предзаказе: владелец взрослой собаки.'},
+const posters=[
+ {id:'puppy',ratio:1500/1080,image:'puppy-v2',title:['Скоро —','первая прогулка.'],copy:'Будущей хозяйке щенка интересно наблюдать за его активностью и понимать, что меняется по мере взросления.',alt:'Иллюстрация: щенок в новом доме у окна.',motive:true},
+ {id:'first',ratio:700/1080,image:'puppy-v2',word:'Впервые.',motive:false},
+ {id:'shared',ratio:1720/1080,image:'shared',title:['Гуляем по очереди.','Заботимся вместе.'],copy:'Владелице двух собак хочется знать больше об их движении — особенно после прогулок с другим человеком.',alt:'Иллюстрация: двое взрослых передают поводки рядом с двумя собаками.',motive:true},
+ {id:'near',ratio:700/1080,image:'shared',word:'Рядом.',motive:false},
+ {id:'history',ratio:2050/1080,image:'history',title:['Помнить больше,','чем вчера.'],copy:'Владелец взрослой собаки хочет сохранять историю наблюдений и обсуждать изменения с ветеринарным специалистом.',alt:'Иллюстрация: взрослая собака у окна рядом с рукой хозяина и записной книжкой.',motive:true},
 ];
 ---
-<section id="owners" class="editorial-section owners" data-block="3" data-tone="dark" aria-labelledby="owners-title">
-  <div class="section-kicker"><span>Из разговоров с владельцами</span><span>Интервью о предзаказе</span></div>
-  <h2 id="owners-title" class="display-title" data-reveal>У каждого —<br/> своё «зачем».</h2>
-  <div class="owner-motives">{motives.map(m=><article><span class="small-label" data-reveal>{m.label}</span><h3 data-reveal>{m.title[0]}<br/> {m.title[1]}</h3><p data-reveal>{m.text}</p><span class="owner-source">{m.source}</span></article>)}</div>
-  <p class="source-note">Анонимизированный пересказ исследовательских интервью. Это причины интереса и ожидания до использования Whoof, а не отзывы о полученном результате.</p>
+<section id="owners" class="owner-posters" data-block="3" data-tone="dark" aria-labelledby="owners-title">
+  <h2 id="owners-title" class="sr-only">Кому ещё интересен Whoof?</h2>
+  <div class="owners-stage" tabindex="0" role="region" aria-label="Мотивы владельцев из интервью о предзаказе" aria-keyshortcuts="ArrowLeft ArrowRight">
+    <div class="owners-rail">
+      {posters.map(p=><article class:list={['owner-poster','owner-poster-'+p.id,{'owner-interlude':!p.motive}]} data-owner-poster data-motive={p.motive||undefined} style={'--poster-ratio:'+p.ratio} aria-hidden={!p.motive||undefined}>
+        <div class="owner-poster-clipper"><div class="owner-poster-inner">
+          <img class="owner-poster-image" src={'/whoof/owners-v33/'+p.image+'.webp'} width="1536" height="1024" alt={p.alt||''} loading="lazy" decoding="async"/>
+          <div class="owner-poster-shade" aria-hidden="true"></div>
+          {p.motive?<><h3 class="owner-poster-title">{p.title![0]}<br/>{p.title![1]}</h3><p class="owner-poster-copy">{p.copy}</p></>:<p class="owner-poster-word">{p.word}</p>}
+        </div></div>
+      </article>)}
+    </div>
+    <p class="owner-research-note"><span>Мотивы из интервью о предзаказе.</span><span>Ожидания до использования. Иллюстрации сгенерированы.</span></p>
+  </div>
 </section>

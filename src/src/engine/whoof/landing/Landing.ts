@@ -10,6 +10,7 @@ import {AppExample} from './AppExample';
 import {StoryText} from './StoryText';
 import {getStoryState} from './StoryMotion';
 import {StoryRows} from './StoryRows';
+import {OwnerPosters} from './OwnerPosters';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
@@ -20,6 +21,7 @@ export function bootLanding(){
   const root=$('.landing-v27'),hero=$('.hero-ui'),worldRoot=$('.opening-world'),details=$('.details-ui'),header=$('.opening-header'),logo=$('.opening-logo');
   const plate=new HeroPlate(),card=new HeroCard(),detailText=new DetailsText(),gallery=new LifeGallery($('#life')),type=new SectionMotion(root);
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
+  const owners=new OwnerPosters($('#owners'));
   const app=new AppExample($('#app'),()=>{type.resize();measure();gallery.resize();});
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const steps=[...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
@@ -29,6 +31,7 @@ export function bootLanding(){
   let world:OpeningScene|undefined,worldRequested=false,worldFailed=false,worldReady=false,lastRender=-100,raf=0;
   let height=innerHeight,width=innerWidth,wearStart=0,wearEnd=0,storyEnd=2,scroll=scrollY/innerHeight;
   let targetX=0,targetY=0,mouseX=0,mouseY=0,moved=false,visible=!document.hidden,previous=performance.now(),started=performance.now(),leftHero=false;
+  let initialHashPending=true;
   const listenerAbort=new AbortController(),signal=listenerAbort.signal;
   function measure(){
     height=innerHeight;width=innerWidth;
@@ -38,6 +41,15 @@ export function bootLanding(){
     themeRanges.length=0;
     sections.forEach(section=>{const rect=section.getBoundingClientRect();themeRanges.push({top:rect.top+scrollY,bottom:rect.bottom+scrollY,tone:section.dataset.tone||'light'});});
   }
+  function anchorTop(hash:string){
+    let target:HTMLElement|null;try{target=document.getElementById(decodeURIComponent(hash.slice(1)));}catch{return;}
+    if(!target)return;
+    let top=target.getBoundingClientRect().top+scrollY;
+    if(hash==='#wearing')top=(wearStart+DETAIL_STOPS[0]-.64)*height;
+    else if(hash==='#life')top+=.35*height;
+    else if(hash!=='#intro'&&hash!=='#situations'&&hash!=='#owners')top-=70;
+    return top;
+  }
   async function loadWorld(){
     if(worldRequested)return;worldRequested=true;
     try{
@@ -46,19 +58,15 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
   },{threshold:[0,.15,.5]});
   clips.forEach(clip=>observer.observe(clip.media.element));
   root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(anchor=>anchor.addEventListener('click',event=>{
-    const target=document.querySelector<HTMLElement>(anchor.hash);if(!target)return;
-    event.preventDefault();
-    let top=target.getBoundingClientRect().top+scrollY;
-    if(anchor.hash==='#wearing')top=(wearStart+DETAIL_STOPS[0]-.64)*height;
-    else if(anchor.hash==='#life')top+=.35*height;
-    else if(anchor.hash!=='#intro'&&anchor.hash!=='#situations')top-=70;
+    const top=anchorTop(anchor.hash);if(top===undefined)return;
+    event.preventDefault();initialHashPending=false;
     const url=new URL(location.href);url.hash=anchor.hash;history.replaceState(null,'',url);
     const direct=reduced.matches||Math.abs(top-scrollY)>height*2.5;
     if(direct)scroll=top/height;
@@ -67,7 +75,8 @@ export function bootLanding(){
   steps.forEach((button,i)=>button.addEventListener('click',()=>window.scrollTo({top:(wearStart+DETAIL_STOPS[i]-.64)*height,behavior:reduced.matches?'instant':'smooth'}),{signal}));
   addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;moved=true;targetX=event.clientX/width*2-1;targetY=event.clientY/height*2-1;},{passive:true,signal});
   addEventListener('resize',resize,{passive:true,signal});
-  reduced.addEventListener('change',()=>{clips.forEach(updateClip);lastRender=-100;},{signal});
+  for(const name of ['wheel','pointerdown','keydown'])addEventListener(name,()=>{initialHashPending=false;},{once:true,passive:true,signal});
+  reduced.addEventListener('change',()=>{clips.forEach(updateClip);resize();lastRender=-100;},{signal});
   function update(now:number){
     if(!visible)return;
     const dt=Math.min(.05,(now-previous)/1000);previous=now;
@@ -79,6 +88,7 @@ export function bootLanding(){
     card.render(scroll,(now-started)/1000,true,reduced.matches);
     storyText.render(scroll,reduced.matches);
     storyRows.render(scroll*height,height,reduced.matches);
+    owners.render(scroll*height,reduced.matches);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
     if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
@@ -117,7 +127,15 @@ export function bootLanding(){
   document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume(),{signal});
   addEventListener('pagehide',suspend,{signal});addEventListener('pageshow',event=>{if(event.persisted)resume();},{signal});
   resize();void document.fonts.ready.then(resize);
+  // Source-style rails set their height in JS. Reconcile bookmarked sections
+  // after fonts/load and native scroll restoration; yield to any user navigation.
+  const pageLoaded=document.readyState==='complete'?Promise.resolve():new Promise<void>(resolve=>addEventListener('load',()=>resolve(),{once:true,signal}));
+  void Promise.all([document.fonts.ready,pageLoaded]).then(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(!initialHashPending||!location.hash)return;
+    const top=anchorTop(location.hash);if(top===undefined)return;
+    scroll=top/height;window.scrollTo({top,behavior:'instant'});initialHashPending=false;
+  })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();app.dispose();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();app.dispose();clips.forEach(c=>c.media.dispose());};
 }
