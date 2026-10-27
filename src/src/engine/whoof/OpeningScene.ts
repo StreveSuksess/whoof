@@ -7,6 +7,8 @@ import { matchOpeningMaterials, openingColorLook, openingEnvironment } from './O
 import {collarLift} from './OpeningTransition';
 import {getStoryState,getStorySpin,getStoryFraming} from './landing/StoryMotion';
 import type {StoryLighting} from './landing/StoryLighting';
+import type {OfferSketches} from './landing/OfferSketches';
+import {getOfferState} from './landing/OfferMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -24,6 +26,7 @@ export class OpeningScene {
   storySpinRotation=new Quaternion();storySpinAxis=new Vector3(1,1,1).normalize();
   studioEnvironment?:WebGLRenderTarget;
   storyLights?:StoryLighting;
+  offerSketches?:OfferSketches;private offerPreparation?:Promise<void>;
   width=1;height=1;mobile=false;portrait=false;
   constructor(container:HTMLElement){
     this.renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -47,6 +50,27 @@ export class OpeningScene {
   resize(width:number,height:number){
     this.width=width;this.height=height;this.mobile=width<=600;this.portrait=width/height<=1;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,this.mobile?1.5:1.8));this.renderer.setSize(width,height);
+    this.offerSketches?.resize(width,height);
+  }
+  prepareOffer(){
+    if(!this.offerPreparation)this.offerPreparation=import('./landing/OfferSketches').then(async({OfferSketches})=>{this.offerSketches=new OfferSketches(this.renderer);await this.offerSketches.load();this.offerSketches.resize(this.width,this.height);}).catch(error=>console.warn('Whoof sketchbook unavailable; offer and product remain available.',error));
+    return this.offerPreparation;
+  }
+  get offerReady(){return this.offerSketches?.isReady||false;}
+  get offerNeedsFrame(){return this.offerSketches?.needsFrame||false;}
+  renderOffer(progress:number,px:number,py:number,dt:number,reduced:boolean,coarse:boolean){
+    const state=getOfferState(progress*this.height,this.height,this.mobile,reduced);
+    this.storyLights?.setStrength(1);
+    this.product.quaternion.setFromEuler(new Euler(-.40+(reduced?0:py)*.045,state.yaw+(reduced?0:px)*.045,-.14));
+    this.product.position.set(0,.855,0);
+    const diameter=Math.min(this.width*(this.mobile?.84:.46),this.height*(this.mobile?.45:.78));
+    this.product.scale.setScalar(diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
+    this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.fov=32;
+    this.camera.setViewOffset(this.width,this.height,0,this.height*.5-state.modelY,this.width,this.height);
+    this.renderer.autoClear=true;this.offerSketches?.update(dt,px,py,reduced?1:progress,reduced,coarse);
+    this.renderer.setRenderTarget(null);this.renderer.clear();this.renderer.autoClear=false;
+    if(this.offerSketches?.isReady)this.renderer.render(this.offerSketches.scene,this.offerSketches.camera);
+    this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
   }
   /** Same camera crop and light as the table; settles into the Testimonies framing. */
   renderOpening(scroll:number,px:number,py:number,reduced:boolean,sectionEnd=2){

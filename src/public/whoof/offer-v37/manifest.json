@@ -1,0 +1,42 @@
+{
+  "generated": true,
+  "purpose": "Decorative pencil sketchbook; not measured data or specifications",
+  "scenes": [
+    {
+      "name": "collar",
+      "size": [
+        1024,
+        683
+      ],
+      "web": "collar.webp",
+      "sha256": "c66b75e06051efc050d92796fbd7bb94d25292ae79aa6435381cd4be01ca9bea"
+    },
+    {
+      "name": "walk",
+      "size": [
+        1024,
+        683
+      ],
+      "web": "walk.webp",
+      "sha256": "9da202b42752843443ab76aef7c2e9342b6a670e6c77e48498f89292495af5af"
+    },
+    {
+      "name": "rest",
+      "size": [
+        1024,
+        683
+      ],
+      "web": "rest.webp",
+      "sha256": "f12802fdb7feff0b5c3b28bd8e4bbb6b947b61c8fe2dacfce5c2a43c8855bb1a"
+    },
+    {
+      "name": "day",
+      "size": [
+        1024,
+        683
+      ],
+      "web": "day.webp",
+      "sha256": "ed655f52a42e7675e1f487ef3b51b9d4ec0bde1cf252ed71a0f88e582f7ed971"
+    }
+  ]
+}

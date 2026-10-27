@@ -1,11 +1,29 @@
-<section id="order" class="editorial-section offer" data-block="8" data-tone="light" aria-labelledby="order-title">
-  <div class="section-kicker"><span>Предзаказ Whoof</span><span>Устройство + приложение</span></div>
-  <div class="section-heading"><h2 id="order-title" data-reveal>Ваш первый год.<br/> Или сразу два.</h2><p data-reveal>Трекер и регулируемый ремешок. Приложение. Подписка на выбранный период. Доставка по России включена.</p></div>
-  <div class="offer-options">
-    <article><div class="offer-term"><span>Начать знакомство</span><strong>12 месяцев</strong></div><h3>Whoof + год подписки</h3><div class="offer-price">14 990 <span>₽</span></div><ul><li>Устройство Whoof с ремешком</li><li>Приложение и год подписки</li><li>Доставка по России</li></ul><a class="editorial-link" href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">Перейти к предзаказу <span aria-hidden="true">↗</span></a></article>
-    <article><div class="offer-term"><span>Больше времени вместе</span><strong>24 месяца</strong></div><h3>Whoof + два года подписки</h3><div class="offer-price">19 990 <span>₽</span></div><ul><li>Всё из годового комплекта</li><li>Подписка на два года</li><li>Заявлены консультация ветеринара и бонусы партнёров*</li></ul><a class="editorial-link" href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">Выбрать два года <span aria-hidden="true">↗</span></a></article>
+---
+const plans=[
+ {id:'year',tab:'1 год',title:'Первый год с Whoof.',description:'Трекер, ремешок и приложение. Год подписки уже в комплекте.',price:'14 990',term:'12 месяцев подписки',extra:'Доставка по России'},
+ {id:'two-years',tab:'2 года',title:'Больше времени вместе.',description:'Тот же Whoof. Два года подписки, чтобы знакомиться с его ритмом день за днём.',price:'19 990',term:'24 месяца подписки',extra:'Консультация и бонусы*'},
+];
+---
+<section id="order" class="source-offer" data-block="8" data-tone="dark" aria-labelledby="order-title">
+  <div class="offer-product" data-offer-product>
+    <div class="offer-stage">
+      <div class="offer-ghosts" aria-hidden="true">{['collar','walk','rest','day'].map(name=><img src={'/whoof/offer-v37/'+name+'.webp'} alt="" loading="lazy" decoding="async" width="1024" height="683"/>)}</div>
+      <div class="offer-model-host" data-offer-model aria-hidden="true"></div>
+      <picture class="offer-fallback" aria-hidden="true"><source media="(max-width:600px)" srcset="/whoof/hero-v24/portrait-collar.webp"/><img src="/whoof/hero-v24/landscape-collar.webp" alt="" loading="lazy"/></picture>
+      <div class="offer-picker">
+        <p class="offer-picker-caption">Выберите свой</p>
+        <h2 id="order-title"><span class="offer-sr">Комплект Whoof</span><img src="/whoof/wordmark.svg" alt="" width="107" height="22"/></h2>
+        <div class="offer-tabs" role="tablist" aria-label="Срок подписки в комплекте">{plans.map((plan,index)=><button type="button" id={'offer-tab-'+plan.id} role="tab" aria-controls={'offer-panel-'+plan.id} aria-selected={index===0?'true':'false'} tabindex={index===0?0:-1} data-offer-tab>{plan.tab}</button>)}</div>
+      </div>
+      {plans.map((plan,index)=><div class="offer-panel" id={'offer-panel-'+plan.id} role="tabpanel" aria-labelledby={'offer-tab-'+plan.id} data-offer-panel hidden={index!==0}>
+        <div class="offer-summary"><h3>{plan.title}</h3><p data-offer-description>{plan.description}</p><div class="offer-amount">{plan.price}<span>₽</span></div></div>
+        <div class="offer-inclusions"><ul><li>Устройство и приложение</li><li>{plan.term}</li><li>{plan.extra}</li></ul><a class="offer-checkout" href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">К предзаказу <span aria-hidden="true">↗</span></a><p>{index===0?'Цена и условия оформления — на whoof.ru.':'* Условия консультации и бонусов — при оформлении.'}</p></div>
+      </div>)}
+    </div>
   </div>
-  <p class="source-note">* Условия консультации и бонусов уточните при оформлении. Актуальная цена, состав комплекта и условия оплаты — на whoof.ru.</p>
-  <div class="offer-after"><div><span class="small-label">После включённого периода</span><h3>Устройство остаётся вашим.</h3><p>Текущая стоимость продления — 6 000 ₽ в год. Расширенные сервисы работают при продлении подписки. Цена будущего продления может измениться.</p></div><div><span class="small-label">Что с базовыми функциями</span><p>Базовые показатели, история прогулок и динамика заявлены без подписки. Их фактический состав зависит от версии приложения и действующих условий — проверьте его при оформлении.</p><a href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">Сравнить возможности на whoof.ru ↗</a></div></div>
-  <div class="fulfillment"><div><h3>Сейчас — предзаказ.</h3><p>Перед оплатой уточните дату отправки, совместимость телефона и доступные функции приложения.</p><a class="editorial-link" href="mailto:tech@whoof.ru?subject=Вопрос%20о%20предзаказе%20Whoof">Уточнить перед заказом <span aria-hidden="true">↗</span></a></div><div><h3>Гарантия и возврат.</h3><p>В FAQ Whoof указаны гарантия 1 год с получения и возврат исправного устройства в течение 7 дней с соблюдением условий. Аппаратная часть и сервисы имеют отдельные условия возврата.</p><a href="https://whoof.ru/legal.html?legal=offer" target="_blank" rel="noopener noreferrer">Прочитать условия продажи ↗</a></div></div>
+  <div class="offer-conditions">
+    <div class="offer-preorder"><h3>Сейчас — предзаказ.</h3><p>Доставка по России включена. Перед оплатой уточните дату отправки, совместимость телефона и доступные функции приложения.</p></div>
+    <details><summary>Подписка и возможности после её окончания <span aria-hidden="true">+</span></summary><div><p>Устройство остаётся вашим. Текущая стоимость продления — 6 000 ₽ в год. Расширенные сервисы работают при продлении подписки. Цена будущего продления может измениться.</p><p>Базовые показатели, история прогулок и динамика заявлены без подписки. Их фактический состав зависит от версии приложения и действующих условий — проверьте его при оформлении.</p><a href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">Состав подписки на whoof.ru ↗</a></div></details>
+    <details><summary>Отправка, гарантия и возврат <span aria-hidden="true">+</span></summary><div><p>В FAQ Whoof указаны гарантия 1 год с получения и возврат исправного устройства в течение 7 дней с соблюдением условий. Аппаратная часть и сервисы имеют отдельные условия возврата.</p><p>Актуальная цена, состав комплекта, сроки и условия оплаты — на whoof.ru.</p><a href="https://whoof.ru/legal.html?legal=offer" target="_blank" rel="noopener noreferrer">Условия продажи ↗</a><a href="mailto:tech@whoof.ru?subject=Вопрос%20о%20предзаказе%20Whoof">Уточнить перед заказом ↗</a></div></details>
+  </div>
 </section>
