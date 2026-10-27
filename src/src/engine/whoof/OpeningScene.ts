@@ -9,6 +9,8 @@ import {getStoryState,getStorySpin,getStoryFraming} from './landing/StoryMotion'
 import type {StoryLighting} from './landing/StoryLighting';
 import type {OfferSketches} from './landing/OfferSketches';
 import {getOfferState} from './landing/OfferMotion';
+import type {AppPhoneScene} from './landing/app/AppPhoneScene';
+import type {AppSceneState} from './landing/app/AppMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -27,6 +29,7 @@ export class OpeningScene {
   studioEnvironment?:WebGLRenderTarget;
   storyLights?:StoryLighting;
   offerSketches?:OfferSketches;private offerPreparation?:Promise<void>;
+  private appScene?:AppPhoneScene;private appRendered=false;private appPreparation?:Promise<void>;
   width=1;height=1;mobile=false;portrait=false;
   constructor(container:HTMLElement){
     this.renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -52,6 +55,24 @@ export class OpeningScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,this.mobile?1.5:1.8));this.renderer.setSize(width,height);
     this.offerSketches?.resize(width,height);
   }
+  prepareApp(){
+    if(!this.appPreparation)this.appPreparation=import('./landing/app/AppPhoneScene').then(({AppPhoneScene})=>{this.appScene=new AppPhoneScene(this.renderer,this.studioEnvironment?.texture);}).catch(error=>console.warn('Whoof app scene unavailable; native examples remain available.',error));
+    return this.appPreparation;
+  }
+  get appReady(){return !!this.appScene;}
+  get appNeedsFrame(){return !!this.appScene&&!this.appRendered;}
+  renderApp(state:AppSceneState,px:number,py:number){
+    this.appScene?.render(state,this.width,this.height,px,py);this.appRendered=!!this.appScene;
+    if(state.handoff<.001)return;
+    this.storyLights?.setStrength(1);
+    this.product.quaternion.setFromEuler(new Euler(-.40,state.handoff*.32,-.14));this.product.position.set(0,.855,0);
+    const diameter=Math.min(this.width*(this.mobile?.46:.34),this.height*.48)*(.85+.15*state.handoff);
+    this.product.scale.setScalar(diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
+    this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.fov=32;
+    this.camera.setViewOffset(this.width,this.height,this.width*(.5-(1.3+((this.mobile?.76:.72)-1.3)*state.handoff)),this.height*(.5-(.76-.08*state.handoff)),this.width,this.height);
+    this.renderer.autoClear=false;this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
+  }
+  disposeApp(){this.appScene?.dispose();}
   prepareOffer(){
     if(!this.offerPreparation)this.offerPreparation=import('./landing/OfferSketches').then(async({OfferSketches})=>{this.offerSketches=new OfferSketches(this.renderer);await this.offerSketches.load();this.offerSketches.resize(this.width,this.height);}).catch(error=>console.warn('Whoof sketchbook unavailable; offer and product remain available.',error));
     return this.offerPreparation;

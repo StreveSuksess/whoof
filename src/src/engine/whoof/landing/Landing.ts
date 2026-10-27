@@ -25,7 +25,7 @@ export function bootLanding(){
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
   const owners=new OwnerPosters($('#owners'));
   const offer=new OfferStage($('#order'),()=>{type.resize();measure();gallery.resize();});
-  const app=new AppExample($('#app'),()=>{type.resize();offer.resize();measure();gallery.resize();});
+  const app=new AppExample($('#app'));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const steps=[...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
   const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section')];
@@ -50,7 +50,7 @@ export function bootLanding(){
     let top=target.getBoundingClientRect().top+scrollY;
     if(hash==='#wearing')top=(wearStart+DETAIL_STOPS[0]-.64)*height;
     else if(hash==='#life')top+=.35*height;
-    else if(hash!=='#intro'&&hash!=='#situations'&&hash!=='#owners'&&hash!=='#order')top-=70;
+    else if(hash!=='#intro'&&hash!=='#situations'&&hash!=='#owners'&&hash!=='#app'&&hash!=='#order')top-=70;
     return top;
   }
   async function loadWorld(){
@@ -61,7 +61,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -92,11 +92,12 @@ export function bootLanding(){
     storyText.render(scroll,reduced.matches);
     storyRows.render(scroll*height,height,reduced.matches);
     owners.render(scroll*height,reduced.matches);
+    app.render(scroll*height,reduced.matches);
     offer.render(scroll*height,dt,reduced.matches);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
     if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
-    const virtual=scroll-wearStart+.64,inWear=scroll>wearStart-.28&&scroll<wearEnd+.12,inOffer=offer.active&&!inWear;
+    const virtual=scroll-wearStart+.64,inWear=scroll>wearStart-.28&&scroll<wearEnd+.12,inOffer=offer.active&&!inWear,inApp=app.active&&!inWear&&!inOffer;
     const detailOpacity=range(scroll,wearStart-.18,wearStart+.08)*(1-range(scroll,wearEnd-.5,wearEnd));
     details.style.visibility=detailOpacity>.001?'visible':'hidden';details.style.opacity=String(detailOpacity);details.inert=detailOpacity<.9;
     detailText.render(virtual,reduced.matches);
@@ -105,16 +106,21 @@ export function bootLanding(){
     const worldOpacity=Math.max(heroWorld,wearWorld)*(1-gallery.cover);
     worldRoot.style.opacity=String(worldOpacity);worldRoot.style.visibility=worldOpacity>.001?'visible':'hidden';
     $('.hero-vignette').style.opacity=String(1-range(scroll,0,.8));
-    const sceneScroll=inOffer?1000+offer.progress:inWear?virtual:scroll;
-    const canvasOpacity=worldReady?(inOffer||inWear?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
-    offer.setCanvas(world&&worldReady&&!worldFailed&&inOffer?world.renderer.domElement:undefined,world?.offerReady);
+    const sceneScroll=inApp?2000+app.progress:inOffer?1000+offer.progress:inWear?virtual:scroll;
+    const canvasOpacity=worldReady?(inApp||inOffer||inWear?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
+    // Detach the prior host before attaching another one, including far anchors.
+    if(!inOffer)offer.setCanvas(undefined);if(!inApp)app.setCanvas(undefined);
+    const canvas=world&&worldReady&&!worldFailed?world.renderer.domElement:undefined;
+    if(inApp)app.setCanvas(canvas,world?.appReady);if(inOffer)offer.setCanvas(canvas,world?.offerReady);
     if(world)world.renderer.domElement.style.opacity=String(canvasOpacity);
-    const renderWorld=inOffer||worldOpacity>.001&&canvasOpacity>.001&&(inWear||(scroll>.08&&scroll<storyEnd));
-    if((scroll>.02&&scroll<storyEnd)||Math.abs(wearStart-scroll)<2.5||Math.abs(offer.distance)<height*2.5)void loadWorld();
+    const renderWorld=inApp||inOffer||worldOpacity>.001&&canvasOpacity>.001&&(inWear||(scroll>.08&&scroll<storyEnd));
+    if((scroll>.02&&scroll<storyEnd)||Math.abs(wearStart-scroll)<2.5||Math.abs(offer.distance)<height*2.5||Math.abs(app.distance)<height*2.5||inApp)void loadWorld();
+    if(worldReady&&!reduced.matches&&(Math.abs(app.distance)<height*2.5||inApp))void world?.prepareApp();
     if(worldReady&&Math.abs(offer.distance)<height*2.5)void world?.prepareOffer();
     if(!renderWorld)lastRender=-100;
-    if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world.offerNeedsFrame)){
-      if(inOffer)world.renderOffer(offer.progress,reduced.matches?0:mouseX,reduced.matches?0:mouseY,dt,reduced.matches,coarse.matches,targetX,targetY);
+    if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world.offerNeedsFrame||inApp&&world.appNeedsFrame)){
+      if(inApp)world.renderApp(app.state,reduced.matches?0:mouseX,reduced.matches?0:mouseY);
+      else if(inOffer)world.renderOffer(offer.progress,reduced.matches?0:mouseX,reduced.matches?0:mouseY,dt,reduced.matches,coarse.matches,targetX,targetY);
       else if(inWear)world.render(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
       else world.renderOpening(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches,storyEnd);
       lastRender=sceneScroll;
@@ -122,15 +128,15 @@ export function bootLanding(){
     steps.forEach((button,i)=>button.toggleAttribute('aria-current',i===(virtual<1.78?0:virtual<2.88?1:2)));
     logo.style.transform='scale('+(1-.48*ease.cubicInOut(range(scroll,.02,.8)))+')';
     const backdrop=themeRanges.find(item=>scrollY+60>=item.top&&scrollY+60<item.bottom);
-    const tone=gallery.cover>.5?'dark':inWear?'light':scroll>.68&&scroll<storyEnd?'dark':backdrop?.tone||'dark';
+    const tone=inApp?app.headerTone:gallery.cover>.5?'dark':inWear?'light':scroll>.68&&scroll<storyEnd?'dark':backdrop?.tone||'dark';
     document.documentElement.dataset.headerTone=tone;
     header.classList.toggle('is-scrolled',actual>.8);
     type.render(scroll*height,height,reduced.matches);
     $('.opening-progress span').style.transform='scaleY('+clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height))+')';
     raf=requestAnimationFrame(update);
   }
-  function suspend(){visible=false;cancelAnimationFrame(raf);gallery.suspend();clips.forEach(clip=>clip.media.setPlaying(false));}
-  function resume(){if(visible)return;visible=true;gallery.resume();clips.forEach(updateClip);previous=performance.now();lastRender=-100;raf=requestAnimationFrame(update);}
+  function suspend(){visible=false;cancelAnimationFrame(raf);gallery.suspend();app.suspend();clips.forEach(clip=>clip.media.setPlaying(false));}
+  function resume(){if(visible)return;visible=true;gallery.resume();app.resume();clips.forEach(updateClip);previous=performance.now();lastRender=-100;raf=requestAnimationFrame(update);}
   document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume(),{signal});
   addEventListener('pagehide',suspend,{signal});addEventListener('pageshow',event=>{if(event.persisted)resume();},{signal});
   resize();void document.fonts.ready.then(resize);
@@ -144,5 +150,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();world?.disposeApp();clips.forEach(c=>c.media.dispose());};
 }

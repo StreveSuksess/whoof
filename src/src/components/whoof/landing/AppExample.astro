@@ -1,25 +1,27 @@
-<section id="app" class="editorial-section app-example" data-block="4" data-tone="light" aria-labelledby="app-title">
-  <div class="section-kicker"><span>Что вы увидите</span><span>Один пример — три шага</span></div>
-  <div class="app-layout">
-    <div class="app-explanation"><h2 id="app-title" data-reveal>Как прочитать<br/> его день.</h2>
-      <div class="app-tabs" role="tablist" aria-label="Разбор примера в приложении">
-        <button id="app-tab-0" role="tab" aria-selected="true" aria-controls="app-panel-0" data-app-tab="0"><span>01</span><span>Посмотреть день<small>Когда было больше движения, а когда — покой.</small></span></button>
-        <button id="app-tab-1" role="tab" aria-selected="false" aria-controls="app-panel-1" data-app-tab="1" tabindex="-1"><span>02</span><span>Сравнить с привычным<small>Один и тот же питомец в разные дни.</small></span></button>
-        <button id="app-tab-2" role="tab" aria-selected="false" aria-controls="app-panel-2" data-app-tab="2" tabindex="-1"><span>03</span><span>Вернуться к контексту<small>Что происходило в жизни собаки?</small></span></button>
-      </div>
-      <p class="source-note">Пример интерфейса и условного сценария. Данные на экранах — иллюстрация, а не результат измерений конкретной собаки.</p>
+<section id="app" class="app-example app-day-scene" data-block="4" data-tone="dark" aria-labelledby="app-title">
+  <h2 id="app-title" class="sr-only">Один день — в Whoof.</h2>
+  <div class="app-atmosphere" aria-hidden="true"></div>
+  <div class="app-world-host" data-app-world aria-hidden="true"></div>
+  <div class="app-stage" tabindex="0" role="region" aria-label="От карты дня к истории в приложении Whoof" aria-keyshortcuts="ArrowDown ArrowUp">
+    <div class="app-poster" aria-hidden="true"><img src="/whoof/app-day.webp" alt="" width="1460" height="1144"/></div>
+    <div class="app-caption app-caption-day" data-app-caption>
+      <h3>Прогулка. Отдых.<br/>Всё между ними.</h3><p>Движение и спокойные периоды<br/>складываются в картину дня.</p>
+      <img class="app-static-media" src="/whoof/app-day.webp" alt="Пример круговой карты движений за день" width="1460" height="1144" loading="lazy"/>
     </div>
-    <div class="app-display">
-      <div id="app-panel-0" role="tabpanel" aria-labelledby="app-tab-0" class="app-panel">
-        <div class="app-panel-top"><strong>Джека</strong><span>Пример дня</span></div><h3>У каждого дня<br/> свой рисунок.</h3><img src="/whoof/app-day.webp" alt="Демонстрационная карта движений по времени суток" width="1460" height="1144" loading="lazy"/><p>Точки на карте помогают увидеть распределение движений в течение дня. Спокойные периоды ещё не означают физиологический сон.</p>
-      </div>
-      <div id="app-panel-1" role="tabpanel" aria-labelledby="app-tab-1" class="app-panel" hidden>
-        <div class="app-panel-top"><strong>Динамика</strong><span>Пример сравнения</span></div><h3>День —<br/> на фоне других дней.</h3><img src="/whoof/app-dynamics.webp" alt="Пример графика активности за четырнадцать дней с ростом в последние дни" width="1460" height="1144" loading="lazy"/><p>В этом условном примере в последние дни движений больше. Это повод вспомнить режим и события, а не автоматически делать вывод о здоровье.</p>
-      </div>
-      <div id="app-panel-2" role="tabpanel" aria-labelledby="app-tab-2" class="app-panel" hidden>
-        <div class="app-panel-top"><strong>Контекст</strong><span>Что можно понять</span></div><h3>Данные дают повод<br/> задать вопрос.</h3>
-        <div class="context-line"><span>Что видно</span><p>Движений стало больше.</p></div><div class="context-line"><span>Что вспомнить</span><p>Стали дольше гулять? Приехали гости? Изменился распорядок?</p></div><div class="context-line"><span>Что сохранить</span><p>Историю за несколько дней и собственные наблюдения.</p></div><p>Если вас беспокоят состояние или поведение собаки, обсудите их с ветеринаром. Один график не объясняет причину изменений.</p>
-      </div>
+    <div class="app-caption app-caption-compare" data-app-caption>
+      <h3>Сегодня —<br/>среди его дней.</h3><p>Сравните день с историей<br/>той же собаки.</p>
+      <img class="app-static-media" src="/whoof/app-dynamics.webp" alt="Пример графика активности за четырнадцать дней" width="1460" height="1144" loading="lazy"/>
     </div>
+    <div class="app-caption app-caption-context" data-app-caption>
+      <h3>Цифры —<br/>в контексте жизни.</h3><p>Больше гуляли? Изменился распорядок?<br/>Вспомните, что было в этот день.</p>
+    </div>
+    <figure class="app-life-film">
+      <video data-app-film controls muted loop playsinline preload="none" poster="/whoof/life-gallery/outside.webp" aria-label="Whoof на настоящей прогулке"><source src="/whoof/life-gallery/outside.mp4" type="video/mp4"/></video>
+      <button class="app-film-play" type="button" hidden>Смотреть прогулку <span aria-hidden="true">↗</span></button>
+      <figcaption>У каждого дня — свой контекст.</figcaption>
+    </figure>
+    <div class="app-caption app-caption-handoff" data-app-caption><h3>Движения — здесь.<br/>История — рядом.</h3><p>Трекер и приложение.<br/>Две части одного Whoof.</p></div>
+    <p class="app-demo-note">Пример интерфейса · Демонстрационные данные</p>
   </div>
+  <p class="app-static-note">После синхронизации с телефоном. Спокойный период не обязательно означает сон. График не определяет причину изменений и не ставит диагноз.</p>
 </section>
