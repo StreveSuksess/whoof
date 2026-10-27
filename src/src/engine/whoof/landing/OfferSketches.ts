@@ -1,8 +1,8 @@
-import {AdditiveBlending,Color,Mesh,NearestFilter,OrthographicCamera,PlaneGeometry,RepeatWrapping,Scene,ShaderMaterial,TextureLoader,Vector2,Vector3,Vector4,WebGLRenderTarget,type WebGLRenderer} from 'three';
+import {AdditiveBlending,Color,Mesh,NearestFilter,NoBlending,OrthographicCamera,PlaneGeometry,RepeatWrapping,Scene,ShaderMaterial,TextureLoader,Vector2,Vector3,Vector4,WebGLRenderTarget,type WebGLRenderer} from 'three';
 import {ease} from '../../core/ease';
 import {getSketchProximity,getOfferBrushRadius,getOfferSketchBreathing} from './OfferMotion';
 import {OfferBloom} from './OfferBloom';
-import {offerPaintFragment,offerSketchFragment} from './OfferShaders';
+import {OFFER_PAINT_ZERO,offerPaintClearFragment,offerPaintFragment,offerSketchFragment} from './OfferShaders';
 const vertex=`varying vec2 v_uv;void main(){v_uv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
 const fullVertex=`varying vec2 v_uv;void main(){v_uv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
 const copyFragment=`uniform sampler2D u_texture;uniform vec2 u_texel;varying vec2 v_uv;void main(){gl_FragColor=(texture2D(u_texture,v_uv)*4.+texture2D(u_texture,v_uv+vec2(u_texel.x,0.))+texture2D(u_texture,v_uv-vec2(u_texel.x,0.))+texture2D(u_texture,v_uv+vec2(0.,u_texel.y))+texture2D(u_texture,v_uv-vec2(0.,u_texel.y)))/8.;}`;
@@ -17,8 +17,9 @@ export class OfferSketches {
   private post:OfferBloom;private quiet=true;private noiseOffset=new Vector2();
   private cards:Card[]=[];private width=1;private height=1;private ready=false;private show=0;private time=0;private remaining=0;private initialized=false;
   private lastPointer=new Vector2();private pointer=new Vector2();private velocity=new Vector2();private from=new Vector4();private to=new Vector4();
-  private paint=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:offerPaintFragment,defines:{USE_NOISE:1},depthTest:false,depthWrite:false,uniforms:{u_lowPaintTexture:{value:null},u_prevPaintTexture:{value:null},u_paintTexelSize:{value:new Vector2()},u_drawFrom:{value:this.from},u_drawTo:{value:this.to},u_pushStrength:{value:25},u_dissipations:{value:new Vector3(.985,.985,.75)},u_vel:{value:this.velocity},u_curlScale:{value:.06},u_curlStrength:{value:1.75}}});
-  private copy=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:copyFragment,depthTest:false,depthWrite:false,uniforms:{u_texture:{value:null},u_texel:{value:new Vector2()}}});
+  private clearPaint=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:offerPaintClearFragment,blending:NoBlending,depthTest:false,depthWrite:false,toneMapped:false,uniforms:{u_velocityZero:{value:OFFER_PAINT_ZERO}}});
+  private paint=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:offerPaintFragment,defines:{USE_NOISE:1},blending:NoBlending,depthTest:false,depthWrite:false,toneMapped:false,uniforms:{u_velocityZero:{value:OFFER_PAINT_ZERO},u_lowPaintTexture:{value:null},u_prevPaintTexture:{value:null},u_paintTexelSize:{value:new Vector2()},u_drawFrom:{value:this.from},u_drawTo:{value:this.to},u_pushStrength:{value:25},u_dissipations:{value:new Vector3(.985,.985,.75)},u_vel:{value:this.velocity},u_curlScale:{value:.06},u_curlStrength:{value:1.75}}});
+  private copy=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:copyFragment,blending:NoBlending,toneMapped:false,depthTest:false,depthWrite:false,uniforms:{u_texture:{value:null},u_texel:{value:new Vector2()}}});
   constructor(private renderer:WebGLRenderer){this.camera.position.z=2;this.quadScene.add(this.quad);this.post=new OfferBloom(renderer);}
   async load(){
     const [textures,noise]=await Promise.all([Promise.all(['collar','walk','rest','day'].map(name=>new TextureLoader().loadAsync('/whoof/offer-v37/'+name+'.webp'))),new TextureLoader().loadAsync('/textures/LDR_RGB1_0.png')]);
@@ -36,9 +37,11 @@ export class OfferSketches {
     this.current.setSize(w,h);this.previous.setSize(w,h);this.low.setSize(Math.max(1,w>>2),Math.max(1,h>>2));
     this.paint.uniforms.u_paintTexelSize.value.set(1/w,1/h);this.copy.uniforms.u_texel.value.set(1/w,1/h);
     this.camera.left=-width/height;this.camera.right=width/height;this.camera.updateProjectionMatrix();
-    const old=this.renderer.getRenderTarget(),color=this.renderer.getClearColor(new Color()),alpha=this.renderer.getClearAlpha();
-    this.renderer.setClearColor(new Color(.5,.5,0),0);for(const target of [this.current,this.previous,this.low]){this.renderer.setRenderTarget(target);this.renderer.clear();}
-    this.renderer.setRenderTarget(old);this.renderer.setClearColor(color,alpha);this.initialized=false;this.remaining=0;
+    // gl.clear premultiplies RGB by alpha on the shared transparent renderer.
+    // Write the data channels directly, as the source fboHelper.clearColor does.
+    const old=this.renderer.getRenderTarget();this.quad.material=this.clearPaint;
+    for(const target of [this.current,this.previous,this.low]){this.renderer.setRenderTarget(target);this.renderer.render(this.quadScene,this.quadCamera);}
+    this.renderer.setRenderTarget(old);this.velocity.set(0,0);this.from.set(0,0,0,0);this.to.set(0,0,0,0);this.initialized=false;this.remaining=0;
   }
   private resizePost(){this.post.resize(this.quiet?1:this.renderer.domElement.width,this.quiet?1:this.renderer.domElement.height);}
   render(){if(this.quiet)this.renderer.render(this.scene,this.camera);else this.post.render(this.scene,this.camera);}
