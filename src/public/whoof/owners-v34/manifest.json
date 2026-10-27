@@ -1,0 +1,24 @@
+{
+  "generated": true,
+  "purpose": "Distinct illustrative owner poster interludes, not customer portraits",
+  "scenes": [
+    {
+      "name": "first-walk",
+      "size": [
+        1536,
+        1024
+      ],
+      "web": "first-walk.webp",
+      "sha256": "81cad6240df0719d1cac93563f6734bceac8dc394d3584a41a89ca4e4a6b9279"
+    },
+    {
+      "name": "nearby",
+      "size": [
+        1536,
+        1024
+      ],
+      "web": "nearby.webp",
+      "sha256": "03b32dfb02ab438e3f6c98099836e013699fa80873672d04fbf6d988da82d6e5"
+    }
+  ]
+}

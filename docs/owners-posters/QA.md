@@ -25,3 +25,9 @@ Local screenshots: /Users/s.gavrilin/development/whoof/tmp/owner-posters/qa/prev
 Preview: http://localhost:4321/?v=33#owners
 
 The hero, collar geometry/materials, captured lighting, grounded prop interaction and seven-film wearing gallery were preserved. The initial-hash reconciliation is the only navigation change; it compensates for JS-measured section height while yielding to user input.
+
+## v34 — independent images for all five posters
+
+User feedback: v33 repeated puppy-v2 and shared-care backgrounds in its narrow interludes. Replaced them with two independent built-in imagegen scenes: chocolate spaniel on a first walk, and black-and-tan dog resting on its owner's knee. Three interview summaries and rail motion are unchanged. Sources and exact prompts are in PROMPTS-v34.md.
+
+Build4pages2.74s and updated owner-poster check pass. The check now rejects duplicate active image sources. Desktop shows5unique loaded scenes with no horizontal overflow; both new phone frames inspected at390×844, with clear faces/type. No browser errors/warnings observed. Proofs: /Users/s.gavrilin/development/whoof/tmp/owner-posters-v34/qa/.

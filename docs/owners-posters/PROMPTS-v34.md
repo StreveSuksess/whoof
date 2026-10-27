@@ -1,0 +1,15 @@
+# Distinct interlude scenes — v34
+
+Mode: built-in image_gen, two independent new generations. These are illustrative campaign scenes, not interviewee portraits or product results. Text remains native HTML.
+
+## first-walk
+
+Use case: photorealistic-natural. Asset type: premium Whoof landing page narrow photographic poster, a distinct visual interlude about a first walk. Create one cinematic editorial photograph, landscape 3:2. A small young chocolate-brown spaniel puppy with floppy ears and a plain black harness takes its first curious step across a stone doorway toward soft morning daylight; only the lower legs of its owner in dark navy trousers are seen, a simple slack leash attaches correctly. Low viewpoint at puppy eye height, natural puppy anatomy, detailed brown fur, paws firmly on stone, believable contact shadows. The puppy and its face sit within the central third, around x50%, y58%, so a central tall crop retains the full face and body. Leave the upper 25% as a calm shadowed pale stone doorway for the single oversized ivory word added later in HTML. Palette limestone, chocolate fur, ink blue and natural daylight; subtle film grain, premium 50mm editorial optics, realistic dynamic range and soft background focus. This must be a new scene, not a golden retriever on an indoor blanket. No product tracker, phone, text, logo, watermark, duplicated limbs, staged pet advertisement, extra dogs or toys. Imagined campaign illustration, not an actual interviewee photograph.
+
+## nearby
+
+Use case: photorealistic-natural. Asset type: premium Whoof landing page narrow photographic poster, a distinct visual interlude about closeness/shared care. Create one cinematic editorial photograph, landscape 3:2. A healthy short-haired black-and-tan medium dog with one small white chest patch rests its chin gently on its seated owner's knee at a quiet riverside park bench after a walk. Only one human hand naturally resting on the dog's shoulder and a dark trousered knee are visible; no human face. A plain charcoal leash is slack beside them. Frame intimately from dog eye height, with the dog's expressive brown eyes and head centered around x50%, y38%, safely inside the central third for a tall narrow crop. Lower 25% is dark navy clothing and soft shadow, calm enough for one oversized ivory word added later in HTML. Soft overcast daylight reflected from water, realistic fine short fur, wet nose, natural ear asymmetry and weight/contact. Cool slate water, navy wool and black/tan fur; subtle optical grain, 85mm editorial lens, restrained depth of field. It must be visibly distinct from an apartment doorway with two dogs and from a golden retriever by a window. No tracker, app UI, text, logos, watermark, extra hands, sad expression or plastic 3D look. Imagined campaign illustration, not a portrait of real research participants.
+
+## Saved outputs
+
+Web renditions: src/public/whoof/owners-v34/{first-walk,nearby}.webp and 768px variants. Master PNGs and provenance: /Users/s.gavrilin/development/whoof/output/imagegen/owners-v34/.

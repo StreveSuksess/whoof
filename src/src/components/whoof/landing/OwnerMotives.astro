@@ -1,9 +1,9 @@
 ---
 const posters=[
  {id:'puppy',ratio:1500/1080,image:'puppy-v2',title:['Скоро —','первая прогулка.'],copy:'Будущей хозяйке щенка интересно наблюдать за его активностью и понимать, что меняется по мере взросления.',alt:'Иллюстрация: щенок в новом доме у окна.',motive:true},
- {id:'first',ratio:700/1080,image:'puppy-v2',word:'Впервые.',motive:false},
+ {id:'first',ratio:700/1080,folder:'owners-v34',image:'first-walk',word:'Впервые.',motive:false},
  {id:'shared',ratio:1720/1080,image:'shared',title:['Гуляем по очереди.','Заботимся вместе.'],copy:'Владелице двух собак хочется знать больше об их движении — особенно после прогулок с другим человеком.',alt:'Иллюстрация: двое взрослых передают поводки рядом с двумя собаками.',motive:true},
- {id:'near',ratio:700/1080,image:'shared',word:'Рядом.',motive:false},
+ {id:'near',ratio:700/1080,folder:'owners-v34',image:'nearby',word:'Рядом.',motive:false},
  {id:'history',ratio:2050/1080,image:'history',title:['Помнить больше,','чем вчера.'],copy:'Владелец взрослой собаки хочет сохранять историю наблюдений и обсуждать изменения с ветеринарным специалистом.',alt:'Иллюстрация: взрослая собака у окна рядом с рукой хозяина и записной книжкой.',motive:true},
 ];
 ---
@@ -13,7 +13,7 @@ const posters=[
     <div class="owners-rail">
       {posters.map(p=><article class:list={['owner-poster','owner-poster-'+p.id,{'owner-interlude':!p.motive}]} data-owner-poster data-motive={p.motive||undefined} style={'--poster-ratio:'+p.ratio} aria-hidden={!p.motive||undefined}>
         <div class="owner-poster-clipper"><div class="owner-poster-inner">
-          <img class="owner-poster-image" src={'/whoof/owners-v33/'+p.image+'.webp'} width="1536" height="1024" alt={p.alt||''} loading="lazy" decoding="async"/>
+          <img class="owner-poster-image" src={'/whoof/'+(p.folder||'owners-v33')+'/'+p.image+'.webp'} width="1536" height="1024" alt={p.alt||''} loading="lazy" decoding="async"/>
           <div class="owner-poster-shade" aria-hidden="true"></div>
           {p.motive?<><h3 class="owner-poster-title">{p.title![0]}<br/>{p.title![1]}</h3><p class="owner-poster-copy">{p.copy}</p></>:<p class="owner-poster-word">{p.word}</p>}
         </div></div>

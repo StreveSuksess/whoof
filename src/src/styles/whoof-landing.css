@@ -120,11 +120,11 @@ html[data-header-tone=dark] .landing-v27 .opening-logo img{filter:brightness(0) 
 .owner-poster-title{position:absolute;left:calc(var(--owner-h)*.046296);top:calc(var(--owner-h)*.05);margin:0!important;font-size:calc(var(--owner-h)*.089286);font-weight:600;line-height:1.1;letter-spacing:-.045em;white-space:nowrap}
 .owner-poster-copy{position:absolute;left:calc(var(--owner-h)*.046296);bottom:calc(var(--owner-h)*.05);width:min(42%,570px);margin:0;font-size:clamp(17px,calc(var(--owner-h)*.0238),26px);font-weight:500;line-height:1.3;letter-spacing:-.035em;text-wrap:pretty}
 .owner-poster-word{position:absolute;left:calc(var(--owner-h)*.04);top:8%;margin:0;font-size:calc(var(--owner-h)*.13);line-height:1;letter-spacing:-.06em;font-weight:600}
-.owner-poster-first .owner-poster-image{object-position:80% 50%}
+.owner-poster-first .owner-poster-image{object-position:50% 50%}
 .owner-poster-shared .owner-poster-image{object-position:75% 50%}
 .owner-poster-history .owner-poster-image{object-position:85% 50%}
 .owner-poster-first .owner-poster-shade{background:linear-gradient(180deg,#11243838,transparent 70%)}
-.owner-poster-near .owner-poster-image{object-position:68% 10%}
+.owner-poster-near .owner-poster-image{object-position:50% 50%}
 .owner-poster-near .owner-poster-word{top:auto;bottom:7%;font-size:calc(var(--owner-h)*.18)}
 .owner-poster-near .owner-poster-shade{background:linear-gradient(0deg,#111e3299,transparent 70%)}
 .owner-research-note{display:flex;flex-wrap:wrap;gap:5px 24px;justify-content:space-between;margin:0;padding:22px 3.125vw 30px;color:#c9c9c2;font-size:11px;line-height:1.4;letter-spacing:-.01em}

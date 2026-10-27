@@ -29,4 +29,8 @@ assert.equal((html.match(/data-motive="true"/g)||[]).length,3,'only three ground
 assert.ok(!html.includes('class="owner-motives"'),'old grid is replaced');
 assert.ok(html.includes('Иллюстрации сгенерированы')&&html.includes('Ожидания до использования'));
 for(const name of ['puppy-v2','shared','history'])assert.ok(existsSync(resolve(app,`public/whoof/owners-v33/${name}.webp`)));
+const posterImages=[...html.matchAll(/<img class="owner-poster-image" src="([^"]+)"/g)].map(match=>match[1]);
+assert.equal(posterImages.length,5,'all five posters have images');
+assert.equal(new Set(posterImages).size,5,'each poster uses an independent scene');
+for(const path of posterImages)assert.ok(existsSync(resolve(app,'public'+path)),'poster asset exists: '+path);
 console.log('Owner posters: source rail/parallax bounds, reverse, mobile last-card hold, static reading, five panels/three grounded motives and generated assets passed.');
