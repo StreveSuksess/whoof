@@ -9,8 +9,7 @@ export function getStoryState(scroll:number,sectionEnd=2){
     atmosphere:range(scroll,.32,.82),
     studio:ease.cubicInOut(range(scroll,.62,1.28)),
     table:ease.cubicInOut(range(scroll,1.25,2)),
-    turn:range(scroll,1.7,Math.max(2,sectionEnd-.75)),
-    exit:range(scroll,Math.max(1,sectionEnd-.75),sectionEnd),
+    turn:range(scroll,1.7,Math.max(2,sectionEnd+.1)),
     // This intro directly follows the table; its title waits for HeroCard's .61 exit.
     title:range(scroll,.58,.92),
     description:range(scroll,.5,1),

@@ -49,7 +49,7 @@ export class OpeningScene {
   }
   /** Same camera crop and light as the table; settles into the Testimonies framing. */
   renderOpening(scroll:number,px:number,py:number,reduced:boolean,sectionEnd=2){
-    const {lift,exit,table,turn,studio}=getStoryState(scroll,sectionEnd);
+    const {lift,table,turn,studio}=getStoryState(scroll,sectionEnd);
     this.storyLights?.setStrength(studio);
     this.product.quaternion.copy(this.heroRotation).slerp(this.storyRotation,lift);
     this.tableRotation.setFromEuler(new Euler(-.30,.10+(reduced?0:turn*.28),-.28));
@@ -67,7 +67,7 @@ export class OpeningScene {
     this.camera.fov=fov;
     this.camera.setViewOffset(fullW+(this.width-fullW)*lift,fullH+(this.height-fullH)*lift,
       (fullW-this.width)/2*(1-lift)+(this.width*.5-centerX)*lift,
-      ((fullH-this.height)/2-shift*fullH)*(1-lift)+this.height*(-.01*lift+exit),this.width,this.height);
+      ((fullH-this.height)/2-shift*fullH)*(1-lift)-this.height*.01*lift,this.width,this.height);
     this.renderer.render(this.scene,this.camera);
   }
   render(scroll:number,px:number,py:number,reduced:boolean){

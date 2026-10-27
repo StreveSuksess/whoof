@@ -39,8 +39,9 @@ export class OwnerPosters {
     if(reduced)return;
     const local=scroll-this.top;
     const state=getOwnerPosterState(local,this.height,this.width,this.movable,this.bounds,this.mobile);
-    const key=[state.offset.toFixed(2),state.clip.toFixed(4),this.mobile].join('/');
+    const key=[state.offset.toFixed(2),state.clip.toFixed(4),state.backdrop.toFixed(4),this.mobile].join('/');
     if(key===this.previous)return;this.previous=key;
+    this.root.style.setProperty('--owner-cover',String(state.backdrop));
     this.rail.style.transform=this.mobile?'none':`translate3d(${-state.offset}px,0,0)`;
     this.posters.forEach((p,index)=>{
       const panel=state.panels[index];p.clipper.style.width=`${state.clip*100}%`;
@@ -50,5 +51,5 @@ export class OwnerPosters {
       if(Math.abs(index-state.active)<=2)p.image.loading='eager';
     });
   }
-  dispose(){this.signal.abort();this.root.classList.remove('has-owner-posters','owners-static');this.root.style.height='';}
+  dispose(){this.signal.abort();this.root.classList.remove('has-owner-posters','owners-static');this.root.style.height='';this.root.style.removeProperty('--owner-cover');}
 }

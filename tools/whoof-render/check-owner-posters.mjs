@@ -4,7 +4,15 @@ import {resolve} from 'node:path';
 import {build} from '../../src/node_modules/esbuild/lib/main.js';
 const app=resolve(import.meta.dirname,'../../src');
 const {outputFiles}=await build({entryPoints:[resolve(app,'src/engine/whoof/landing/OwnerPosterMotion.ts')],bundle:true,write:false,format:'esm',platform:'node'});
-const {getOwnerPosterState}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
+const {getOwnerPosterState,getOwnerEntryState}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
+assert.equal(getOwnerPosterState(-.65*900,900,1440,2000,[{left:0,width:1000}],false).clip,1,'incoming picture is fully revealed before crossing the collar');
+for(let local=-900;local<=100;local+=5){
+ const entry=getOwnerEntryState(local,900);
+ assert.ok(entry.backdrop>=0&&entry.backdrop<=1);
+ if(!entry.worldVisible)assert.equal(entry.backdrop,1,'world only stops after an opaque backdrop covers it');
+ if(local<=-.12*900)assert.equal(entry.backdrop,0,'no empty opaque band ahead of the poster');
+ assert.deepEqual(getOwnerEntryState(local,900),entry,'entry is deterministic in either direction');
+}
 for(const [width,height,mobile] of [[1440,900,false],[1020,1194,false],[350,844,true]]){
  let left=0;const items=[1500,700,1720,700,2050].map(value=>{const w=mobile?width:Math.min(width,height*.8*value/1080);const item={left:mobile?0:left,width:w};left+=w+height*.8*24/1080;return item;});
  const movable=mobile?width*items.length:left-height*.8*24/1080-width;

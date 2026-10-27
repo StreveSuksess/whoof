@@ -128,7 +128,9 @@ html[data-header-tone=dark] .landing-v27 .opening-logo img{filter:brightness(0) 
 .owner-poster-near .owner-poster-word{top:auto;bottom:7%;font-size:calc(var(--owner-h)*.18)}
 .owner-poster-near .owner-poster-shade{background:linear-gradient(0deg,#111e3299,transparent 70%)}
 .owner-research-note{display:flex;flex-wrap:wrap;gap:5px 24px;justify-content:space-between;margin:0;padding:22px 3.125vw 30px;color:#c9c9c2;font-size:11px;line-height:1.4;letter-spacing:-.01em}
-.has-owner-posters:not(.owners-static) .owners-stage{position:sticky;top:0;height:100svh;overflow:hidden}
+.owner-posters.has-owner-posters:not(.owners-static){background:transparent}
+.has-owner-posters:not(.owners-static) .owners-stage{position:sticky;top:0;height:100svh;overflow:hidden;isolation:isolate}
+.has-owner-posters:not(.owners-static) .owners-stage:before{content:'';position:absolute;inset:0;background:var(--story-background);opacity:var(--owner-cover,1);z-index:-1;pointer-events:none}
 .has-owner-posters:not(.owners-static) .owners-rail{display:flex;position:absolute;top:10svh;left:0;height:var(--owner-h);gap:calc(var(--owner-h)*.022222);width:max-content;will-change:transform}
 .has-owner-posters:not(.owners-static) .owner-poster{--poster-width:min(calc(var(--owner-h)*var(--poster-ratio)),100vw);flex:none;width:var(--poster-width);height:100%}
 .has-owner-posters:not(.owners-static) .owner-poster-inner{position:absolute;left:0;top:0;width:var(--poster-width);height:100%}

@@ -11,6 +11,7 @@ import {StoryText} from './StoryText';
 import {getStoryState} from './StoryMotion';
 import {StoryRows} from './StoryRows';
 import {OwnerPosters} from './OwnerPosters';
+import {getOwnerEntryState} from './OwnerPosterMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
@@ -37,7 +38,7 @@ export function bootLanding(){
     height=innerHeight;width=innerWidth;
     wearStart=($('#details').getBoundingClientRect().top+scrollY)/height;
     wearEnd=wearStart+$('#details').offsetHeight/height;
-    storyEnd=($('#situations').getBoundingClientRect().bottom+scrollY)/height;
+    storyEnd=($('#owners').getBoundingClientRect().top+scrollY)/height;
     themeRanges.length=0;
     sections.forEach(section=>{const rect=section.getBoundingClientRect();themeRanges.push({top:rect.top+scrollY,bottom:rect.bottom+scrollY,tone:section.dataset.tone||'light'});});
   }
@@ -97,7 +98,7 @@ export function bootLanding(){
     details.style.visibility=detailOpacity>.001?'visible':'hidden';details.style.opacity=String(detailOpacity);details.inert=detailOpacity<.9;
     detailText.render(virtual,reduced.matches);
     gallery.render(scroll,reduced.matches);
-    const heroWorld=scroll<storyEnd?1:0,wearWorld=inWear?detailOpacity:0;
+    const heroWorld=getOwnerEntryState((scroll-storyEnd)*height,height).worldVisible?1:0,wearWorld=inWear?detailOpacity:0;
     const worldOpacity=Math.max(heroWorld,wearWorld)*(1-gallery.cover);
     worldRoot.style.opacity=String(worldOpacity);worldRoot.style.visibility=worldOpacity>.001?'visible':'hidden';
     $('.hero-vignette').style.opacity=String(1-range(scroll,0,.8));
