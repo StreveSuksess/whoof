@@ -13,6 +13,7 @@ import {StoryRows} from './StoryRows';
 import {OwnerPosters} from './OwnerPosters';
 import {getOwnerEntryState} from './OwnerPosterMotion';
 import {OfferStage} from './OfferStage';
+import {HeaderMotion,crossesHeader} from './HeaderMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
@@ -21,6 +22,7 @@ export function bootLanding(){
   document.documentElement.classList.remove('no-js');
   document.body.classList.add('is-ready');
   const root=$('.landing-v27'),hero=$('.hero-ui'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
+  const headerMotion=new HeaderMotion();
   const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root);
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
   const owners=new OwnerPosters($('#owners'));
@@ -30,15 +32,20 @@ export function bootLanding(){
   const trust=new TrustStage($('#trust'));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section')];
+  const headerObstacles=sections.map(section=>[...section.querySelectorAll<HTMLElement>('h2:not(.sr-only),h3,h4,p,figure,button,summary,a,.section-kicker,.story-table-header')]);
   const clips=[...root.querySelectorAll<HTMLVideoElement>('[data-inline-video]')].map(element=>({media:new GalleryVideo(element),onscreen:false}));
   const themeRanges:{top:number;bottom:number;tone:string}[]=[];
   let world:OpeningScene|undefined,worldRequested=false,worldFailed=false,worldReady=false,lastRender=-100,raf=0;
   let height=innerHeight,width=innerWidth,storyEnd=2,scroll=scrollY/innerHeight;
   let targetX=0,targetY=0,mouseX=0,mouseY=0,moved=false,visible=!document.hidden,previous=performance.now(),started=performance.now(),leftHero=false;
   let initialHashPending=true;
+  let headerTop=28;
+  let headerCheckScroll=-1,headerCheckActual=-1,headerBlocked=false;
   const listenerAbort=new AbortController(),signal=listenerAbort.signal;
   function measure(){
     height=innerHeight;width=innerWidth;
+    headerTop=parseFloat(getComputedStyle(header).top)||0;
+    headerCheckActual=-1;
     storyEnd=($('#owners').getBoundingClientRect().top+scrollY)/height;
     themeRanges.length=0;
     sections.forEach(section=>{const rect=section.getBoundingClientRect();themeRanges.push({top:rect.top+scrollY,bottom:rect.bottom+scrollY,tone:section.dataset.tone||'light'});});
@@ -59,7 +66,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();card.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();card.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();headerMotion.reset(scrollY);world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -128,7 +135,33 @@ export function bootLanding(){
     const tone=inApp?app.headerTone:scroll>.68&&scroll<storyEnd?'dark':backdrop?.tone||'dark';
     document.documentElement.dataset.headerTone=tone;
     header.classList.toggle('is-scrolled',actual>.8);
+    header.classList.toggle('is-covered',actual>.35);
     type.render(scroll*height,height,reduced.matches);
+    const focused=header.querySelector(':focus-visible')!==null;
+    const directionHidden=headerMotion.update(scrollY,height,focused);
+    let obstructed=false;
+    if(!directionHidden&&!focused&&actual>.8){
+      if(headerCheckActual!==scrollY||Math.abs(headerCheckScroll-scroll)>.00001){
+        const floor=headerTop+28+20;
+        // Only the native section crossing the header can occlude it. Inactive
+        // fixed stages in distant sections must never suppress navigation.
+        headerBlocked=headerObstacles.some((elements,index)=>{
+          const section=themeRanges[index];
+          if(!section||section.top>scrollY+floor||section.bottom<scrollY)return false;
+          return elements.some(element=>{
+            if(!crossesHeader(element.getBoundingClientRect(),floor,width))return false;
+            for(let node:HTMLElement|null=element;node&&node!==sections[index];node=node.parentElement){
+              const style=getComputedStyle(node);
+              if(style.visibility==='hidden'||Number(style.opacity)<.05)return false;
+            }
+            return true;
+          });
+        });
+        headerCheckActual=scrollY;headerCheckScroll=scroll;
+      }
+      obstructed=headerBlocked;
+    }
+    header.classList.toggle('is-hidden',directionHidden||obstructed);
     $('.opening-progress span').style.transform='scaleY('+clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height))+')';
     raf=requestAnimationFrame(update);
   }

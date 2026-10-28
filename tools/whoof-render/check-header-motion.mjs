@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {resolve} from 'node:path';
+import {build} from '../../src/node_modules/esbuild/lib/main.js';
+const entry=resolve(import.meta.dirname,'../../src/src/engine/whoof/landing/HeaderMotion.ts');
+const {outputFiles}=await build({entryPoints:[entry],bundle:true,write:false,format:'esm',platform:'node'});
+const {HeaderMotion,crossesHeader}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
+assert.equal(crossesHeader({top:18,bottom:160,left:24,right:480},76,1020),true,'the supplied headline collision blocks revealing the header');
+assert.equal(crossesHeader({top:80,bottom:220,left:24,right:480},76,1020),false,'clear space allows navigation to return');
+assert.equal(crossesHeader({top:-90,bottom:-2,left:24,right:480},76,1020),false,'departed text cannot hold the header hidden');
+assert.equal(crossesHeader({top:20,bottom:60,left:1100,right:1400},76,1020),false,'offscreen horizontal posters do not obstruct');
+assert.equal(crossesHeader({top:20,bottom:21,left:0,right:1},76,1020),false,'screen-reader-only content is not an obstacle');
+for(const height of [390,844,900,1194]){
+ const header=new HeaderMotion();
+ assert.equal(header.update(0,height),false);
+ assert.equal(header.update(height*.34,height),false,'hero retains the original visible header');
+ assert.equal(header.update(height,height),true,'downward travel clears the following headline');
+ for(let i=0;i<50;i++)assert.equal(header.update(height,height),true,'idle does not flash navigation over content');
+ for(const offset of [-2,1,-3,0])assert.equal(header.update(height+offset,height),true,'trackpad jitter does not reveal');
+ assert.equal(header.update(height-24,height),false,'deliberate upward motion restores navigation');
+ assert.equal(header.update(height-25,height),false);
+ assert.equal(header.update(height-20,height),false,'a small reverse correction does not hide it');
+ assert.equal(header.update(height+20,height),true);
+ assert.equal(header.update(height+21,height,true),false,'keyboard focus always has immediate access');
+ assert.equal(header.update(height+21,height),true,'focus override does not corrupt scroll state');
+ header.reset(height*2);
+ assert.equal(header.update(height*2,height),true,'layout changes cannot invent upward movement');
+ assert.equal(header.update(height*2-20,height),false);
+ assert.equal(header.update(height*.2,height),false,'returning to the hero restores its unbacked header');
+ assert.equal(header.update(-120,height),false,'native top overscroll stays visible');
+ const anchored=new HeaderMotion();
+ assert.equal(anchored.update(height*30,height),true,'far anchor entries have no overlapping header flash');
+ assert.equal(anchored.update(height*30-20,height),false);
+}
+console.log('Header: hero/down/up, idle, jitter, focus, resize, overscroll and far-anchor navigation passed.');
