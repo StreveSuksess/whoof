@@ -9,6 +9,7 @@ import {getStoryState,getStorySpin,getStoryFraming} from './landing/StoryMotion'
 import type {StoryLighting} from './landing/StoryLighting';
 import type {OfferSketches} from './landing/OfferSketches';
 import {getOfferState} from './landing/OfferMotion';
+import {getProductPassageState} from './landing/ProductPassageMotion';
 import type {AppPhoneScene} from './landing/app/AppPhoneScene';
 import type {AppSceneState} from './landing/app/AppMotion';
 import type {AppLighting} from './landing/app/AppLighting';
@@ -35,6 +36,7 @@ export class OpeningScene {
   private appScene?:AppPhoneScene;private appLights?:AppLighting;private appEnvironment?:WebGLRenderTarget;private appRendered=false;private appUnavailable=false;private appPreparation?:Promise<void>;
   private trustLights?:AppLighting;private trustPreparation?:Promise<void>;private trustRendered=false;private trustUnavailable=false;
   private endingScene?:KibbleScene;private endingPreparation?:Promise<void>;
+  private sketchReveal=0;
   private trustProductPosition=new Vector3();private trustProductScale=new Vector3();private trustProductRotation=new Quaternion();
   private trustCameraPosition=new Vector3();private trustCameraRotation=new Quaternion();
   width=1;height=1;mobile=false;portrait=false;
@@ -100,16 +102,19 @@ export class OpeningScene {
   renderOffer(progress:number,px:number,py:number,dt:number,reduced:boolean,coarse:boolean,rawX=px,rawY=py){
     const state=getOfferState(progress*this.height,this.height,this.mobile,reduced);
     this.storyLights?.setStrength(1);
+    this.applyOfferPose(state,px,py,reduced);
+    this.renderer.autoClear=true;this.offerSketches?.update(dt,px,py,reduced?1:progress,reduced,coarse,rawX,rawY);
+    this.renderer.setRenderTarget(null);this.renderer.clear();this.renderer.autoClear=false;
+    if(this.offerSketches?.isReady)this.offerSketches.render();
+    this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
+  }
+  private applyOfferPose(state:ReturnType<typeof getOfferState>,px:number,py:number,reduced:boolean,exitOffset=0){
     this.product.quaternion.setFromEuler(new Euler(-.40+(reduced?0:py)*.045,state.yaw+(reduced?0:px)*.045,-.14));
     this.product.position.set(0,.855,0);
     const diameter=Math.min(this.width*(this.mobile?.84:.46),this.height*(this.mobile?.45:.78));
     this.product.scale.setScalar(diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
     this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.fov=32;
-    this.camera.setViewOffset(this.width,this.height,0,this.height*.5-state.modelY,this.width,this.height);
-    this.renderer.autoClear=true;this.offerSketches?.update(dt,px,py,reduced?1:progress,reduced,coarse,rawX,rawY);
-    this.renderer.setRenderTarget(null);this.renderer.clear();this.renderer.autoClear=false;
-    if(this.offerSketches?.isReady)this.offerSketches.render();
-    this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
+    this.camera.setViewOffset(this.width,this.height,0,this.height*.5-state.modelY+exitOffset,this.width,this.height);
   }
   /** Same camera crop and light as the table; settles into the Testimonies framing. */
   renderOpening(scroll:number,px:number,py:number,reduced:boolean,sectionEnd=2){
@@ -146,6 +151,12 @@ export class OpeningScene {
   /** Both sections use the same captured radiance, display response and scoped self-shadow key. */
   renderTrust(state:TrustSceneState,virtual:number,px:number,py:number,reduced:boolean){
     this.storyLights?.setStrength(0);
+    this.applyTrustPose(state,virtual,px,py,reduced);
+    this.renderer.autoClear=true;
+    if(this.trustLights){this.trustLights.key.intensity=.85;this.trustLights.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'));this.trustRendered=true;}
+    else this.renderer.render(this.scene,this.camera);
+  }
+  private applyTrustPose(state:TrustSceneState,virtual:number,px:number,py:number,reduced:boolean){
     this.applyWearPose(virtual,px,py,reduced);
     const blend=state.wearBlend;
     if(blend<1){
@@ -161,9 +172,39 @@ export class OpeningScene {
       const x=this.width*.5-state.x,y=this.height*.5-state.y;
       this.camera.setViewOffset(this.width+(fullWidth-this.width)*blend,this.height+(fullHeight-this.height)*blend,x+(offsetX-x)*blend,y+(offsetY-y)*blend,this.width,this.height);
     }
+  }
+  /** Evaluate both original poses in one projection; draw only the interpolated collar. */
+  applyProductPassagePose(state:TrustSceneState,virtual:number,local:number,px:number,py:number,reduced=false,exitOffset=0){
+    const {blend}=getProductPassageState(local,this.height);
+    if(blend===0){this.applyTrustPose(state,virtual,px,py,reduced);return blend;}
+    const offer=getOfferState(local,this.height,this.mobile,reduced);
+    if(blend===1){this.applyOfferPose(offer,px,py,reduced,exitOffset);return blend;}
+    this.applyTrustPose(state,virtual,px,py,reduced);
+    this.trustProductPosition.copy(this.product.position);this.trustProductScale.copy(this.product.scale);this.trustProductRotation.copy(this.product.quaternion);
+    this.trustCameraPosition.copy(this.camera.position);this.trustCameraRotation.copy(this.camera.quaternion);
+    const v=this.camera.view!,fw=v.fullWidth,fh=v.fullHeight,ox=v.offsetX,oy=v.offsetY,fov=this.camera.fov;
+    this.applyOfferPose(offer,px,py,reduced,exitOffset);
+    this.product.position.lerp(this.trustProductPosition,1-blend);this.product.scale.lerp(this.trustProductScale,1-blend);this.product.quaternion.slerp(this.trustProductRotation,1-blend);
+    this.camera.position.lerp(this.trustCameraPosition,1-blend);this.camera.quaternion.slerp(this.trustCameraRotation,1-blend);
+    this.camera.fov=32+(fov-32)*(1-blend);
+    const targetY=this.height*.5-offer.modelY+exitOffset;
+    this.camera.setViewOffset(this.width+(fw-this.width)*(1-blend),this.height+(fh-this.height)*(1-blend),ox*(1-blend),targetY+(oy-targetY)*(1-blend),this.width,this.height);
+    return blend;
+  }
+  renderProductPassage(state:TrustSceneState,virtual:number,local:number,px:number,py:number,dt:number,reduced:boolean,coarse:boolean,rawX=px,rawY=py,exitOffset=0){
+    const blend=this.applyProductPassagePose(state,virtual,local,px,py,reduced,exitOffset);
+    this.storyLights?.setStrength(blend);
+    this.renderer.setRenderTarget(null);this.renderer.autoClear=true;this.renderer.clear();this.renderer.autoClear=false;
+    if(blend>0&&this.offerSketches?.isReady){
+      this.sketchReveal=Math.min(1,this.sketchReveal+dt*2);
+      this.offerSketches.update(dt,px,py,getOfferState(local,this.height,this.mobile,reduced).progress,reduced,coarse,rawX,rawY,blend*this.sketchReveal);this.offerSketches.render();
+    }
+    this.renderer.clearDepth();
+    if(this.trustLights){
+      this.trustLights.key.intensity=.85*(1-blend);
+      this.trustLights.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'),.85+(this.scene.environmentIntensity-.85)*blend);this.trustRendered=true;
+    }else this.renderer.render(this.scene,this.camera);
     this.renderer.autoClear=true;
-    if(this.trustLights){this.trustLights.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'));this.trustRendered=true;}
-    else this.renderer.render(this.scene,this.camera);
   }
   disposeTrust(){this.trustLights?.dispose();}
   render(scroll:number,px:number,py:number,reduced:boolean){

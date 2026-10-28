@@ -74,7 +74,7 @@ uniform sampler2D u_blurTexture3;
 #if ITERATION > 4
 uniform sampler2D u_blurTexture4;
 #endif
-uniform float u_bloomWeights[ITERATION];uniform float u_saturation;
+uniform float u_bloomWeights[ITERATION];uniform float u_saturation;uniform float u_opacity;
 #include <common>
 vec3 dithering(vec3 color){float grid_position=rand(gl_FragCoord.xy);vec3 dither_shift_RGB=vec3(0.25/255.0,-0.25/255.0,0.25/255.0);dither_shift_RGB=mix(2.0*dither_shift_RGB,-2.0*dither_shift_RGB,grid_position);return color+dither_shift_RGB;}void main(){vec4 color=texture2D(u_texture,v_uv);vec3 bloomColor=(u_bloomWeights[0]*texture2D(u_blurTexture0,v_uv)
 #if ITERATION > 1
@@ -89,4 +89,4 @@ vec3 dithering(vec3 color){float grid_position=rand(gl_FragCoord.xy);vec3 dither
 #if ITERATION > 4
 +u_bloomWeights[4]*texture2D(u_blurTexture4,v_uv)
 #endif
-).rgb;float luma=dot(bloomColor,vec3(0.299,0.587,0.114));color.rgb+=mix(vec3(luma),bloomColor,u_saturation);color.rgb=dithering(color.rgb);float ink=dot(color.rgb,vec3(.299,.587,.114));gl_FragColor=vec4(ink*vec3(1.04,1.015,.97)+vec3(11.,13.,15.)/255.,1.);}`;
+).rgb;float luma=dot(bloomColor,vec3(0.299,0.587,0.114));color.rgb+=mix(vec3(luma),bloomColor,u_saturation);color.rgb=dithering(color.rgb);float ink=dot(color.rgb,vec3(.299,.587,.114));gl_FragColor=vec4((ink*vec3(1.04,1.015,.97)+vec3(11.,13.,15.)/255.)*u_opacity,u_opacity);}`;

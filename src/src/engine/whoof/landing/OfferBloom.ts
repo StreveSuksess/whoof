@@ -18,7 +18,7 @@ export class OfferBloom {
     const type=renderer.extensions.has('EXT_color_buffer_float')?HalfFloatType:UnsignedByteType;
     const target=()=>new WebGLRenderTarget(1,1,{type,depthBuffer:false,stencilBuffer:false});
     this.high=target();this.scene.add(this.quad);
-    const uniforms:Record<string,{value:unknown}>={u_texture:{value:this.layer.texture},u_bloomWeights:{value:getOfferBloomWeights()},u_saturation:{value:FX.saturation}};
+    const uniforms:Record<string,{value:unknown}>={u_texture:{value:this.layer.texture},u_bloomWeights:{value:getOfferBloomWeights()},u_saturation:{value:FX.saturation},u_opacity:{value:1}};
     for(let i=0;i<FX.iterations;i++){
       this.horizontal.push(target());this.vertical.push(target());
       this.blurs.push(material(offerBloomBlur,{u_texture:{value:null},u_resolution:{value:new Vector2(1,1)},u_direction:{value:this.x}},{KERNEL_RADIUS:3+i*2,SIGMA:3+i*2}));
@@ -31,8 +31,9 @@ export class OfferBloom {
     this.layer.setSize(this.width,this.height);this.high.setSize(layout.levels[0].width,layout.levels[0].height);
     layout.levels.forEach((level,i)=>{this.horizontal[i].setSize(level.width,level.height);this.vertical[i].setSize(level.width,level.height);this.blurs[i].uniforms.u_resolution.value.set(level.width,level.height);});
   }
-  render(scene:Scene,camera:Camera){
+  render(scene:Scene,camera:Camera,opacity=1){
     const renderer=this.renderer;
+    this.composite.uniforms.u_opacity.value=opacity;
     renderer.setRenderTarget(this.layer);renderer.clear();renderer.render(scene,camera);
     this.highMaterial.uniforms.u_texture.value=this.layer.texture;this.quad.material=this.highMaterial;
     renderer.setRenderTarget(this.high);renderer.render(this.scene,this.camera);

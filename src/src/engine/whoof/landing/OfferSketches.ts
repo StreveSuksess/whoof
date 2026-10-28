@@ -14,7 +14,7 @@ export class OfferSketches {
   private quadCamera=new OrthographicCamera(-1,1,1,-1,0,2);private quadScene=new Scene();
   private geometry=new PlaneGeometry(2,2);private quad=new Mesh(this.geometry);
   private current=new WebGLRenderTarget(1,1);private previous=new WebGLRenderTarget(1,1);private low=new WebGLRenderTarget(1,1);
-  private post:OfferBloom;private quiet=true;private noiseOffset=new Vector2();
+  private post:OfferBloom;private quiet=true;private reveal=1;private noiseOffset=new Vector2();
   private cards:Card[]=[];private width=1;private height=1;private ready=false;private show=0;private time=0;private remaining=0;private initialized=false;
   private lastPointer=new Vector2();private pointer=new Vector2();private velocity=new Vector2();private from=new Vector4();private to=new Vector4();
   private clearPaint=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:offerPaintClearFragment,blending:NoBlending,depthTest:false,depthWrite:false,toneMapped:false,uniforms:{u_velocityZero:{value:OFFER_PAINT_ZERO}}});
@@ -44,9 +44,10 @@ export class OfferSketches {
     this.renderer.setRenderTarget(old);this.velocity.set(0,0);this.from.set(0,0,0,0);this.to.set(0,0,0,0);this.initialized=false;this.remaining=0;
   }
   private resizePost(){this.post.resize(this.quiet?1:this.renderer.domElement.width,this.quiet?1:this.renderer.domElement.height);}
-  render(){if(this.quiet)this.renderer.render(this.scene,this.camera);else this.post.render(this.scene,this.camera);}
-  update(dt:number,x:number,y:number,progress:number,reduced:boolean,coarse:boolean,rawX=x,rawY=y){
+  render(){if(this.quiet)this.renderer.render(this.scene,this.camera);else this.post.render(this.scene,this.camera,this.reveal);}
+  update(dt:number,x:number,y:number,progress:number,reduced:boolean,coarse:boolean,rawX=x,rawY=y,reveal=1){
     if(!this.ready)return;
+    this.reveal=reveal;
     const mobile=this.width<=600,quiet=coarse||reduced||mobile;
     if(this.quiet!==quiet){this.quiet=quiet;this.resizePost();this.initialized=false;}
     this.noiseOffset.set(quiet?0:Math.random(),quiet?0:Math.random());
@@ -75,7 +76,7 @@ export class OfferSketches {
       card.mesh.rotation.z=card.rotation+breathing.rotation+(quiet?0:near*dx*.1);
       const scale=card.scale*(mobile?.5:this.width/this.height<1.1?.78:1)*(1+near*.05)*strength*breathing.scale;card.mesh.scale.set(scale*card.aspect,scale,1);
       const uniforms=card.material.uniforms;uniforms.u_screenPaintTexture.value=this.current.texture;uniforms.u_resolution.value.set(quiet?this.renderer.domElement.width:this.post.width,quiet?this.renderer.domElement.height:this.post.height);
-      uniforms.u_opacity.value=(quiet?.56:near*.6)*strength;uniforms.u_activeRatio.value=mobile?.6:1;uniforms.u_blur.value=(1-ease.cubicOut(near))*.5;
+      uniforms.u_opacity.value=(quiet?.56:near*.6)*strength*(quiet?reveal:1);uniforms.u_activeRatio.value=mobile?.6:1;uniforms.u_blur.value=(1-ease.cubicOut(near))*.5;
     });
   }
 }

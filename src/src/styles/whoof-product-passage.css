@@ -1,0 +1,13 @@
+/* One physical scene across Trust and the price introduction. */
+.product-passage-world{position:fixed;inset:0;z-index:2;pointer-events:none;visibility:hidden}
+.product-passage-paper,.product-passage-dark,.product-passage-canvas{position:absolute;inset:0}
+.product-passage-paper{background:radial-gradient(ellipse at 18% 12%,#fffef9 0%,#f4f3ef 38%,#e9e7e0 100%)}
+.product-passage-dark{background:radial-gradient(ellipse 75% 90% at 18% 30%,#3d302021,transparent 74%),#0b0d0f;opacity:var(--passage-dark,0)}
+.product-passage-canvas{z-index:1}
+.product-passage-canvas canvas{display:block;width:100%;height:100%;transition:none!important}
+.has-product-passage .trust-world{background:none!important}
+.has-product-world .trust-native-product{visibility:hidden}
+.has-product-passage .source-offer{background:transparent}
+.has-product-passage .offer-stage{z-index:4;background:transparent}
+.has-product-passage .offer-ghosts,.has-product-passage .offer-fallback{display:none}
+.has-product-passage .offer-picker,.has-product-passage .offer-panel{opacity:var(--offer-ui,1)}
