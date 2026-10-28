@@ -21,8 +21,8 @@
 .has-app-stage:not(.app-static) .app-caption{position:absolute;left:5.5%;top:var(--app-caption-y);width:43%;max-width:650px;margin:0;visibility:hidden;color:var(--app-ink)}
 .has-app-stage:not(.app-static) .app-static-media,.has-app-stage:not(.app-static) .app-static-note{display:none}
 .has-app-stage:not(.app-static) .app-caption-context{top:14svh}
-.has-app-stage:not(.app-static) .app-caption-handoff{top:13svh;left:20%;width:60%;max-width:none;text-align:center}
-.has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:auto;margin-right:auto}
+.has-app-stage:not(.app-static) .app-caption-handoff{top:14svh;left:58%;width:36%;max-width:none;text-align:left}
+.has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0;margin-right:0;font-size:18px}
 .has-app-stage:not(.app-static) .app-life-film{position:absolute;left:5.5%;top:44svh;width:min(29vw,34svh);margin:0;opacity:0;visibility:hidden;will-change:transform}
 .has-app-stage:not(.app-static) .app-demo-note{position:absolute;left:5.5%;bottom:28px;margin:0;color:var(--app-ink);opacity:var(--app-demo-opacity,.48)}
 .has-app-stage:not(.app-static) .app-poster{display:block;position:absolute;z-index:1;left:54%;top:22%;width:30%;padding:15px;border:9px solid #202225;border-radius:34px;background:#f7f7f5;overflow:hidden;box-shadow:20px 20px 70px #0004}
@@ -43,7 +43,7 @@
 @media(min-width:601px) and (max-aspect-ratio:1/1){
  .has-app-stage:not(.app-static) .app-caption{width:41%}
  .app-caption h3{font-size:clamp(40px,5vw,65px)}
- .has-app-stage:not(.app-static) .app-caption-handoff{left:12%;width:76%}
+ .has-app-stage:not(.app-static) .app-caption-handoff{left:58%;width:36%}
 }
 @media(max-width:600px){
  .app-stage{padding:110px 24px 50px}
@@ -79,3 +79,10 @@
 .connection-intro>h2.app-follow-title{position:fixed;left:var(--section-pad);top:14svh;width:calc(100% - var(--section-pad)*2);max-width:none;margin:0;text-align:center;z-index:4;pointer-events:none}
 
 .connection-intro:has(>.app-follow-title)>.section-kicker{visibility:hidden}
+
+@media(min-width:601px){.has-app-stage:not(.app-static) .app-caption-handoff h3{font-size:clamp(34px,4vw,62px)}.has-app-stage:not(.app-static) .app-caption-handoff p{margin-top:22px}}
+@media(max-height:600px) and (min-width:601px){
+ .has-app-stage:not(.app-static) .app-caption-handoff h3{font-size:28px}
+ .has-app-stage:not(.app-static) .app-caption-handoff p{display:none}
+ .connection-intro>h2.app-follow-title{font-size:32px}
+}

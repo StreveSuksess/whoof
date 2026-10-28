@@ -15,7 +15,7 @@ export class AppPhoneScene {
   private materials:MeshPhysicalMaterial[]=[];
   constructor(private renderer:WebGLRenderer,environment?:Texture){
     this.scene.environment=environment||null;this.scene.add(this.phone);this.phone.add(this.shell);
-    const metal=new MeshPhysicalMaterial({color:'#777c84',metalness:.92,roughness:.24,clearcoat:.6,clearcoatRoughness:.18,envMapIntensity:1.3});
+    const metal=new MeshPhysicalMaterial({color:'#656a72',metalness:.96,roughness:.27,clearcoat:.25,clearcoatRoughness:.18,envMapIntensity:1.3});
     const edge=new MeshPhysicalMaterial({color:'#34383e',metalness:.84,roughness:.19,clearcoat:1,envMapIntensity:1.4});
     const glass=new MeshPhysicalMaterial({color:'#151719',metalness:.15,roughness:.08,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1});
     this.materials.push(metal,edge,glass);
@@ -30,8 +30,8 @@ export class AppPhoneScene {
     button(-1.07,.84,.32);button(-1.07,.31,.32);button(1.07,.58,.57);
     const port=new Mesh(new RoundedBoxGeometry(.32,.014,.067,3,.006),new MeshBasicMaterial({color:'#101114'}));port.position.set(0,-2.215,-.01);this.shell.add(port);
     for(const x of [-.82,-.77,-.72,.72,.77,.82]){const mesh=new Mesh(new CircleGeometry(.012,10),new MeshBasicMaterial({color:'#1c1e22'}));mesh.rotation.x=Math.PI/2;mesh.position.set(x,-2.216,0);this.shell.add(mesh);}
-    this.scene.add(new HemisphereLight('#f5f6fa','#292c35',1.2));
-    for(const [x,y,z,power,w,h] of [[-3,3,5,5,3,6],[4,0,3,3,1,5],[0,-4,4,1.5,4,2]]){const light=new RectAreaLight('#f6f6f7',power,w,h);light.position.set(x,y,z);light.lookAt(0,0,0);this.scene.add(light);}
+    this.scene.add(new HemisphereLight('#f5f6fa','#292c35',.45));
+    for(const [x,y,z,power,w,h] of [[-3,3,5,5,1.6,6],[4,0,3,2.5,.75,5],[0,-4,4,.7,4,2]]){const light=new RectAreaLight('#f6f6f7',power,w,h);light.position.set(x,y,z);light.lookAt(0,0,0);this.scene.add(light);}
   }
   render(state:AppSceneState,width:number,height:number,px:number,py:number){
     this.screen.update(state);
