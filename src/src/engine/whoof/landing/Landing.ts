@@ -7,6 +7,7 @@ import {LifeGallery} from '../life/LifeGallery';
 import {GalleryVideo} from '../life/GalleryVideo';
 import {SectionMotion} from './SectionMotion';
 import {AppExample} from './AppExample';
+import {HowStory} from './how/HowStory';
 import {StoryText} from './StoryText';
 import {getStoryState} from './StoryMotion';
 import {StoryRows} from './StoryRows';
@@ -26,6 +27,7 @@ export function bootLanding(){
   const owners=new OwnerPosters($('#owners'));
   const offer=new OfferStage($('#order'),()=>{type.resize();measure();gallery.resize();});
   const app=new AppExample($('#app'));
+  const how=new HowStory($('#how-steps'));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const steps=[...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
   const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section')];
@@ -61,7 +63,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -94,6 +96,7 @@ export function bootLanding(){
     owners.render(scroll*height,reduced.matches);
     if((worldFailed||world?.appFailed)&&app.useFallback())resize();
     app.render(scroll*height,reduced.matches);
+    how.render(scroll*height,reduced.matches);
     offer.render(scroll*height,dt,reduced.matches);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
     if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
@@ -151,5 +154,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();world?.disposeApp();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();world?.disposeApp();clips.forEach(c=>c.media.dispose());};
 }

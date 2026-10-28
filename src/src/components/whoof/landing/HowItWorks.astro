@@ -1,14 +1,33 @@
+---
+import {howScenes as scenes} from '../../../engine/whoof/landing/how/HowScenes';
+---
 <section id="how" class="editorial-section how-it-works" data-block="5" data-tone="dark" aria-labelledby="how-title">
   <div class="connection-intro">
-  <div class="connection-title-stage" data-app-next-title>
-  <div class="section-kicker"><span>От движения — к истории</span><span>Как работает Whoof</span></div>
-  <h2 id="how-title" class="display-title">От трекера —<br/> к приложению.</h2>
+    <div class="connection-title-stage" data-app-next-title>
+      <div class="section-kicker"><span>От движения — к истории</span><span>Как работает Whoof</span></div>
+      <h2 id="how-title" class="display-title">От трекера —<br/> к приложению.</h2>
+    </div>
   </div>
+  <div id="how-steps" class="how-story">
+    <div class="how-stage">
+      <div class="how-title" aria-hidden="true"><span class="how-kicker">Как работает Whoof</span><span class="how-word"><span class="how-word-core">Просто.</span><span class="how-word-glow how-word-glow-near">Просто.</span><span class="how-word-glow how-word-glow-far">Просто.</span></span></div>
+      <div class="how-word-anchor" aria-hidden="true"></div>
+      <div class="how-composition">
+        <div class="how-thumbs how-thumbs-left" aria-hidden="true"><div class="how-thumbs-rail">{scenes.map(scene=><div class="how-thumb"><img src={`/whoof/how-v45/${scene.id}.webp`} alt="" width="1024" height="1536" loading="lazy"/></div>)}</div></div>
+        <div class="how-frame" role="group" aria-roledescription="галерея" aria-label="Как пользоваться Whoof. Листайте страницу или переключайте сцены стрелками влево и вправо." tabindex="0">
+          <div class="how-rail">{scenes.map(scene=><figure class="how-card" data-how-scene={scene.id}>
+            <img class="how-photo" src={`/whoof/how-v45/${scene.id}.webp`} alt={scene.alt} width="1024" height="1536" loading="lazy" decoding="async" style={`object-position:${scene.position}`}/>
+            <figcaption class="how-caption">
+              <p class="how-category" data-how-copy>{scene.category}</p>
+              <h3 data-how-copy>{scene.title.map((line,i)=><>{i>0&&<><br/>{' '}</>}{line}</>)}</h3>
+              <p class="how-copy" data-how-copy>{scene.copy}</p>
+              <p class="how-detail" data-how-copy>{scene.detail}</p>
+            </figcaption>
+          </figure>)}</div>
+        </div>
+        <div class="how-thumbs how-thumbs-right" aria-hidden="true"><div class="how-thumbs-rail">{scenes.map(scene=><div class="how-thumb"><img src={`/whoof/how-v45/${scene.id}.webp`} alt="" width="1024" height="1536" loading="lazy"/></div>)}</div></div>
+      </div>
+      <p class="how-illustration-note">Иллюстрации сценариев использования</p>
+    </div>
   </div>
-  <ol class="connection-flow">
-    <li><span class="flow-number" aria-hidden="true">01</span><h3 data-reveal>Наденьте<br/> и подключите.</h3><p data-reveal>Отрегулируйте ремешок: комфортно, без сильного натяжения и свободного болтания. Подключите трекер в приложении по Bluetooth.</p></li>
-    <li><span class="flow-number" aria-hidden="true">02</span><h3 data-reveal>Собираются<br/> движения.</h3><p data-reveal>Акселерометр и гироскоп фиксируют движение. Постоянный интернет самому трекеру не нужен.</p></li>
-    <li><span class="flow-number" aria-hidden="true">03</span><h3 data-reveal>Синхронизируйте<br/> с телефоном.</h3><p data-reveal>Для передачи данных телефон должен оказаться рядом с трекером. Для обработки и получения статистики нужен интернет на телефоне.</p></li>
-  </ol>
-  <div class="sync-notes"><article><h3>Это история после синхронизации.</h3><p>Whoof не является автономной камерой, GPS-локатором или удалённым монитором с собственной мобильной связью. Проверяйте время последнего обновления данных.</p></article><article><h3>Привычный ритм складывается постепенно.</h3><p>В материалах Whoof указан ориентир 2–6 недель для персонального профиля. Это период накопления истории, а не медицинская норма или обещание точности.</p></article></div>
 </section>
