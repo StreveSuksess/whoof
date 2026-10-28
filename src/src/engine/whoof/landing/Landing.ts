@@ -8,6 +8,8 @@ import {GalleryVideo} from '../life/GalleryVideo';
 import {SectionMotion} from './SectionMotion';
 import {AppExample} from './AppExample';
 import {HowStory} from './how/HowStory';
+import {TrustStage} from './trust/TrustStage';
+import {getTrustClip} from './trust/TrustMotion';
 import {StoryText} from './StoryText';
 import {getStoryState} from './StoryMotion';
 import {StoryRows} from './StoryRows';
@@ -28,6 +30,7 @@ export function bootLanding(){
   const offer=new OfferStage($('#order'),()=>{type.resize();measure();gallery.resize();});
   const app=new AppExample($('#app'));
   const how=new HowStory($('#how-steps'));
+  const trust=new TrustStage($('#trust'));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const steps=[...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
   const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section')];
@@ -52,6 +55,7 @@ export function bootLanding(){
     let top=target.getBoundingClientRect().top+scrollY;
     if(hash==='#wearing')top=(wearStart+DETAIL_STOPS[0]-.64)*height;
     else if(hash==='#life')top+=.35*height;
+    else if(hash==='#trust')top+=.34*height;
     else if(hash!=='#intro'&&hash!=='#situations'&&hash!=='#owners'&&hash!=='#app'&&hash!=='#order')top-=70;
     return top;
   }
@@ -63,7 +67,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();card.resize();detailText.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();gallery.resize();world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -95,35 +99,41 @@ export function bootLanding(){
     storyRows.render(scroll*height,height,reduced.matches);
     owners.render(scroll*height,reduced.matches);
     if((worldFailed||world?.appFailed)&&app.useFallback())resize();
+    if((worldFailed||world?.trustFailed)&&trust.useFallback())resize();
     app.render(scroll*height,reduced.matches);
     how.render(scroll*height,reduced.matches);
+    trust.render(scroll*height,reduced.matches);
     offer.render(scroll*height,dt,reduced.matches);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
     if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
-    const virtual=scroll-wearStart+.64,inWear=scroll>wearStart-.28&&scroll<wearEnd+.12,inOffer=offer.active&&!inWear,inApp=app.active&&!inWear&&!inOffer;
-    const detailOpacity=range(scroll,wearStart-.18,wearStart+.08)*(1-range(scroll,wearEnd-.5,wearEnd));
+    const virtual=scroll-wearStart+.64,inWear=!trust.static&&scroll>wearStart-.28&&scroll<wearEnd+.12,inTrust=trust.active,inOffer=offer.active&&!inWear,inApp=app.active&&!inWear&&!inOffer&&!inTrust;
+    const detailOpacity=trust.static?1:range(scroll,wearStart-.18,wearStart+.08)*(1-range(scroll,wearEnd-.5,wearEnd));
     details.style.visibility=detailOpacity>.001?'visible':'hidden';details.style.opacity=String(detailOpacity);details.inert=detailOpacity<.9;
-    detailText.render(virtual,reduced.matches);
+    const detailClip=getTrustClip(wearStart*height,(wearEnd-wearStart)*height,scrollY,height);
+    details.style.clipPath=trust.static?'':`inset(${detailClip.top}px 0 ${detailClip.bottom}px 0)`;
+    if(!trust.static)detailText.render(virtual,reduced.matches);
     gallery.render(scroll,reduced.matches);
     const heroWorld=getOwnerEntryState((scroll-storyEnd)*height,height).worldVisible?1:0,wearWorld=inWear?detailOpacity:0;
-    const worldOpacity=Math.max(heroWorld,wearWorld)*(1-gallery.cover);
+    const worldOpacity=(inTrust?0:Math.max(heroWorld,wearWorld))*(1-gallery.cover);
     worldRoot.style.opacity=String(worldOpacity);worldRoot.style.visibility=worldOpacity>.001?'visible':'hidden';
     $('.hero-vignette').style.opacity=String(1-range(scroll,0,.8));
-    const sceneScroll=inApp?2000+app.progress:inOffer?1000+offer.progress:inWear?virtual:scroll;
-    const canvasOpacity=worldReady?(inApp||inOffer||inWear?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
+    const sceneScroll=inTrust?3000+trust.state.t:inApp?2000+app.progress:inOffer?1000+offer.progress:inWear?virtual:scroll;
+    const canvasOpacity=worldReady?(inApp||inOffer||inWear||inTrust?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
     // Detach the prior host before attaching another one, including far anchors.
-    if(!inOffer)offer.setCanvas(undefined);if(!inApp)app.setCanvas(undefined);
+    if(!inOffer)offer.setCanvas(undefined);if(!inApp)app.setCanvas(undefined);if(!inTrust)trust.setCanvas(undefined);
     const canvas=world&&worldReady&&!worldFailed?world.renderer.domElement:undefined;
-    if(inApp)app.setCanvas(canvas,world?.appReady);if(inOffer)offer.setCanvas(canvas,world?.offerReady);
+    if(inTrust)trust.setCanvas(canvas);if(inApp)app.setCanvas(canvas,world?.appReady);if(inOffer)offer.setCanvas(canvas,world?.offerReady);
     if(world)world.renderer.domElement.style.opacity=String(canvasOpacity);
-    const renderWorld=inApp||inOffer||worldOpacity>.001&&canvasOpacity>.001&&(inWear||(scroll>.08&&scroll<storyEnd));
-    if((scroll>.02&&scroll<storyEnd)||Math.abs(wearStart-scroll)<2.5||Math.abs(offer.distance)<height*2.5||Math.abs(app.distance)<height*2.5||inApp)void loadWorld();
+    const renderWorld=inTrust||inApp||inOffer||worldOpacity>.001&&canvasOpacity>.001&&(inWear||(scroll>.08&&scroll<storyEnd));
+    if((scroll>.02&&scroll<storyEnd)||Math.abs(wearStart-scroll)<2.5||Math.abs(offer.distance)<height*2.5||Math.abs(app.distance)<height*2.5||inApp||Math.abs(trust.distance)<height*2.5||inTrust)void loadWorld();
     if(worldReady&&!reduced.matches&&(Math.abs(app.distance)<height*2.5||inApp))void world?.prepareApp();
+    if(worldReady&&!reduced.matches&&(Math.abs(trust.distance)<height*2.5||inTrust))void world?.prepareTrust();
     if(worldReady&&Math.abs(offer.distance)<height*2.5)void world?.prepareOffer();
     if(!renderWorld)lastRender=-100;
-    if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world.offerNeedsFrame||inApp&&world.appNeedsFrame)){
-      if(inApp)world.renderApp(app.state,reduced.matches?0:mouseX,reduced.matches?0:mouseY);
+    if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world.offerNeedsFrame||inApp&&world.appNeedsFrame||inTrust&&world.trustNeedsFrame)){
+      if(inTrust)world.renderTrust(trust.state,trust.wearVirtual,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
+      else if(inApp)world.renderApp(app.state,reduced.matches?0:mouseX,reduced.matches?0:mouseY);
       else if(inOffer)world.renderOffer(offer.progress,reduced.matches?0:mouseX,reduced.matches?0:mouseY,dt,reduced.matches,coarse.matches,targetX,targetY);
       else if(inWear)world.render(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
       else world.renderOpening(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches,storyEnd);
@@ -154,5 +164,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();world?.disposeApp();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();gallery.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();world?.disposeApp();world?.disposeTrust();clips.forEach(c=>c.media.dispose());};
 }

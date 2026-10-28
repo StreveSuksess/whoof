@@ -12,6 +12,7 @@ import {getOfferState} from './landing/OfferMotion';
 import type {AppPhoneScene} from './landing/app/AppPhoneScene';
 import type {AppSceneState} from './landing/app/AppMotion';
 import type {AppLighting} from './landing/app/AppLighting';
+import type {TrustSceneState} from './landing/trust/TrustMotion';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -31,6 +32,9 @@ export class OpeningScene {
   storyLights?:StoryLighting;
   offerSketches?:OfferSketches;private offerPreparation?:Promise<void>;
   private appScene?:AppPhoneScene;private appLights?:AppLighting;private appEnvironment?:WebGLRenderTarget;private appRendered=false;private appUnavailable=false;private appPreparation?:Promise<void>;
+  private trustLights?:AppLighting;private trustPreparation?:Promise<void>;private trustRendered=false;private trustUnavailable=false;
+  private trustProductPosition=new Vector3();private trustProductScale=new Vector3();private trustProductRotation=new Quaternion();
+  private trustCameraPosition=new Vector3();private trustCameraRotation=new Quaternion();
   width=1;height=1;mobile=false;portrait=false;
   constructor(container:HTMLElement){
     this.renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -122,8 +126,39 @@ export class OpeningScene {
       ((fullH-this.height)/2-shift*fullH)*(1-lift)-this.height*.01*lift,this.width,this.height);
     this.renderer.render(this.scene,this.camera);
   }
-  render(scroll:number,px:number,py:number,reduced:boolean){
+  prepareTrust(){
+    if(!this.trustPreparation)this.trustPreparation=import('./landing/app/AppLighting').then(({AppLighting})=>{this.trustLights=new AppLighting(this.scene,true);this.trustLights.key.intensity=.85;}).catch(error=>{this.trustUnavailable=true;console.warn('Whoof trust scene unavailable; native content remains available.',error);});
+    return this.trustPreparation;
+  }
+  get trustFailed(){return this.trustUnavailable;}
+  get trustNeedsFrame(){return !!this.trustLights&&!this.trustRendered;}
+  /** Both sections use the same captured radiance, display response and scoped self-shadow key. */
+  renderTrust(state:TrustSceneState,virtual:number,px:number,py:number,reduced:boolean){
     this.storyLights?.setStrength(0);
+    this.applyWearPose(virtual,px,py,reduced);
+    const blend=state.wearBlend;
+    if(blend<1){
+      this.trustProductPosition.copy(this.product.position);this.trustProductScale.copy(this.product.scale);this.trustProductRotation.copy(this.product.quaternion);
+      this.trustCameraPosition.copy(this.camera.position);this.trustCameraRotation.copy(this.camera.quaternion);
+      const v=this.camera.view!,fullWidth=v.fullWidth,fullHeight=v.fullHeight,offsetX=v.offsetX,offsetY=v.offsetY,fov=this.camera.fov;
+      this.product.quaternion.setFromEuler(new Euler(state.pitch+(reduced?0:py)*.025,state.yaw+(reduced?0:px)*.025,state.bank));
+      this.storySpinRotation.setFromAxisAngle(this.storySpinAxis,state.spin);this.product.quaternion.premultiply(this.storySpinRotation);
+      this.product.position.set(0,.855,0);this.product.scale.setScalar(state.diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
+      this.product.position.lerp(this.trustProductPosition,blend);this.product.scale.lerp(this.trustProductScale,blend);this.product.quaternion.slerp(this.trustProductRotation,blend);
+      this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.position.lerp(this.trustCameraPosition,blend);this.camera.quaternion.slerp(this.trustCameraRotation,blend);
+      this.camera.fov=32+(fov-32)*blend;
+      const x=this.width*.5-state.x,y=this.height*.5-state.y;
+      this.camera.setViewOffset(this.width+(fullWidth-this.width)*blend,this.height+(fullHeight-this.height)*blend,x+(offsetX-x)*blend,y+(offsetY-y)*blend,this.width,this.height);
+    }
+    this.renderer.autoClear=true;
+    if(this.trustLights){this.trustLights.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'));this.trustRendered=true;}
+    else this.renderer.render(this.scene,this.camera);
+  }
+  disposeTrust(){this.trustLights?.dispose();}
+  render(scroll:number,px:number,py:number,reduced:boolean){
+    this.storyLights?.setStrength(0);this.applyWearPose(scroll,px,py,reduced);this.renderer.render(this.scene,this.camera);
+  }
+  private applyWearPose(scroll:number,px:number,py:number,reduced:boolean){
     const leave=collarLift(scroll),p=clamp((scroll-.45)/3);
     this.cameraTrack.applyTransform(reduced?0:p*68);this.productTrack.applyTransform(reduced?0:p*68);
     this.motion.copy(this.originCamera).multiply(this.sourceCamera.quaternion.clone().invert()).multiply(this.sourceProduct.quaternion).multiply(this.originProduct);
@@ -146,6 +181,5 @@ export class OpeningScene {
     const detailX=stacked?0:-this.width*.12*side;
     const detailY=stacked?this.height*(this.mobile?.025:.09):0;
     this.camera.setViewOffset(fullW+(this.width-fullW)*leave,fullH+(this.height-fullH)*leave,(fullW-this.width)/2*(1-leave)+detailX*leave,((fullH-this.height)/2-shift*fullH)*(1-leave)+detailY*leave,this.width,this.height);
-    this.renderer.render(this.scene,this.camera);
   }
 }
