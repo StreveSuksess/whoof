@@ -7,7 +7,6 @@ const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 export class StoryText {
   private title=SplitText.create('#situations-title',options);
   private description=SplitText.create('#situations-copy',options);
-  private sync=document.querySelector<HTMLElement>('.situations-sync')!;
   private descriptionRoot=document.querySelector<HTMLElement>('.situations-description')!;
   private last=-100;
   private lastReduced=false;
@@ -23,7 +22,6 @@ export class StoryText {
         (char as HTMLElement).style.opacity=String(reduced?1:clamp((progress-ratio*.5)/.5));
       });
     }
-    this.sync.style.opacity=String(reduced?1:clamp((state.description-.75)/.25));
   }
   dispose(){this.title.revert();this.description.revert();}
 }

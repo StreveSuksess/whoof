@@ -14,7 +14,7 @@
 .app-life-film video{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
 .app-life-film figcaption{font-size:12px;line-height:1.35;margin:14px 0 0;color:#c9c8c3}
 .app-film-play{position:absolute;left:14px;right:14px;bottom:45px;border:1px solid #fff4;background:#181a1acc;color:#fff;padding:14px;display:flex;justify-content:space-between;font-size:14px}
-.app-demo-note,.app-static-note{position:relative;font-size:11px;line-height:1.4;color:#92959a;z-index:4}
+.app-static-note{position:relative;font-size:11px;line-height:1.4;color:#92959a;z-index:4}
 .app-static-note{margin:0;padding:0 var(--section-pad) 65px;max-width:80ch}
 .has-app-stage:not(.app-static) .app-stage{position:sticky;top:0;height:100svh;min-height:0;padding:0;z-index:4}
 .has-app-stage:not(.app-static) .app-caption{position:absolute;left:5.5%;top:var(--app-caption-y);width:43%;max-width:650px;margin:0;visibility:hidden;color:var(--app-ink)}
@@ -23,7 +23,6 @@
 .has-app-stage:not(.app-static) .app-caption-handoff{position:fixed;top:14svh;left:58%;width:36%;max-width:none;text-align:left}
 .has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0;margin-right:0;font-size:18px}
 .has-app-stage:not(.app-static) .app-life-film{position:absolute;left:5.5%;top:44svh;width:min(29vw,34svh);margin:0;opacity:0;visibility:hidden;will-change:transform}
-.has-app-stage:not(.app-static) .app-demo-note{position:absolute;left:5.5%;bottom:28px;margin:0;color:var(--app-ink);opacity:var(--app-demo-opacity,.48)}
 .connection-intro{position:relative;min-height:100svh;padding-top:clamp(90px,11svh,145px)}
 .connection-title-stage>.section-kicker,.connection-title-stage>h2{position:relative;z-index:4}
 .connection-title-stage>h2{margin-top:28px;max-width:12ch;font-size:clamp(42px,5vw,72px)}
@@ -34,7 +33,6 @@
 .app-static .app-caption h3 div{transform:none!important}
 .app-static .app-caption p{opacity:1!important;transform:none!important}
 .app-static .app-caption-handoff{display:none}
-.app-static .app-demo-note{color:#92959a}
 .app-static .app-life-film figcaption{color:#92959a}
 @media(min-width:601px) and (max-aspect-ratio:1/1){
  .has-app-stage:not(.app-static) .app-caption{width:41%}
@@ -52,14 +50,12 @@
  .has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0}
  .has-app-stage:not(.app-static) .app-life-film{left:24px;top:47svh;width:31vw}
  .app-life-film figcaption{font-size:10px;max-width:14ch;margin-top:10px}
- .has-app-stage:not(.app-static) .app-demo-note{left:24px;right:24px;bottom:24px;font-size:9px}
  .connection-title-stage>h2{margin-top:55px;font-size:42px}
 }
 @media(max-height:600px) and (min-width:601px){
  .app-caption h3{font-size:40px}.app-caption p{font-size:14px;margin-top:16px}
  .has-app-stage:not(.app-static) .app-caption-context{top:18svh}
  .has-app-stage:not(.app-static) .app-life-film{left:42%;top:28svh;width:24svh}
- .has-app-stage:not(.app-static) .app-demo-note{bottom:12px;font-size:9px}
 }
 
 .has-app-stage:not(.app-static)>.app-atmosphere{display:block}

@@ -74,7 +74,8 @@ for(const svg of [renderAppScreenSvg(),...['day','week'].flatMap(mode=>[renderAp
  assert.ok(!/NaN|Infinity/.test(svg));
  const ids=[...svg.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
  for(const [,id] of svg.matchAll(/url\(#([^)]+)\)/g))assert.ok(ids.includes(id),id);
- assert.ok(svg.includes('Концепт интерфейса'));assert.ok(svg.includes('Демонстрационные данные'));
+ assert.ok(svg.includes('aria-label="Концепт интерфейса Whoof: демонстрационная история движений за день"'),'source context remains in accessible metadata');
+ assert.ok(!/<text\b[^>]*>(Концепт интерфейса|Демонстрационные данные)<\/text>/.test(svg),'selected visual labels are removed');
 }
 assert.ok(renderAppArtwork('week',true).includes('data-art-week="" opacity="1"'));assert.ok(renderAppArtwork('week',true).includes('>История движения</text>'));
 console.log('App vectors: 144 chronological intervals, midnight/end labels, finite/reversible clipping, unique resolved IDs and shared static derivatives passed.');

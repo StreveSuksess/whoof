@@ -16,7 +16,6 @@
 .how-copy{font-size:clamp(15px,1.85svh,19px);line-height:1.4;letter-spacing:-.025em;margin:0;max-width:36ch;color:#f5f0e8;text-wrap:pretty}
 .how-detail{font-size:clamp(12px,1.5svh,15px);line-height:1.4;letter-spacing:-.01em;margin:19px 0 0;padding-top:15px;border-top:1px solid #f5eadb40;color:#d1c8bb;max-width:45ch;text-wrap:pretty}
 [data-how-copy]>div{padding-bottom:.15em;margin-bottom:-.15em}
-.how-illustration-note{font-size:10px;line-height:1.2;letter-spacing:.015em;color:#c2b4a1;margin:45px 0 0;text-align:center}
 /* The stage belongs to document flow. It cannot cover Trust or leave a fixed ghost. */
 .has-how-story:not(.how-static){--how-h:82svh;--how-w:calc(var(--how-h)*2/3);--how-top:10svh;--how-thumb-w:calc(var(--how-w)*.35);--how-thumb-h:calc(var(--how-h)*.35);--how-gap:calc(var(--how-thumb-w)*.09)}
 .has-how-story:not(.how-static) .how-stage{position:sticky;top:0;height:100svh;padding:0;overflow:hidden;isolation:isolate}
@@ -38,7 +37,6 @@
 .how-thumbs-rail{position:absolute;top:50%;display:flex;gap:var(--how-gap);will-change:transform}
 .how-thumbs-left .how-thumbs-rail{left:100%}.how-thumbs-right .how-thumbs-rail{left:calc(-1*(var(--how-thumb-w) + var(--how-gap)))}
 .how-thumb{flex:none;width:var(--how-thumb-w);height:var(--how-thumb-h);overflow:hidden}.how-thumb img{display:block;width:100%;height:100%;object-fit:cover}
-.has-how-story:not(.how-static) .how-illustration-note{position:absolute;left:0;right:0;bottom:2.6svh;margin:0}
 @media(max-aspect-ratio:6/5){
  .has-how-story:not(.how-static){--how-h:min(72svh,calc(88vw*3/2));--how-w:calc(var(--how-h)*2/3);--how-top:22svh}
  .has-how-story:not(.how-static) .how-word-anchor{left:calc((100% - var(--how-w))/2);top:calc(var(--how-top) - 70px);font-size:clamp(38px,4.5vw,54px)}
@@ -50,11 +48,10 @@
  .has-how-story:not(.how-static) .how-thumbs{display:none}
  .has-how-story:not(.how-static) .how-word-anchor{top:calc(var(--how-top) - 57px);font-size:38px}
  .how-caption h3{font-size:32px;margin-bottom:14px}.how-copy{font-size:15px}.how-detail{font-size:12px;margin-top:15px;padding-top:12px}.how-category{font-size:10px;margin-bottom:10px}
- .has-how-story:not(.how-static) .how-illustration-note{bottom:2.5svh;font-size:9px}
 }
 @media(max-height:650px) and (min-aspect-ratio:6/5){
  .has-how-story:not(.how-static){--how-h:84svh;--how-top:12svh;--how-w:calc(var(--how-h)*.8)}
  .how-caption h3{font-size:28px;margin-bottom:10px}.how-copy{font-size:13px}.how-detail{font-size:11px;margin-top:10px;padding-top:10px}
  .has-how-story:not(.how-static) .how-caption{padding:22px}.how-category{font-size:10px;margin-bottom:9px}
- .has-how-story:not(.how-static) .how-word-anchor{font-size:34px}.has-how-story:not(.how-static) .how-illustration-note{bottom:1svh}
+ .has-how-story:not(.how-static) .how-word-anchor{font-size:34px}
 }

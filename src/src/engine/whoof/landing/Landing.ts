@@ -21,7 +21,7 @@ const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>
 export function bootLanding(){
   document.documentElement.classList.remove('no-js');
   document.body.classList.add('is-ready');
-  const root=$('.landing-v27'),hero=$('.hero-ui'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
+  const root=$('.landing-v27'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
   const headerMotion=new HeaderMotion();
   const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root);
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
@@ -90,8 +90,7 @@ export function bootLanding(){
     const actual=scrollY/height;
     scroll+=(actual-scroll)*(reduced.matches?1:1-Math.exp(-9*dt));if(Math.abs(actual-scroll)<.0003)scroll=actual;
     mouseX+=(targetX-mouseX)*(1-Math.exp(-3*dt));mouseY+=(targetY-mouseY)*(1-Math.exp(-3*dt));
-    const inHero=scroll<1.05,heroOpacity=1-range(scroll,.05,.6);
-    hero.style.opacity=String(heroOpacity);hero.style.visibility=heroOpacity>.001?'visible':'hidden';hero.inert=heroOpacity<.1;
+    const inHero=scroll<1.05;
     card.render(scroll,(now-started)/1000,true,reduced.matches);
     storyText.render(scroll,reduced.matches);
     storyRows.render(scroll*height,height,reduced.matches);

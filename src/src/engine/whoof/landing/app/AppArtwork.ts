@@ -68,13 +68,13 @@ export function renderAppScreenSvg(prefix='whoof-day'){
       <rect x="371" y="51" width="282" height="65" rx="32" fill="#08090b"/><circle cx="605" cy="83" r="12" fill="#202b3c"/>
       ${text('WHOOF',84,258,52,'font-weight="500" letter-spacing="-2"')}${text('Джека',940,258,31,`text-anchor="end" fill="${muted}"`)}
       <path d="M84 306H940" stroke="${paper}" stroke-opacity=".16"/>
-      ${text('Ритм дня',84,407,67,'data-art-heading letter-spacing="-3"')}${text('Концепт интерфейса',84,464,28,`fill="${muted}"`)}
+      ${text('Ритм дня',84,407,67,'data-art-heading letter-spacing="-3"')}
     </g>
     ${graphic(prefix)}
     <g data-art-chrome><path d="M84 1510H940" stroke="${paper}" stroke-opacity=".16"/>
       ${text('48',84,1660,114,'letter-spacing="-6"')}${text('%',218,1657,49,`fill="${muted}"`)}${text('Движение',84,1723,30,`fill="${muted}"`)}
       ${text('52',565,1660,114,'letter-spacing="-6"')}${text('%',699,1657,49,`fill="${muted}"`)}${text('Спокойные периоды',565,1723,30,`fill="${muted}"`)}
-      ${text('После синхронизации',512,1906,29,`text-anchor="middle" fill="${muted}"`)}${text('Демонстрационные данные',512,1958,25,`text-anchor="middle" fill="${muted}"`)}
+      ${text('После синхронизации',512,1906,29,`text-anchor="middle" fill="${muted}"`)}
       <path d="M84 2030H940" stroke="${paper}" stroke-opacity=".16"/>
       ${['Сегодня','История','Профиль'].map((value,i)=>text(value,184+i*328,2103,30,`text-anchor="middle" fill="${i===0?blue:muted}"`)).join('')}
       <path d="M380 2160h264" stroke="${paper}" stroke-opacity=".6" stroke-width="7" stroke-linecap="round"/>

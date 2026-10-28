@@ -5,7 +5,7 @@
       <rect x="371" y="51" width="282" height="65" rx="32" fill="#08090b"/><circle cx="605" cy="83" r="12" fill="#202b3c"/>
       <text x="84" y="258" font-size="52" font-weight="500" letter-spacing="-2">WHOOF</text><text x="940" y="258" font-size="31" text-anchor="end" fill="#8f9298">Джека</text>
       <path d="M84 306H940" stroke="#f4f1eb" stroke-opacity=".16"/>
-      <text x="84" y="407" font-size="67" data-art-heading="" letter-spacing="-3">История движения</text><text x="84" y="464" font-size="28" fill="#8f9298">Концепт интерфейса</text>
+      <text x="84" y="407" font-size="67" data-art-heading="" letter-spacing="-3">История движения</text>
     </g>
     <g data-art-day="" opacity="0">
     <defs><clipPath id="whoof-static-week-day"><rect data-art-day-clip="" x="84" y="630" width="856" height="500"/></clipPath><clipPath id="whoof-static-week-selection"><rect data-art-selection="" x="918" y="630" width="24" height="500"/></clipPath></defs>
@@ -28,7 +28,7 @@
     <g data-art-chrome=""><path d="M84 1510H940" stroke="#f4f1eb" stroke-opacity=".16"/>
       <text x="84" y="1660" font-size="114" letter-spacing="-6">48</text><text x="218" y="1657" font-size="49" fill="#8f9298">%</text><text x="84" y="1723" font-size="30" fill="#8f9298">Движение</text>
       <text x="565" y="1660" font-size="114" letter-spacing="-6">52</text><text x="699" y="1657" font-size="49" fill="#8f9298">%</text><text x="565" y="1723" font-size="30" fill="#8f9298">Спокойные периоды</text>
-      <text x="512" y="1906" font-size="29" text-anchor="middle" fill="#8f9298">После синхронизации</text><text x="512" y="1958" font-size="25" text-anchor="middle" fill="#8f9298">Демонстрационные данные</text>
+      <text x="512" y="1906" font-size="29" text-anchor="middle" fill="#8f9298">После синхронизации</text>
       <path d="M84 2030H940" stroke="#f4f1eb" stroke-opacity=".16"/>
       <text x="184" y="2103" font-size="30" text-anchor="middle" fill="#555cf6">Сегодня</text><text x="512" y="2103" font-size="30" text-anchor="middle" fill="#8f9298">История</text><text x="840" y="2103" font-size="30" text-anchor="middle" fill="#8f9298">Профиль</text>
       <path d="M380 2160h264" stroke="#f4f1eb" stroke-opacity=".6" stroke-width="7" stroke-linecap="round"/>
