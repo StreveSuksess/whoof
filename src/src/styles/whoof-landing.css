@@ -230,9 +230,6 @@ html[data-header-tone=dark] .landing-v27 .opening-logo img{filter:brightness(0) 
 .faq-list summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:24px;cursor:pointer;font-size:clamp(18px,1.6vw,24px);line-height:1.25;letter-spacing:-.035em;padding:25px 0}
 .faq-list summary::-webkit-details-marker{display:none}
 .faq-list p{font-size:16px;line-height:1.55;color:var(--landing-muted);letter-spacing:-.02em;margin:0 30px 28px 0;max-width:65ch}
-.final-action{display:flex;align-items:end;justify-content:space-between;gap:50px;border-top:1px dashed var(--landing-line);margin-top:130px;padding-top:65px}
-.final-action h3{font-size:clamp(44px,7vw,112px);font-weight:500;line-height:1.02;letter-spacing:-.065em;margin:0}
-.final-action .editorial-link{width:34%;font-size:clamp(18px,1.8vw,27px)}
 .landing-footer{position:relative;z-index:3;background:#17120e;color:#c5b7a6;padding:50px var(--section-pad);display:flex;justify-content:space-between;align-items:end;gap:40px;font-size:10px}
 .landing-footer img{width:180px;height:auto;filter:brightness(0) invert(.94);opacity:.75}
 .landing-footer>div{display:flex;flex-direction:column;gap:13px}
@@ -283,9 +280,6 @@ html[data-header-tone=dark] .landing-v27 .opening-logo img{filter:brightness(0) 
  .faq-layout h2{margin:24px 0 27px}
  .faq-list summary{font-size:19px;gap:20px}
  .faq-list p{font-size:16px;margin-right:0}
- .final-action{display:block;margin-top:70px;padding-top:40px}
- .final-action h3{font-size:49px}
- .final-action .editorial-link{width:100%;margin-top:32px;font-size:22px}
  .landing-footer{align-items:start;flex-wrap:wrap;font-size:11px}
  .landing-footer img{width:150px}
  .landing-footer p{width:100%}

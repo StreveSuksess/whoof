@@ -13,6 +13,7 @@ import type {AppPhoneScene} from './landing/app/AppPhoneScene';
 import type {AppSceneState} from './landing/app/AppMotion';
 import type {AppLighting} from './landing/app/AppLighting';
 import type {TrustSceneState} from './landing/trust/TrustMotion';
+import type {KibbleScene} from './landing/ending/KibbleScene';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -33,6 +34,7 @@ export class OpeningScene {
   offerSketches?:OfferSketches;private offerPreparation?:Promise<void>;
   private appScene?:AppPhoneScene;private appLights?:AppLighting;private appEnvironment?:WebGLRenderTarget;private appRendered=false;private appUnavailable=false;private appPreparation?:Promise<void>;
   private trustLights?:AppLighting;private trustPreparation?:Promise<void>;private trustRendered=false;private trustUnavailable=false;
+  private endingScene?:KibbleScene;private endingPreparation?:Promise<void>;
   private trustProductPosition=new Vector3();private trustProductScale=new Vector3();private trustProductRotation=new Quaternion();
   private trustCameraPosition=new Vector3();private trustCameraRotation=new Quaternion();
   width=1;height=1;mobile=false;portrait=false;
@@ -59,7 +61,16 @@ export class OpeningScene {
     this.width=width;this.height=height;this.mobile=width<=600;this.portrait=width/height<=1;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,this.mobile?1.5:1.8));this.renderer.setSize(width,height);
     this.offerSketches?.resize(width,height);
+    this.endingScene?.resize(width,height);
   }
+  prepareEnding(){
+    if(!this.endingPreparation)this.endingPreparation=import('./landing/ending/KibbleScene').then(({KibbleScene})=>{this.endingScene=new KibbleScene(this.renderer);this.endingScene.resize(this.width,this.height);}).catch(error=>console.warn('Whoof ending unavailable; final action remains available.',error));
+    return this.endingPreparation;
+  }
+  get endingReady(){return !!this.endingScene;}
+  get endingNeedsFrame(){return this.endingScene?.needsFrame||false;}
+  renderEnding(dt:number,px:number,py:number,progress:number,reduced:boolean,coarse:boolean,pointer:boolean){this.endingScene?.render(dt,px,py,progress,reduced,coarse,pointer);}
+  disposeEnding(){this.endingScene?.dispose();}
   prepareApp(){
     if(!this.appPreparation)this.appPreparation=Promise.all([import('./landing/app/AppPhoneScene'),import('./landing/app/AppLighting'),import('./landing/app/AppEnvironment')]).then(([{AppPhoneScene},{AppLighting},{createAppEnvironment}])=>{this.appEnvironment=createAppEnvironment(this.renderer);this.appScene=new AppPhoneScene(this.renderer,this.appEnvironment.texture,this.colorLook);this.appLights=new AppLighting(this.scene,true,this.appEnvironment.texture);}).catch(error=>{this.appUnavailable=true;console.warn('Whoof app scene unavailable; native examples remain available.',error);});
     return this.appPreparation;

@@ -4,5 +4,4 @@ import Accordion from './Accordion.astro';
 ---
 <section id="faq" class="editorial-section faq-section" data-block="9" data-tone="dark" aria-labelledby="faq-title">
   <div class="faq-layout"><div><span class="small-label">Разберём детали</span><h2 id="faq-title" data-reveal>Остались<br/> вопросы?</h2><a href="mailto:tech@whoof.ru">tech@whoof.ru ↗</a></div><div class="faq-list">{faq.map((f,index)=><Accordion id={'faq-'+(index+1)} title={f.q}><p>{f.a}</p></Accordion>)}</div></div>
-  <div class="final-action"><h3 data-reveal>Познакомьтесь<br/> с его ритмом.</h3><a class="editorial-link" href="#order">Выбрать комплект Whoof <span aria-hidden="true">↗</span></a></div>
 </section>

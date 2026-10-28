@@ -21,7 +21,7 @@ export class TrustStage {
     this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.root.classList.toggle('trust-static',this.static);
     this.root.style.height=this.static?'':TRUST_SCROLL_UNITS*innerHeight+'px';
-    this.top=this.root.getBoundingClientRect().top+scrollY;this.end=this.top+this.root.offsetHeight;this.height=innerHeight;this.width=innerWidth;this.previous='';
+    const bounds=this.root.getBoundingClientRect();this.top=bounds.top+scrollY;this.end=bounds.bottom+scrollY;this.height=innerHeight;this.width=innerWidth;this.previous='';
     this.titleSplit.split(options);this.episodes.forEach(e=>e.splits.forEach(s=>s.split(options)));
     if(this.static){this.setCanvas(undefined);this.reset();}
   }

@@ -15,6 +15,7 @@ import {getOwnerEntryState} from './OwnerPosterMotion';
 import {OfferStage} from './OfferStage';
 import {HeaderMotion,crossesHeader} from './HeaderMotion';
 import {Accordions} from './Accordions';
+import {KibbleStage} from './ending/KibbleStage';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
@@ -31,9 +32,10 @@ export function bootLanding(){
   const app=new AppExample($('#app'));
   const how=new HowStory($('#how-steps'));
   const trust=new TrustStage($('#trust'));
+  const ending=new KibbleStage($('#finish'));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
   const accordions=new Accordions(root,()=>reduced.matches);
-  const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section')];
+  const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section'),$('#finish')];
   const headerObstacles=sections.map(section=>[...section.querySelectorAll<HTMLElement>('h2:not(.sr-only),h3,h4,p,figure,button,summary,a,.section-kicker,.story-table-header')]);
   const clips=[...root.querySelectorAll<HTMLVideoElement>('[data-inline-video]')].map(element=>({media:new GalleryVideo(element),onscreen:false}));
   const themeRanges:{top:number;bottom:number;tone:string}[]=[];
@@ -48,6 +50,7 @@ export function bootLanding(){
     height=innerHeight;width=innerWidth;
     headerTop=parseFloat(getComputedStyle(header).top)||0;
     headerCheckActual=-1;
+    ending.measure();
     storyEnd=($('#owners').getBoundingClientRect().top+scrollY)/height;
     themeRanges.length=0;
     sections.forEach(section=>{const rect=section.getBoundingClientRect();themeRanges.push({top:rect.top+scrollY,bottom:rect.bottom+scrollY,tone:section.dataset.tone||'light'});});
@@ -68,7 +71,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();headerMotion.reset(scrollY);world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();ending.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();headerMotion.reset(scrollY);world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -104,29 +107,34 @@ export function bootLanding(){
     how.render(scroll*height,reduced.matches);
     trust.render(scroll*height,reduced.matches);
     offer.render(scroll*height,dt,reduced.matches);
+    ending.render(scrollY);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
     if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
-    const inTrust=trust.active,inOffer=offer.active&&!inTrust,inApp=app.active&&!inOffer&&!inTrust;
+    const inEnding=ending.active,inTrust=trust.active&&!inEnding,inOffer=offer.active&&!inTrust&&!inEnding,inApp=app.active&&!inOffer&&!inTrust&&!inEnding;
     const heroWorld=getOwnerEntryState((scroll-storyEnd)*height,height).worldVisible?1:0;
-    const worldOpacity=inTrust?0:heroWorld;
+    const worldOpacity=inTrust||inEnding?0:heroWorld;
     worldRoot.style.opacity=String(worldOpacity);worldRoot.style.visibility=worldOpacity>.001?'visible':'hidden';
     $('.hero-vignette').style.opacity=String(1-range(scroll,0,.8));
-    const sceneScroll=inTrust?3000+trust.state.t:inApp?2000+app.progress:inOffer?1000+offer.progress:scroll;
-    const canvasOpacity=worldReady?(inApp||inOffer||inTrust?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
+    const sceneScroll=inEnding?4000+ending.progress:inTrust?3000+trust.state.t:inApp?2000+app.progress:inOffer?1000+offer.progress:scroll;
+    const canvasOpacity=worldReady?(inApp||inOffer||inTrust||inEnding?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
     // Detach the prior host before attaching another one, including far anchors.
-    if(!inOffer)offer.setCanvas(undefined);if(!inApp)app.setCanvas(undefined);if(!inTrust)trust.setCanvas(undefined);
+    if(!inOffer)offer.setCanvas(undefined);if(!inApp)app.setCanvas(undefined);if(!inTrust)trust.setCanvas(undefined);if(!inEnding)ending.setCanvas(undefined);
     const canvas=world&&worldReady&&!worldFailed?world.renderer.domElement:undefined;
     if(inTrust)trust.setCanvas(canvas);if(inApp)app.setCanvas(canvas,world?.appReady);if(inOffer)offer.setCanvas(canvas,world?.offerReady);
+    if(inEnding)ending.setCanvas(canvas,world?.endingReady);
     if(world)world.renderer.domElement.style.opacity=String(canvasOpacity);
-    const renderWorld=inTrust||inApp||inOffer||worldOpacity>.001&&canvasOpacity>.001&&(scroll>.08&&scroll<storyEnd);
-    if((scroll>.02&&scroll<storyEnd)||Math.abs(offer.distance)<height*2.5||Math.abs(app.distance)<height*2.5||inApp||Math.abs(trust.distance)<height*2.5||inTrust)void loadWorld();
+    const renderWorld=inEnding&&!!world?.endingReady||inTrust||inApp||inOffer||worldOpacity>.001&&canvasOpacity>.001&&(scroll>.08&&scroll<storyEnd);
+    if((scroll>.02&&scroll<storyEnd)||Math.abs(offer.distance)<height*2.5||Math.abs(app.distance)<height*2.5||inApp||Math.abs(trust.distance)<height*2.5||inTrust||Math.abs(ending.distance)<height*2.5)void loadWorld();
     if(worldReady&&!reduced.matches&&(Math.abs(app.distance)<height*2.5||inApp))void world?.prepareApp();
     if(worldReady&&!reduced.matches&&(Math.abs(trust.distance)<height*2.5||inTrust))void world?.prepareTrust();
     if(worldReady&&Math.abs(offer.distance)<height*2.5)void world?.prepareOffer();
+    if(worldReady&&Math.abs(ending.distance)<height*2.5)void world?.prepareEnding();
     if(!renderWorld)lastRender=-100;
-    if(world&&worldReady&&!worldFailed&&renderWorld&&(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world.offerNeedsFrame||inApp&&world.appNeedsFrame||inTrust&&world.trustNeedsFrame)){
-      if(inTrust)world.renderTrust(trust.state,trust.wearVirtual,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
+    const needsFrame=inEnding?(!reduced.matches||Math.abs(sceneScroll-lastRender)>.00005||world?.endingNeedsFrame):(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world?.offerNeedsFrame||inApp&&world?.appNeedsFrame||inTrust&&world?.trustNeedsFrame);
+    if(world&&worldReady&&!worldFailed&&renderWorld&&needsFrame){
+      if(inEnding)world.renderEnding(dt,targetX,targetY,ending.progress,reduced.matches,coarse.matches,moved);
+      else if(inTrust)world.renderTrust(trust.state,trust.wearVirtual,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches);
       else if(inApp)world.renderApp(app.state,reduced.matches?0:mouseX,reduced.matches?0:mouseY);
       else if(inOffer)world.renderOffer(offer.progress,reduced.matches?0:mouseX,reduced.matches?0:mouseY,dt,reduced.matches,coarse.matches,targetX,targetY);
       else world.renderOpening(sceneScroll,reduced.matches?0:mouseX,reduced.matches?0:mouseY,reduced.matches,storyEnd);
@@ -181,5 +189,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();world?.disposeApp();world?.disposeTrust();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();world?.disposeApp();world?.disposeTrust();world?.disposeEnding();clips.forEach(c=>c.media.dispose());};
 }
