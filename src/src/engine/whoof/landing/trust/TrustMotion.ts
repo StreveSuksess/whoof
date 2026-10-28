@@ -4,12 +4,7 @@ export const TRUST_SCROLL_UNITS=4.4;
 const range=(v:number,a:number,b:number)=>Math.max(0,Math.min(1,(v-a)/(b-a)));
 /** Use actual document bounds for the shared fixed host, independent of easing. */
 export function getTrustClip(top:number,size:number,scroll:number,height:number){
-  return {top:Math.max(0,Math.min(height,top-scroll)),bottom:Math.max(0,Math.min(height,scroll-top-size))};
-}
-/** Native sticky text leaves upward while the fixed header keeps its clear lane. */
-export function getTrustTextClip(local:number,height:number,nav:number){
-  const stageTop=local<0?-local:Math.min(0,(TRUST_SCROLL_UNITS-1)*height-local);
-  return Math.max(0,Math.min(height,nav-stageTop));
+  return {top:Math.max(0,Math.min(height,top-scroll)),bottom:Math.max(0,Math.min(height,scroll+height-top-size))};
 }
 /** Continuous product travel. Source Wearing motion is evaluated underneath the final blend. */
 export function getTrustState(local:number,height:number,width:number){

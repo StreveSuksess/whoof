@@ -1,28 +1,27 @@
 import {SplitText} from 'gsap/SplitText';
 import {ease} from '../../../core/ease';
-import {getTrustState,getTrustClip,getTrustTextClip,TRUST_SCROLL_UNITS,type TrustSceneState} from './TrustMotion';
+import {getTrustState,getTrustClip,TRUST_SCROLL_UNITS,type TrustSceneState} from './TrustMotion';
 const options={type:'lines',mask:'lines',autoSplit:false} as const;
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 type Episode={element:HTMLElement;splits:SplitText[];extras:HTMLElement[]};
-/** One canvas owner spans two semantic sections; content retains native boundaries. */
+/** The Trust canvas and text both stop at the native section boundary. */
 export class TrustStage {
   private host:HTMLElement;private stage:HTMLElement;private title:HTMLElement;private titleSplit:SplitText;
-  private episodes:Episode[];private details:HTMLElement;private wearing:HTMLElement;
+  private episodes:Episode[];
   private top=0;private end=0;private height=1;private width=1;private previous='';private fallback=false;
   private attached?:HTMLCanvasElement;private original?:HTMLElement;
   static=false;active=false;distance=Infinity;wearVirtual=.64;
   state:TrustSceneState=getTrustState(-1000,1,1);
   constructor(private root:HTMLElement){
     this.host=root.querySelector('[data-trust-world]')!;this.stage=root.querySelector('.trust-stage')!;this.title=root.querySelector('#trust-title')!;this.titleSplit=SplitText.create(this.title,options);
-    this.wearing=document.getElementById('wearing')!;this.details=document.getElementById('details')!;
     this.episodes=[...root.querySelectorAll<HTMLElement>('[data-trust-episode]')].map(element=>({element,splits:[...element.querySelectorAll<HTMLElement>('[data-trust-copy]')].map(p=>SplitText.create(p,options)),extras:[...element.querySelectorAll<HTMLElement>('.trust-measure-line,.trust-protocol,.trust-expertise,.trust-team')]}));
-    root.classList.add('has-trust-sequence');this.wearing.classList.add('has-trust-sequence');
+    root.classList.add('has-trust-sequence');
   }
   resize(){
     this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.root.classList.toggle('trust-static',this.static);this.wearing.classList.toggle('trust-static',this.static);
+    this.root.classList.toggle('trust-static',this.static);
     this.root.style.height=this.static?'':TRUST_SCROLL_UNITS*innerHeight+'px';
-    this.top=this.root.getBoundingClientRect().top+scrollY;this.end=this.details.getBoundingClientRect().bottom+scrollY;this.height=innerHeight;this.width=innerWidth;this.previous='';
+    this.top=this.root.getBoundingClientRect().top+scrollY;this.end=this.top+this.root.offsetHeight;this.height=innerHeight;this.width=innerWidth;this.previous='';
     this.titleSplit.split(options);this.episodes.forEach(e=>e.splits.forEach(s=>s.split(options)));
     if(this.static){this.setCanvas(undefined);this.reset();}
   }
@@ -35,10 +34,11 @@ export class TrustStage {
     const clip=`inset(${boundary.top}px 0 ${boundary.bottom}px 0)`;
     this.host.style.clipPath=clip;this.host.style.visibility=this.active?'visible':'hidden';
     if(this.static||reduced)return;
+    const nav=this.height<=650&&this.width/this.height>1.2?62:this.width<=600?78:100;
+    this.stage.style.clipPath=`inset(${Math.max(nav,boundary.top)}px 0 ${boundary.bottom}px 0)`;
     const textInRange=actual>-this.height&&actual<TRUST_SCROLL_UNITS*this.height;
-    this.stage.style.visibility=textInRange?'visible':'hidden';
+    this.stage.style.visibility=textInRange?'visible':'hidden';this.stage.inert=!textInRange;
     if(!textInRange){this.previous='';return;}
-    this.stage.style.clipPath=`inset(${getTrustTextClip(actual,this.height,this.height<=650&&this.width/this.height>1.2?62:this.width<=600?78:100)}px 0 0 0)`;
     const key=[this.state.t.toFixed(5),scrollY].join('/');if(this.previous===key)return;this.previous=key;
     const t=this.state.t;
     const title=clamp((t+.15)/.45)*(1-clamp((t-.85)/.4));
@@ -59,7 +59,7 @@ export class TrustStage {
   private reset(){
     this.title.style.cssText='';this.titleSplit.lines.forEach(line=>(line as HTMLElement).style.transform='none');
     this.episodes.forEach(e=>{e.element.style.cssText='';e.element.removeAttribute('aria-hidden');e.element.inert=false;e.splits.forEach(s=>s.lines.forEach(line=>(line as HTMLElement).style.transform='none'));e.extras.forEach(extra=>extra.style.cssText='');});
-    this.host.style.cssText='';this.stage.style.cssText='';
+    this.host.style.cssText='';this.stage.style.cssText='';this.stage.inert=false;
   }
-  dispose(){this.active=false;this.setCanvas(undefined);this.titleSplit.revert();this.episodes.forEach(e=>e.splits.forEach(s=>s.revert()));this.reset();this.root.classList.remove('has-trust-sequence','trust-static','has-trust-world');this.wearing.classList.remove('has-trust-sequence','trust-static');this.root.style.height='';}
+  dispose(){this.active=false;this.setCanvas(undefined);this.titleSplit.revert();this.episodes.forEach(e=>e.splits.forEach(s=>s.revert()));this.reset();this.root.classList.remove('has-trust-sequence','trust-static','has-trust-world');this.root.style.height='';}
 }
