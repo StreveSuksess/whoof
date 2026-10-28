@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 import {build} from '../../src/node_modules/esbuild/lib/main.js';
 const repo=resolve(import.meta.dirname,'../..');
 const result=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppMotion.ts')],bundle:true,write:false,platform:'node',format:'esm'});
-const {getAppSceneState,APP_SCROLL_UNITS}=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
+const {getAppSceneState,getAppViewportClip,APP_SCROLL_UNITS}=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
 assert.equal(APP_SCROLL_UNITS,7);
 for(const [w,h] of [[1440,900],[1020,1194],[390,844],[844,390]]){
  let previous;
@@ -24,6 +24,15 @@ for(const [w,h] of [[1440,900],[1020,1194],[390,844],[844,390]]){
  const a=getAppSceneState(0,h,w,true),b=getAppSceneState(5*h,h,w,true);assert.equal(a.phoneX,b.phoneX);assert.equal(a.zoom,1);assert.equal(b.context,0);
 }
 console.log('App scene: bounded/reversible phases, continuous framing, reading holds, how handoff and reduced pose passed.');
+assert.deepEqual(getAppViewportClip(1000,6300,700,900),{top:300,bottom:0});
+assert.deepEqual(getAppViewportClip(1000,6300,7400,900),{top:0,bottom:100});
+for(const height of [390,844,900,1194])for(let scroll=-height;scroll<height*11;scroll+=height/137){
+ const clip=getAppViewportClip(height,height*7,scroll,height);
+ assert.ok(clip.top>=0&&clip.top<=height&&clip.bottom>=0&&clip.bottom<=height);
+ if(scroll<height)assert.ok(clip.top>=Math.min(height,height-scroll),'nothing above actual section edge');
+ if(scroll>height*8)assert.ok(clip.bottom>=Math.min(height,scroll-height*8),'next section occludes fixed world');
+}
+console.log('App boundary: actual-scroll entry/exit clips prevent fixed graphics crossing adjacent sections.');
 const tracks=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppPose.ts')],bundle:true,write:false,platform:'node',format:'esm'});
 const {sampleAppTrack}=await import('data:text/javascript;base64,'+Buffer.from(tracks.outputFiles[0].text).toString('base64'));
 const knots=[[0,0,1],[1,2,3],[2.5,-1,2],[4,3,0]];
@@ -60,10 +69,22 @@ for(const svg of [renderAppScreenSvg(),...['day','week'].flatMap(mode=>[renderAp
 assert.ok(renderAppArtwork('week',true).includes('data-art-week="" opacity="1"'));assert.ok(renderAppArtwork('week',true).includes('>История движения</text>'));
 console.log('App vectors: 144 chronological intervals, midnight/end labels, finite/reversible clipping, unique resolved IDs and shared static derivatives passed.');
 
+// Geometry normals and render-state isolation guard the physical pair.
+const physicalBuild=await build({stdin:{contents:`export {phoneSidewall,phoneFace} from './src/src/engine/whoof/landing/app/AppPhoneBody';export {AppLighting} from './src/src/engine/whoof/landing/app/AppLighting';export {Scene,Texture} from 'three';`,resolveDir:repo},nodePaths:[resolve(repo,'src/node_modules')],bundle:true,write:false,platform:'node',format:'esm'});
+const physical=await import('data:text/javascript;base64,'+Buffer.from(physicalBuild.outputFiles[0].text).toString('base64'));
+const body=physical.phoneSidewall();body.computeBoundingBox();assert.ok(Math.abs(body.boundingBox.max.x-body.boundingBox.min.x-2.11)<.00001);assert.ok(Math.abs(body.boundingBox.max.z-body.boundingBox.min.z-.239)<.00001);
+const normals=body.getAttribute('normal');for(let i=0;i<normals.count;i++)assert.ok(Math.abs(Math.hypot(normals.getX(i),normals.getY(i),normals.getZ(i))-1)<.00001);body.dispose();
+const physicalScene=new physical.Scene(),originalEnv=new physical.Texture(),appEnv=new physical.Texture();physicalScene.environment=originalEnv;physicalScene.environmentIntensity=.7;
+const lighting=new physical.AppLighting(physicalScene,true,appEnv),renderer={shadowMap:{enabled:false,type:0}};
+assert.throws(()=>lighting.render(renderer,1440,()=>{assert.equal(physicalScene.environment,appEnv);assert.equal(renderer.shadowMap.enabled,true);throw Error('interrupted render');},'pose-a'),/interrupted render/);
+assert.equal(physicalScene.environment,originalEnv);assert.equal(physicalScene.environmentIntensity,.7);assert.equal(lighting.key.visible,false);assert.equal(renderer.shadowMap.enabled,false);assert.equal(renderer.shadowMap.type,0);lighting.dispose();originalEnv.dispose();appEnv.dispose();
+console.log('App physical pair: finite unit sidewall normals, manufactured bounds, environment/shadow state restored even on interrupted render.');
+
 if(process.argv.includes('--built')){
  const html=readFileSync(resolve(repo,'src/dist/index.html'),'utf8');
  for(const text of ['data-app-world','data-app-caption','data-app-film','Концепт интерфейса','После синхронизации'])assert.ok(html.includes(text),text);
  assert.ok(!html.includes('data-app-tab'),'old numbered tabs removed');
+ assert.ok(!html.includes('class="app-poster"'),'early flat phone removed');
  assert.ok(html.includes('/whoof/life-gallery/outside.mp4'),'real existing film');
  console.log('App markup: native captions, illustrative data, existing real film and no numbered tabs passed.');
 }

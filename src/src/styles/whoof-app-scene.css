@@ -1,7 +1,7 @@
 /* A single day-to-device passage, sharing the physical product renderer. */
 .app-day-scene{position:relative;background:#111315;color:#f4f1eb;--app-paper:0;--app-ink:#f4f1eb;--app-caption-y:15svh}
 .app-world-host{position:fixed;inset:0;z-index:3;pointer-events:none;visibility:hidden}
-.app-world-host canvas{display:block;width:100%;height:100%;transition:none!important}
+.app-world-host canvas{position:relative;z-index:1;display:block;width:100%;height:100%;transition:none!important}
 .app-stage{position:relative;min-height:100svh;padding:120px var(--section-pad) 80px;outline-offset:-8px}
 .app-atmosphere{display:none;position:fixed;inset:0;z-index:2;visibility:hidden;background:radial-gradient(ellipse 52% 64% at 66% 50%,#84868a24,transparent 80%),radial-gradient(ellipse 58% 62% at 15% 75%,#68646320,transparent 80%),#111315;pointer-events:none}
 .app-atmosphere:after{content:'';position:absolute;inset:0;background:#f7f7f5;opacity:var(--app-paper)}
@@ -10,7 +10,6 @@
 .app-caption p{font-size:clamp(16px,1.35vw,21px);line-height:1.4;letter-spacing:-.025em;margin:26px 0 0;max-width:36ch;color:inherit;opacity:.65}
 .app-caption h3>div{padding-bottom:.16em;margin-bottom:-.16em}
 .app-static-media{display:block;width:min(500px,100%);height:auto;margin:45px 0;background:#f7f7f5}
-.app-poster{display:none}
 .app-life-film{position:relative;z-index:4;margin:35px 0 70px;width:min(370px,100%)}
 .app-life-film video{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
 .app-life-film figcaption{font-size:12px;line-height:1.35;margin:14px 0 0;color:#c9c8c3}
@@ -25,16 +24,13 @@
 .has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0;margin-right:0;font-size:18px}
 .has-app-stage:not(.app-static) .app-life-film{position:absolute;left:5.5%;top:44svh;width:min(29vw,34svh);margin:0;opacity:0;visibility:hidden;will-change:transform}
 .has-app-stage:not(.app-static) .app-demo-note{position:absolute;left:5.5%;bottom:28px;margin:0;color:var(--app-ink);opacity:var(--app-demo-opacity,.48)}
-.has-app-stage:not(.app-static) .app-poster{display:block;position:absolute;z-index:1;left:54%;top:22%;width:30%;padding:0;border:9px solid #202225;border-radius:34px;background:#111315;overflow:hidden;box-shadow:20px 20px 70px #0004}
-.app-poster img{display:block;width:100%;height:auto}
-.has-app-world .app-poster{visibility:hidden}
 .connection-intro{position:relative;min-height:100svh;padding-top:clamp(90px,11svh,145px)}
 .connection-intro>.section-kicker,.connection-intro>h2{position:relative;z-index:4}
 .connection-intro>h2{margin-top:28px;max-width:12ch;font-size:clamp(42px,5vw,72px)}
 .how-it-works{padding-top:0!important}
 .app-static .app-stage{background:#111315;color:#f4f1eb}
 .app-static .app-caption,.app-static .app-life-film{position:relative;visibility:visible!important;opacity:1!important;transform:none!important}
-.app-static .app-atmosphere,.app-static .app-world-host,.app-static .app-poster{display:none}
+.app-static .app-atmosphere,.app-static .app-world-host{display:none}
 .app-static .app-caption h3 div{transform:none!important}
 .app-static .app-caption p{opacity:1!important;transform:none!important}
 .app-static .app-caption-handoff{display:none}
@@ -57,7 +53,6 @@
  .has-app-stage:not(.app-static) .app-life-film{left:24px;top:47svh;width:31vw}
  .app-life-film figcaption{font-size:10px;max-width:14ch;margin-top:10px}
  .has-app-stage:not(.app-static) .app-demo-note{left:24px;right:24px;bottom:24px;font-size:9px}
- .has-app-stage:not(.app-static) .app-poster{left:36%;top:36%;width:52%;padding:3px;border-width:5px;border-radius:23px}
  .connection-intro>h2{margin-top:55px;font-size:42px}
 }
 @media(max-height:600px) and (min-width:601px){

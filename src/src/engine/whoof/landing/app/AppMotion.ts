@@ -4,6 +4,10 @@ export const APP_SCROLL_UNITS=7;
 export const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 export const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
+/** Fixed layers follow actual document boundaries, never eased scene time. */
+export function getAppViewportClip(top:number,size:number,scroll:number,height:number){
+  return {top:Math.max(0,Math.min(height,top-scroll)),bottom:Math.max(0,Math.min(height,scroll-top-size))};
+}
 /** One deterministic camera/screen timeline; no elapsed-time dependent poses. */
 export function getAppSceneState(local:number,height:number,width:number,reduced=false){
   const t=local/height,mobile=width<=600;

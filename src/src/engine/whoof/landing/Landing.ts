@@ -92,6 +92,7 @@ export function bootLanding(){
     storyText.render(scroll,reduced.matches);
     storyRows.render(scroll*height,height,reduced.matches);
     owners.render(scroll*height,reduced.matches);
+    if((worldFailed||world?.appFailed)&&app.useFallback())resize();
     app.render(scroll*height,reduced.matches);
     offer.render(scroll*height,dt,reduced.matches);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);

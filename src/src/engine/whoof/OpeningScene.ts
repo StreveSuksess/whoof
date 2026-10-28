@@ -1,4 +1,4 @@
-import { AgXToneMapping, Euler, Group, Object3D, PerspectiveCamera, Quaternion, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
+import { AgXToneMapping, type Data3DTexture, Euler, Group, Object3D, PerspectiveCamera, Quaternion, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
 import { FrameAnimation } from '../FrameAnimation';
 import { loadBuf } from '../BufLoader';
 import { ease } from '../core/ease';
@@ -11,6 +11,7 @@ import type {OfferSketches} from './landing/OfferSketches';
 import {getOfferState} from './landing/OfferMotion';
 import type {AppPhoneScene} from './landing/app/AppPhoneScene';
 import type {AppSceneState} from './landing/app/AppMotion';
+import type {AppLighting} from './landing/app/AppLighting';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Live continuation of the offline first frame. Camera starts at the baked pose. */
@@ -26,10 +27,10 @@ export class OpeningScene {
   storyRotation=new Quaternion().setFromEuler(new Euler(.12,-.28,-.09));
   tableRotation=new Quaternion();
   storySpinRotation=new Quaternion();storySpinAxis=new Vector3(1,1,1).normalize();
-  studioEnvironment?:WebGLRenderTarget;
+  studioEnvironment?:WebGLRenderTarget;private colorLook?:Data3DTexture;
   storyLights?:StoryLighting;
   offerSketches?:OfferSketches;private offerPreparation?:Promise<void>;
-  private appScene?:AppPhoneScene;private appRendered=false;private appPreparation?:Promise<void>;
+  private appScene?:AppPhoneScene;private appLights?:AppLighting;private appEnvironment?:WebGLRenderTarget;private appRendered=false;private appUnavailable=false;private appPreparation?:Promise<void>;
   width=1;height=1;mobile=false;portrait=false;
   constructor(container:HTMLElement){
     this.renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -43,7 +44,7 @@ export class OpeningScene {
     await Promise.all([
       // The captured table already blocks lower-hemisphere light. Do not apply
       // the review studio's stronger inner-band occlusion on top of that.
-      Promise.all([createProductCollar(true,.78),openingColorLook()]).then(([c,look])=>{matchOpeningMaterials(c.group,look);this.model.add(c.group);onProgress(74);}),
+      Promise.all([createProductCollar(true,.78),openingColorLook()]).then(([c,look])=>{this.colorLook=look;matchOpeningMaterials(c.group,look);this.model.add(c.group);onProgress(74);}),
       openingEnvironment(this.renderer).then(target=>{this.studioEnvironment=target;this.scene.environment=target.texture;}),
       import('./landing/StoryLighting').then(({StoryLighting})=>{this.storyLights=new StoryLighting(this.scene);}),
       loadBuf('/models/hero_camera.buf').then(g=>{this.cameraTrack.setTarget(this.sourceCamera);this.cameraTrack.setGeometry(g);this.cameraTrack.applyTransform(0);this.originCamera.copy(this.sourceCamera.quaternion);}),
@@ -56,24 +57,25 @@ export class OpeningScene {
     this.offerSketches?.resize(width,height);
   }
   prepareApp(){
-    if(!this.appPreparation)this.appPreparation=import('./landing/app/AppPhoneScene').then(({AppPhoneScene})=>{this.appScene=new AppPhoneScene(this.renderer,this.studioEnvironment?.texture);}).catch(error=>console.warn('Whoof app scene unavailable; native examples remain available.',error));
+    if(!this.appPreparation)this.appPreparation=Promise.all([import('./landing/app/AppPhoneScene'),import('./landing/app/AppLighting'),import('./landing/app/AppEnvironment')]).then(([{AppPhoneScene},{AppLighting},{createAppEnvironment}])=>{this.appEnvironment=createAppEnvironment(this.renderer);this.appScene=new AppPhoneScene(this.renderer,this.appEnvironment.texture,this.colorLook);this.appLights=new AppLighting(this.scene,true,this.appEnvironment.texture);}).catch(error=>{this.appUnavailable=true;console.warn('Whoof app scene unavailable; native examples remain available.',error);});
     return this.appPreparation;
   }
+  get appFailed(){return this.appUnavailable;}
   get appReady(){return !!this.appScene;}
   get appNeedsFrame(){return !!this.appScene&&!this.appRendered;}
   renderApp(state:AppSceneState,px:number,py:number){
     this.appScene?.render(state,this.width,this.height,px,py);this.appRendered=!!this.appScene;
     if(state.collarVisible<.001)return;
-    this.storyLights?.setStrength(1);
+    this.storyLights?.setStrength(0);
     this.product.quaternion.setFromEuler(new Euler(state.collarPitch,state.collarYaw,state.collarBank));
     this.storySpinRotation.setFromAxisAngle(this.storySpinAxis,state.collarSpin);this.product.quaternion.premultiply(this.storySpinRotation);this.product.position.set(0,.855,0);
     const diameter=state.collarDiameter;
     this.product.scale.setScalar(diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
     this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.fov=32;
     this.camera.setViewOffset(this.width,this.height,this.width*.5-state.collarX,this.height*.5-state.collarY,this.width,this.height);
-    this.renderer.autoClear=false;this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
+    this.renderer.autoClear=false;this.renderer.clearDepth();this.appLights?.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,state.t].join('/'));this.renderer.autoClear=true;
   }
-  disposeApp(){this.appScene?.dispose();}
+  disposeApp(){this.appScene?.dispose();this.appLights?.dispose();this.appEnvironment?.dispose();}
   prepareOffer(){
     if(!this.offerPreparation)this.offerPreparation=import('./landing/OfferSketches').then(async({OfferSketches})=>{this.offerSketches=new OfferSketches(this.renderer);await this.offerSketches.load();this.offerSketches.resize(this.width,this.height);}).catch(error=>console.warn('Whoof sketchbook unavailable; offer and product remain available.',error));
     return this.offerPreparation;
