@@ -12,6 +12,8 @@ for(const [w,h] of [[1440,900],[1020,1194],[390,844],[844,390]]){
  for(let n=-100;n<800;n++){
   const state=getAppSceneState(n/100*h,h,w);samples.push([n,state]);
   for(const k of ['day','zoom','compare','graph','context','handoff','opacity','paper','nextTitle'])assert.ok(state[k]>=0&&state[k]<=1,k);
+  assert.ok(state.captionWeights.every(v=>Number.isFinite(v)&&v>=0&&v<=1));
+  assert.ok(state.captionWeights.filter(v=>v>.000001).length<=1,'captions sharing a frame never overlap');
   for(const value of Object.values(state).filter(v=>typeof v==='number'))assert.ok(Number.isFinite(value));
   assert.ok(state.phoneX>=w*.2&&state.phoneX<=w*.75);
   if(previous)assert.ok(Math.abs(state.phoneX-previous.phoneX)<w*.04,'continuous framing');

@@ -27,7 +27,9 @@ export function getAppSceneState(local:number,height:number,width:number,reduced
   const normalHeight=Math.min(height*(mobile?.56:.76),width*1.55),collarBase=Math.min(width*(mobile?.46:.43),height*.50);
   const phoneHeight=Math.min(normalHeight*size,mobile?mix(normalHeight*1.1,width*.91,handoff):width*1.05);
   const collarDiameter=collarBase*Math.min(cs,mobile?1:1.12),collarVisible=reduced?0:range(t,4.7,4.9);
-  const captionWeights=[1-range(t,2.2,2.45),range(t,2.2,2.45)*(1-range(t,3.5,3.75)),range(t,3.5,3.75)*(1-range(t,4.7,4.95)),getAppPairCaptionProgress(t)];
+  // These captions occupy the same text frame: finish the outgoing reveal
+  // before the incoming one starts, including when scrubbing backwards.
+  const captionWeights=[1-range(t,2.15,2.32),range(t,2.32,2.52)*(1-range(t,3.45,3.62)),range(t,3.62,3.84)*(1-range(t,4.7,4.95)),getAppPairCaptionProgress(t)];
   const nextTitle=getAppTitleProgress(t);
   return {t,day,zoom,compare,graph,context,handoff,opacity,nextTitle,paper:0,phoneX,phoneY,phoneHeight,macroDiameter:Math.min(width*(mobile?.92:.72),height*.94),rotateX:pitch*(mobile?.8:1),rotateY:yaw*(mobile?.75:1),rotateZ:bank*(mobile?.5:1),collarX:cx*width,collarY:cy*height,collarDiameter,collarPitch:cp,collarYaw:cr,collarBank:cb,collarSpin:spin,collarVisible,captionWeights};
 }

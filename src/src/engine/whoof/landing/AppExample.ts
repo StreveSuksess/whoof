@@ -18,12 +18,17 @@ export class AppExample {
   }
   resize(){
     this.height=innerHeight;this.width=innerWidth;this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.root.classList.toggle('app-static',this.static);this.root.dataset.tone='dark';this.root.style.height=this.static?'':APP_SCROLL_UNITS*this.height+'px';this.size=this.root.offsetHeight;this.top=this.root.getBoundingClientRect().top+scrollY;this.last='';
+    this.root.classList.toggle('app-static',this.static);this.root.dataset.tone='dark';this.root.style.height=this.static?'':APP_SCROLL_UNITS*this.height+'px';this.last='';
     const managed=!this.static;if(managed!==this.titleManaged){this.titleManaged=managed;this.nextLayer.parentElement!.classList.toggle('has-app-handoff',managed);this.nextLayer.style.visibility=managed?'hidden':'';this.nextLayer.style.clipPath='';this.nextTitle.style.opacity=managed?'1':'';this.nextTitle.style.transform='';this.nextKey='';}
-    this.nextSplit.split({type:'lines',mask:'lines'});this.nextKey='';
-    this.captions.forEach(c=>{c.title.split({type:'lines,words,chars',mask:'lines'});});
+    // Static reading must restore native markup, not clear SplitText's glyph
+    // styles: its generated divs depend on display:inline-block to stay inline.
+    if(this.static){this.nextSplit.revert();this.captions.forEach(c=>c.title.revert());this.resetStatic();}
+    else{this.nextSplit.split({type:'lines',mask:'lines'});this.captions.forEach(c=>c.title.split({type:'lines,words,chars',mask:'lines'}));}
+    this.nextKey='';
     this.media.element.controls=this.static;if(this.static){this.media.setPlaying(false);this.filmWanted=false;}
+    const bounds=this.root.getBoundingClientRect();this.size=bounds.height;this.top=bounds.top+scrollY;
   }
+  private resetStatic(){this.captions.forEach(c=>{c.element.removeAttribute('aria-hidden');c.element.style.cssText='';c.copy.style.cssText='';});this.film.style.cssText='';}
   useFallback(){if(this.fallback)return false;this.fallback=true;return true;}
   render(scroll:number,reduced:boolean){
     this.distance=scroll-this.top;this.progress=this.distance/this.height;this.state=getAppSceneState(this.distance,this.height,this.width,reduced);
@@ -34,11 +39,11 @@ export class AppExample {
     const nextKey=this.titleManaged?[reveal.toFixed(5),clip].join('/'):'native';
     if(nextKey!==this.nextKey){
       this.nextKey=nextKey;this.nextLayer.style.visibility=this.titleManaged?(reveal>.00001?'visible':'hidden'):'';this.nextLayer.style.clipPath=this.titleManaged?clip:'';
-      this.nextSplit.lines.forEach((line,index)=>{const progress=this.titleManaged?range(reveal,index*.08,1):1;(line as HTMLElement).style.transform=`translate3d(0,${(1-ease.cubicOut(progress))*112}%,0)`;});
+      if(this.titleManaged)this.nextSplit.lines.forEach((line,index)=>{const progress=range(reveal,index*.08,1);(line as HTMLElement).style.transform=`translate3d(0,${(1-ease.cubicOut(progress))*112}%,0)`;});
     }
     this.active=!this.static&&s.opacity>.001;this.headerTone=s.paper>.45?'light':'dark';
     const wanted=!this.static&&this.visible&&s.context>.05&&this.active;if(wanted!==this.filmWanted){this.filmWanted=wanted;this.media.setPlaying(wanted);}this.play.hidden=this.static||!this.media.blocked;
-    if(this.static){if(this.last==='static')return;this.last='static';this.captions.forEach(c=>{c.element.removeAttribute('aria-hidden');c.element.style.cssText='';c.title.chars.forEach(char=>(char as HTMLElement).style.cssText='');c.copy.style.cssText='';});this.film.style.cssText='';return;}
+    if(this.static){if(this.last==='static')return;this.last='static';this.resetStatic();return;}
     if(!this.active){if(this.last!=='inactive'){this.host.style.visibility='hidden';this.atmosphere.style.visibility='hidden';this.captions.forEach(c=>{c.element.style.visibility='hidden';c.element.setAttribute('aria-hidden','true');});this.film.style.visibility='hidden';this.last='inactive';}return;}
     const key=[s.t.toFixed(4),scrollY,this.visible].join('/');if(key===this.last)return;this.last=key;
     this.root.style.setProperty('--app-paper',String(s.paper));this.root.style.setProperty('--app-caption-y',(this.height*(this.width<=600?.13:.15+.08*s.zoom))+'px');

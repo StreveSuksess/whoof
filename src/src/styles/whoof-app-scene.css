@@ -35,7 +35,7 @@
 .app-static .app-caption-handoff{display:none}
 .app-static .app-life-film figcaption{color:#92959a}
 @media(min-width:601px) and (max-aspect-ratio:1/1){
- .has-app-stage:not(.app-static) .app-caption{width:41%}
+ .has-app-stage:not(.app-static) .app-caption{width:35%}
  .app-caption h3{font-size:clamp(40px,5vw,65px)}
  .has-app-stage:not(.app-static) .app-caption-handoff{left:58%;width:36%}
 }
