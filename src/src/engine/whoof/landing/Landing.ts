@@ -135,7 +135,6 @@ export function bootLanding(){
     const tone=inApp?app.headerTone:scroll>.68&&scroll<storyEnd?'dark':backdrop?.tone||'dark';
     document.documentElement.dataset.headerTone=tone;
     header.classList.toggle('is-scrolled',actual>.8);
-    header.classList.toggle('is-covered',actual>.35);
     type.render(scroll*height,height,reduced.matches);
     const focused=header.querySelector(':focus-visible')!==null;
     const directionHidden=headerMotion.update(scrollY,height,focused);

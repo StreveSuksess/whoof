@@ -15,24 +15,36 @@ body{background:var(--landing-paper);color:var(--landing-ink)}
 #landing-content>section{scroll-margin-top:80px}
 .opening-world{z-index:0;pointer-events:none}
 #hero-plate{pointer-events:none}
-.landing-v27 .opening-header{z-index:30;opacity:1;isolation:isolate;transition:color .2s,opacity .18s,transform .24s cubic-bezier(.22,1,.36,1);pointer-events:none}
-.landing-v27 .opening-header::before{content:'';position:absolute;z-index:-1;inset:-12px -14px;opacity:0;pointer-events:none;background:#171a19;border:1px solid #f5eadb20;box-shadow:0 8px 28px #00000012;transition:opacity .18s,background .2s}
+.landing-v27 .opening-header{z-index:30;opacity:1;background:transparent;transition:color .2s,opacity .18s,transform .24s cubic-bezier(.22,1,.36,1);pointer-events:none}
+/* Source SiteHeader: transparent navigation over the scene; a viewport
+   scrim appears only while interacting with the menu, never a header strip. */
+.header-scrim{position:fixed;inset:0;z-index:29;background:rgba(20,23,22,.72);opacity:0;pointer-events:none;transition:opacity .18s}
+.landing-v27:has(.opening-header :focus-visible)>.header-scrim{opacity:1}
+.landing-v27 .opening-header nav a{transition:opacity .18s}
+.landing-v27 .opening-header nav:has(:focus-visible) a:not(:focus-visible){opacity:.5}
 .landing-v27 .opening-header.is-scrolled{height:28px;align-items:center}
-.landing-v27 .opening-header.is-covered::before{opacity:1}
 .landing-v27 .opening-header.is-scrolled .opening-logo{width:clamp(109px,11.96vw,182px);transform:none!important;will-change:auto}
 .landing-v27 .opening-header.is-scrolled nav{padding-top:0}
 .landing-v27 .opening-header.is-hidden:not(:has(:focus-visible)){opacity:0;transform:translateY(calc(-100% - 60px))}
-.landing-v27 .opening-header.is-hidden:not(:has(:focus-visible)) a{pointer-events:none}
+.landing-v27 .opening-header.is-hidden:not(:has(:focus-visible)) :is(nav,a){pointer-events:none}
 .landing-v27 .opening-header:has(:focus-visible){opacity:1;transform:none;transition:none}
 .landing-v27 .opening-logo{width:clamp(210px,23vw,350px);transform-origin:0 0}
-.landing-v27 .opening-header nav{gap:clamp(20px,2.6vw,42px);padding-top:5px}
+.landing-v27 .opening-header nav{gap:clamp(20px,2.6vw,42px);padding-top:5px;pointer-events:auto}
 .landing-v27 .opening-header nav a{font-size:clamp(11px,.9vw,14px);white-space:nowrap}
 .landing-v27 .opening-header .header-order:after{transform:scaleX(1)}
 html[data-header-tone=light] .landing-v27 .opening-header{color:var(--landing-ink)}
 html[data-header-tone=light] .landing-v27 .opening-logo img{filter:brightness(0)}
-html[data-header-tone=light] .landing-v27 .opening-header::before{background:#f4f0e8;border-color:#28231f24}
+html[data-header-tone=light] .landing-v27:has(.opening-header :focus-visible) .opening-header{color:var(--landing-ivory)}
+html[data-header-tone=light] .landing-v27:has(.opening-header :focus-visible) .opening-logo img{filter:brightness(0) invert(.95)}
 html[data-header-tone=dark] .landing-v27 .opening-header{color:var(--landing-ivory)}
 html[data-header-tone=dark] .landing-v27 .opening-logo img{filter:brightness(0) invert(.95)}
+@media(hover:hover) and (pointer:fine) and (min-width:768px){
+ .landing-v27:has(.opening-header:not(.is-hidden) nav:hover)>.header-scrim{opacity:1}
+ .landing-v27 .opening-header nav:hover a{opacity:.5}
+ .landing-v27 .opening-header nav:hover a:hover{opacity:1}
+ html[data-header-tone=light] .landing-v27:has(.opening-header nav:hover) .opening-header{color:var(--landing-ivory)}
+ html[data-header-tone=light] .landing-v27:has(.opening-header nav:hover) .opening-logo img{filter:brightness(0) invert(.95)}
+}
 .landing-hero{height:100svh;background:transparent}
 .landing-v27 .hero-ui{opacity:1;z-index:3}
 .landing-v27 .hero-tagline{top:calc(var(--hero-pad) + clamp(210px,23vw,350px)*.206 + 18px);font-size:clamp(12px,1vw,16px)}
@@ -341,7 +353,7 @@ html[data-header-tone=dark] .landing-v27 .opening-logo img{filter:brightness(0) 
 .no-js .landing-v27 .hero-ui{position:absolute;visibility:visible;opacity:1}
 .no-js .landing-v27 .hero-glass{position:absolute;visibility:visible}
 .no-js .landing-v27 .opening-header{position:absolute}
-@media(prefers-reduced-motion:reduce){.landing-v27 .opening-header,.landing-v27 .opening-header::before{transition:none}}
+@media(prefers-reduced-motion:reduce){.landing-v27 .opening-header,.header-scrim{transition:none}}
 .no-js .landing-v27 .details-ui{position:relative;visibility:visible!important;opacity:1!important;padding:100px var(--section-pad);background:var(--landing-paper)}
 .no-js #wearing #details{height:auto}
 .no-js .wearing-stage-heading{position:static}
