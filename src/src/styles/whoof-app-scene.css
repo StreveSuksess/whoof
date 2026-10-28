@@ -20,13 +20,13 @@
 .has-app-stage:not(.app-static) .app-caption{position:absolute;left:5.5%;top:var(--app-caption-y);width:43%;max-width:650px;margin:0;visibility:hidden;color:var(--app-ink)}
 .has-app-stage:not(.app-static) .app-static-media,.has-app-stage:not(.app-static) .app-static-note{display:none}
 .has-app-stage:not(.app-static) .app-caption-context{top:14svh}
-.has-app-stage:not(.app-static) .app-caption-handoff{top:14svh;left:58%;width:36%;max-width:none;text-align:left}
+.has-app-stage:not(.app-static) .app-caption-handoff{position:fixed;top:14svh;left:58%;width:36%;max-width:none;text-align:left}
 .has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0;margin-right:0;font-size:18px}
 .has-app-stage:not(.app-static) .app-life-film{position:absolute;left:5.5%;top:44svh;width:min(29vw,34svh);margin:0;opacity:0;visibility:hidden;will-change:transform}
 .has-app-stage:not(.app-static) .app-demo-note{position:absolute;left:5.5%;bottom:28px;margin:0;color:var(--app-ink);opacity:var(--app-demo-opacity,.48)}
 .connection-intro{position:relative;min-height:100svh;padding-top:clamp(90px,11svh,145px)}
-.connection-intro>.section-kicker,.connection-intro>h2{position:relative;z-index:4}
-.connection-intro>h2{margin-top:28px;max-width:12ch;font-size:clamp(42px,5vw,72px)}
+.connection-title-stage>.section-kicker,.connection-title-stage>h2{position:relative;z-index:4}
+.connection-title-stage>h2{margin-top:28px;max-width:12ch;font-size:clamp(42px,5vw,72px)}
 .how-it-works{padding-top:0!important}
 .app-static .app-stage{background:#111315;color:#f4f1eb}
 .app-static .app-caption,.app-static .app-life-film{position:relative;visibility:visible!important;opacity:1!important;transform:none!important}
@@ -53,7 +53,7 @@
  .has-app-stage:not(.app-static) .app-life-film{left:24px;top:47svh;width:31vw}
  .app-life-film figcaption{font-size:10px;max-width:14ch;margin-top:10px}
  .has-app-stage:not(.app-static) .app-demo-note{left:24px;right:24px;bottom:24px;font-size:9px}
- .connection-intro>h2{margin-top:55px;font-size:42px}
+ .connection-title-stage>h2{margin-top:55px;font-size:42px}
 }
 @media(max-height:600px) and (min-width:601px){
  .app-caption h3{font-size:40px}.app-caption p{font-size:14px;margin-top:16px}
@@ -71,13 +71,15 @@
 
 .app-stage:focus{outline:none}.app-stage:focus-visible{outline:1px dashed #a4a5a680;outline-offset:-10px}
 
-.connection-intro>h2.app-follow-title{position:fixed;left:var(--section-pad);top:14svh;width:calc(100% - var(--section-pad)*2);max-width:none;margin:0;text-align:center;z-index:4;pointer-events:none}
+.has-app-handoff .connection-title-stage{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+.has-app-handoff .connection-title-stage>h2{position:absolute;left:var(--section-pad);top:14svh;width:calc(100% - var(--section-pad)*2);max-width:none;margin:0;text-align:center;z-index:4;pointer-events:none}
 
-.connection-intro:has(>.app-follow-title)>.section-kicker{visibility:hidden}
+.has-app-handoff .connection-title-stage>.section-kicker{display:none}
+.connection-title-stage h2>div{padding-bottom:.16em;margin-bottom:-.16em}
 
 @media(min-width:601px){.has-app-stage:not(.app-static) .app-caption-handoff h3{font-size:clamp(34px,4vw,62px)}.has-app-stage:not(.app-static) .app-caption-handoff p{margin-top:22px}}
 @media(max-height:600px) and (min-width:601px){
  .has-app-stage:not(.app-static) .app-caption-handoff h3{font-size:28px}
  .has-app-stage:not(.app-static) .app-caption-handoff p{display:none}
- .connection-intro>h2.app-follow-title{font-size:32px}
+ .has-app-handoff .connection-title-stage>h2{font-size:32px}
 }

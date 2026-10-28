@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 import {build} from '../../src/node_modules/esbuild/lib/main.js';
 const repo=resolve(import.meta.dirname,'../..');
 const result=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppMotion.ts')],bundle:true,write:false,platform:'node',format:'esm'});
-const {getAppSceneState,getAppViewportClip,APP_SCROLL_UNITS}=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
+const {getAppSceneState,getAppViewportClip,getAppTitleProgress,getAppTitleReveal,getAppPairCaptionProgress,APP_SCROLL_UNITS}=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
 assert.equal(APP_SCROLL_UNITS,7);
 for(const [w,h] of [[1440,900],[1020,1194],[390,844],[844,390]]){
  let previous;
@@ -33,6 +33,16 @@ for(const height of [390,844,900,1194])for(let scroll=-height;scroll<height*11;s
  if(scroll>height*8)assert.ok(clip.bottom>=Math.min(height,scroll-height*8),'next section occludes fixed world');
 }
 console.log('App boundary: actual-scroll entry/exit clips prevent fixed graphics crossing adjacent sections.');
+// No native/fixed ownership switch and no title ahead of the outgoing caption.
+assert.equal(getAppPairCaptionProgress(5.9),1);assert.equal(getAppPairCaptionProgress(6.35),0);
+assert.equal(Math.min(getAppPairCaptionProgress(7.2),getAppPairCaptionProgress(5.9)),0,'fixed pair caption never leaks into actual next content');
+for(const [actual,scene] of [[6.5,6.1],[5.9,7.3],[7.9,6.9],[8.1,7.4]])assert.equal(getAppTitleReveal(actual,scene),0);
+for(let n=0;n<9000;n++){
+ const t=n/1000,reveal=getAppTitleReveal(t,t);assert.ok(reveal>=0&&reveal<=1);assert.equal(reveal,getAppTitleProgress(t));
+ if(n)assert.ok(Math.abs(reveal-getAppTitleReveal(t-.001,t-.001))<.004,'line reveal never jumps at the old ownership thresholds');
+ for(const lag of [-1,-.4,.4,1]){const bounded=getAppTitleReveal(t,t-lag);assert.ok(bounded<=reveal+.00001);}
+}
+console.log('App handoff title: delayed/fast/reverse boundary guards and continuous single-owner line reveal passed.');
 const tracks=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppPose.ts')],bundle:true,write:false,platform:'node',format:'esm'});
 const {sampleAppTrack}=await import('data:text/javascript;base64,'+Buffer.from(tracks.outputFiles[0].text).toString('base64'));
 const knots=[[0,0,1],[1,2,3],[2.5,-1,2],[4,3,0]];
@@ -85,6 +95,8 @@ if(process.argv.includes('--built')){
  for(const text of ['data-app-world','data-app-caption','data-app-film','Концепт интерфейса','После синхронизации'])assert.ok(html.includes(text),text);
  assert.ok(!html.includes('data-app-tab'),'old numbered tabs removed');
  assert.ok(!html.includes('class="app-poster"'),'early flat phone removed');
+ assert.ok(html.includes('data-app-next-title'),'single managed title stage retains native heading');
+ assert.equal([...html.matchAll(/id="how-title"/g)].length,1,'heading is never cloned into a second owner');
  assert.ok(html.includes('/whoof/life-gallery/outside.mp4'),'real existing film');
  console.log('App markup: native captions, illustrative data, existing real film and no numbered tabs passed.');
 }

@@ -8,6 +8,10 @@ const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
 export function getAppViewportClip(top:number,size:number,scroll:number,height:number){
   return {top:Math.max(0,Math.min(height,top-scroll)),bottom:Math.max(0,Math.min(height,scroll-top-size))};
 }
+/** The next heading has one visual owner for its entire animated lifetime. */
+export const getAppPairCaptionProgress=(t:number)=>range(t,5.35,5.65)*(1-range(t,6.0,6.35));
+export const getAppTitleProgress=(t:number)=>range(t,6.35,6.75)*(1-range(t,APP_SCROLL_UNITS+.25,APP_SCROLL_UNITS+.6));
+export const getAppTitleReveal=(actualT:number,sceneT:number)=>Math.min(getAppTitleProgress(actualT),getAppTitleProgress(sceneT));
 /** One deterministic camera/screen timeline; no elapsed-time dependent poses. */
 export function getAppSceneState(local:number,height:number,width:number,reduced=false){
   const t=local/height,mobile=width<=600;
@@ -23,8 +27,8 @@ export function getAppSceneState(local:number,height:number,width:number,reduced
   const normalHeight=Math.min(height*(mobile?.56:.76),width*1.55),collarBase=Math.min(width*(mobile?.46:.43),height*.50);
   const phoneHeight=Math.min(normalHeight*size,mobile?mix(normalHeight*1.1,width*.91,handoff):width*1.05);
   const collarDiameter=collarBase*Math.min(cs,mobile?1:1.12),collarVisible=reduced?0:range(t,4.7,4.9);
-  const captionWeights=[1-range(t,2.2,2.45),range(t,2.2,2.45)*(1-range(t,3.5,3.75)),range(t,3.5,3.75)*(1-range(t,4.7,4.95)),range(t,5.35,5.65)*(1-range(t,6.0,6.35))];
-  const nextTitle=range(t,6.35,6.75)*(1-range(t,APP_SCROLL_UNITS+.25,APP_SCROLL_UNITS+.6));
+  const captionWeights=[1-range(t,2.2,2.45),range(t,2.2,2.45)*(1-range(t,3.5,3.75)),range(t,3.5,3.75)*(1-range(t,4.7,4.95)),getAppPairCaptionProgress(t)];
+  const nextTitle=getAppTitleProgress(t);
   return {t,day,zoom,compare,graph,context,handoff,opacity,nextTitle,paper:0,phoneX,phoneY,phoneHeight,macroDiameter:Math.min(width*(mobile?.92:.72),height*.94),rotateX:pitch*(mobile?.8:1),rotateY:yaw*(mobile?.75:1),rotateZ:bank*(mobile?.5:1),collarX:cx*width,collarY:cy*height,collarDiameter,collarPitch:cp,collarYaw:cr,collarBank:cb,collarSpin:spin,collarVisible,captionWeights};
 }
 export type AppSceneState=ReturnType<typeof getAppSceneState>;
