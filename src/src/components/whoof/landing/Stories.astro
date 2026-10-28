@@ -1,8 +1,8 @@
 ---
 const situations=[
   {id:'day',title:'Вы были заняты. Он — своими делами.',benefit:'Восстановить день',detail:'После синхронизации посмотрите, как чередовались движение и покой.',media:'/whoof/life-extra/daytime',video:true,alt:'Собака отдыхает дома',interface:false},
-  {id:'rhythm',title:'Сегодня двигался меньше. А обычно — как?',benefit:'Сравнить с его ритмом',detail:'История помогает сравнивать одну и ту же собаку в разные дни.',media:'/whoof/app-dynamics.webp',video:false,alt:'Пример интерфейса Whoof с динамикой активности',interface:true},
-  {id:'history',title:'Вчера помните. А что было неделю назад?',benefit:'Сохранить историю',detail:'Возвращайтесь к данным за прошлые дни — не нужно держать всё в памяти.',media:'/whoof/app-day.webp',video:false,alt:'Пример интерфейса Whoof с картой движений за день',interface:true},
+  {id:'rhythm',title:'Сегодня двигался меньше. А обычно — как?',benefit:'Сравнить с его ритмом',detail:'История помогает сравнивать одну и ту же собаку в разные дни.',media:'/whoof/app-v42/week.svg',video:false,alt:'Концепт интерфейса Whoof с динамикой активности',interface:true},
+  {id:'history',title:'Вчера помните. А что было неделю назад?',benefit:'Сохранить историю',detail:'Возвращайтесь к данным за прошлые дни — не нужно держать всё в памяти.',media:'/whoof/app-v42/day.svg',video:false,alt:'Концепт интерфейса Whoof с картой движений за день',interface:true},
   {id:'context',title:'В выходные — поездка. В будни — привычный маршрут.',benefit:'Добавить контекст',detail:'Учитывайте события дня, когда разбираетесь, почему изменилось движение.',media:'/whoof/life-gallery/outside',video:true,alt:'Собака на прогулке',interface:false},
   {id:'conversation',title:'«Кажется, что-то изменилось». А когда именно?',benefit:'Обсудить наблюдения',detail:'История движений добавляет контекст. Она не определяет причину изменений и не ставит диагноз.',media:'/whoof/life-story/together.webp',video:false,alt:'Собака рядом с человеком дома',interface:false},
 ];
@@ -25,7 +25,7 @@ const situations=[
       </div>
       <figure class:list={['story-row-visual',{'is-interface':item.interface},'story-media-'+item.id]} data-story-visual>
         {item.video?<video data-inline-video muted playsinline loop preload="none" src={item.media+'.mp4'} poster={item.media+'.webp'} aria-label={item.alt}></video>:<img src={item.media} alt={item.alt} width="640" height="480" loading="lazy"/>}
-        {item.interface&&<figcaption>Пример интерфейса</figcaption>}
+        {item.interface&&<figcaption>Концепт интерфейса</figcaption>}
       </figure>
     </article>)}
   </div>

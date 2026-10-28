@@ -39,24 +39,30 @@ for(const [w,h] of [[1440,900],[1020,1194],[390,844]]){
 }
 console.log('App choreography: C1 pose tracks, continued phone turn/collar roll, spatial travel and foreground scale passed.');
 
-// Execute every canvas phase with a minimal 2D sink: catches missing point/index
-// data and invalid alpha state without introducing a browser/renderer mock.
-const canvasBuild=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppScreen.ts')],bundle:true,write:false,platform:'node',format:'esm'});
-const oldDocument=globalThis.document;
-const gradient={addColorStop(){}};
-const context=new Proxy({globalAlpha:1},{get:(object,key)=>key in object?object[key]:key==='createRadialGradient'||key==='createLinearGradient'?()=>gradient:()=>{},set:(object,key,value)=>(object[key]=value,true)});
-globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>context})};
-try{
- const {AppScreen}=await import('data:text/javascript;base64,'+Buffer.from(canvasBuild.outputFiles[0].text).toString('base64'));
- const screen=new AppScreen();
- for(let t=-.5;t<7.7;t+=.015){screen.update(getAppSceneState(t*900,900,1440));assert.equal(context.globalAlpha,1);}
- const state=getAppSceneState(3.4*900,900,1440);screen.update(state);const version=screen.texture.version;screen.update(state);assert.equal(screen.texture.version,version,'held frames do not upload another screen texture');screen.dispose();
-}finally{globalThis.document=oldDocument;}
-console.log('App screen: all forward/reverse phase data drawable, alpha restored and held texture uploads skipped.');
+// Pure vector artwork: chronological bounds, exact reverse, resolved clip IDs.
+const artworkBuild=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppArtwork.ts')],bundle:true,write:false,platform:'node',format:'esm'});
+const {getAppArtworkState,renderAppArtwork,renderAppScreenSvg,DAY_ACTIVITY,DAY_PLOT}=await import('data:text/javascript;base64,'+Buffer.from(artworkBuild.outputFiles[0].text).toString('base64'));
+assert.equal(DAY_ACTIVITY.length,144);assert.ok(DAY_ACTIVITY.every(v=>v>=0&&v<=1));
+assert.equal(getAppArtworkState(0,0,0,0).time,'00:00');assert.equal(getAppArtworkState(.5,0,0,0).time,'12:00');assert.equal(getAppArtworkState(1,0,0,0).time,'23:59');
+const frames=[];
+for(let t=-.5;t<7.7;t+=.015){
+ const scene=getAppSceneState(t*900,900,1440),state=getAppArtworkState(scene.day,scene.graph,scene.compare,scene.zoom);frames.push([scene,state]);
+ for(const value of Object.values(state).filter(v=>typeof v==='number'))assert.ok(Number.isFinite(value));
+ assert.ok(state.dayWidth>=0&&state.dayWidth<=DAY_PLOT.span);assert.ok(state.weekWidth>=0&&state.weekWidth<=DAY_PLOT.span);assert.ok(state.cursorX>=DAY_PLOT.left&&state.cursorX<=DAY_PLOT.right);
+}
+for(const [scene,state] of frames.reverse())assert.deepEqual(getAppArtworkState(scene.day,scene.graph,scene.compare,scene.zoom),state);
+for(const svg of [renderAppScreenSvg(),...['day','week'].flatMap(mode=>[renderAppArtwork(mode),renderAppArtwork(mode,true)])]){
+ assert.ok(!/NaN|Infinity/.test(svg));
+ const ids=[...svg.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
+ for(const [,id] of svg.matchAll(/url\(#([^)]+)\)/g))assert.ok(ids.includes(id),id);
+ assert.ok(svg.includes('Концепт интерфейса'));assert.ok(svg.includes('Демонстрационные данные'));
+}
+assert.ok(renderAppArtwork('week',true).includes('data-art-week="" opacity="1"'));assert.ok(renderAppArtwork('week',true).includes('>История движения</text>'));
+console.log('App vectors: 144 chronological intervals, midnight/end labels, finite/reversible clipping, unique resolved IDs and shared static derivatives passed.');
 
 if(process.argv.includes('--built')){
  const html=readFileSync(resolve(repo,'src/dist/index.html'),'utf8');
- for(const text of ['data-app-world','data-app-caption','data-app-film','Пример интерфейса','После синхронизации'])assert.ok(html.includes(text),text);
+ for(const text of ['data-app-world','data-app-caption','data-app-film','Концепт интерфейса','После синхронизации'])assert.ok(html.includes(text),text);
  assert.ok(!html.includes('data-app-tab'),'old numbered tabs removed');
  assert.ok(html.includes('/whoof/life-gallery/outside.mp4'),'real existing film');
  console.log('App markup: native captions, illustrative data, existing real film and no numbered tabs passed.');
