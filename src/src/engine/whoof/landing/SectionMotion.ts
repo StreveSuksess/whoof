@@ -10,8 +10,9 @@ export class SectionMotion {
     this.resize();
   }
   resize(){
-    this.items.forEach(item=>{item.split.split(options);item.top=item.element.getBoundingClientRect().top+scrollY;item.last=-1;});
+    this.items.forEach(item=>{item.split.split(options);item.last=-1;});this.measure();
   }
+  measure(){this.items.forEach(item=>{item.top=item.element.getBoundingClientRect().top+scrollY;});}
   render(scroll:number,height:number,reduced:boolean){
     this.items.forEach(item=>{
       const progress=reduced?1:clamp((scroll+height*.9-item.top)/(height*.37));

@@ -10,7 +10,7 @@ export class OfferStage {
   private tabs:HTMLButtonElement[];private panels:Panel[];private index=0;private previous='';
   private attached?:HTMLCanvasElement;private original?:HTMLElement;private abort=new AbortController();
   active=false;progress=0;distance=Infinity;
-  constructor(private root:HTMLElement,onLayout=()=>{}){
+  constructor(private root:HTMLElement){
     this.product=root.querySelector('[data-offer-product]')!;this.host=root.querySelector('[data-offer-model]')!;
     this.tabs=[...root.querySelectorAll<HTMLButtonElement>('[data-offer-tab]')];
     this.panels=[...root.querySelectorAll<HTMLElement>('[data-offer-panel]')].map(element=>({element,title:SplitText.create(element.querySelector('h3')!,{type:'words,chars'}),copy:SplitText.create(element.querySelector('[data-offer-description]')!,{type:'words,chars'}),ratio:1}));
@@ -18,7 +18,6 @@ export class OfferStage {
       tab.addEventListener('click',()=>this.select(index),{signal:this.abort.signal});
       tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=nextOfferTab(index,event.key);this.select(next);this.tabs[next].focus();},{signal:this.abort.signal});
     });
-    root.querySelectorAll('details').forEach(detail=>detail.addEventListener('toggle',onLayout,{signal:this.abort.signal}));
     this.root.classList.add('has-offer-stage');this.select(0,true);
   }
   private select(index:number,initial=false){

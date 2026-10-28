@@ -1,0 +1,8 @@
+---
+interface Props {id:string;title:string;}
+const {id,title}=Astro.props;
+---
+<details id={id} data-accordion>
+  <summary id={id+'-summary'} aria-controls={id+'-panel'}><span class="accordion-question">{title}</span><span class="accordion-icon" aria-hidden="true"></span></summary>
+  <div id={id+'-panel'} class="accordion-panel" aria-labelledby={id+'-summary'}><slot /></div>
+</details>

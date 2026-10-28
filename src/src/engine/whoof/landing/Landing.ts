@@ -14,6 +14,7 @@ import {OwnerPosters} from './OwnerPosters';
 import {getOwnerEntryState} from './OwnerPosterMotion';
 import {OfferStage} from './OfferStage';
 import {HeaderMotion,crossesHeader} from './HeaderMotion';
+import {Accordions} from './Accordions';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
@@ -26,11 +27,12 @@ export function bootLanding(){
   const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root);
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
   const owners=new OwnerPosters($('#owners'));
-  const offer=new OfferStage($('#order'),()=>{type.resize();measure();});
+  const offer=new OfferStage($('#order'));
   const app=new AppExample($('#app'));
   const how=new HowStory($('#how-steps'));
   const trust=new TrustStage($('#trust'));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
+  const accordions=new Accordions(root,()=>reduced.matches);
   const sections=[...document.querySelectorAll<HTMLElement>('#landing-content > section')];
   const headerObstacles=sections.map(section=>[...section.querySelectorAll<HTMLElement>('h2:not(.sr-only),h3,h4,p,figure,button,summary,a,.section-kicker,.story-table-header')]);
   const clips=[...root.querySelectorAll<HTMLVideoElement>('[data-inline-video]')].map(element=>({media:new GalleryVideo(element),onscreen:false}));
@@ -66,7 +68,7 @@ export function bootLanding(){
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();card.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();headerMotion.reset(scrollY);world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();headerMotion.reset(scrollY);world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
@@ -87,6 +89,7 @@ export function bootLanding(){
   function update(now:number){
     if(!visible)return;
     const dt=Math.min(.05,(now-previous)/1000);previous=now;
+    if(accordions.update()){type.measure();measure();}
     const actual=scrollY/height;
     scroll+=(actual-scroll)*(reduced.matches?1:1-Math.exp(-9*dt));if(Math.abs(actual-scroll)<.0003)scroll=actual;
     mouseX+=(targetX-mouseX)*(1-Math.exp(-3*dt));mouseY+=(targetY-mouseY)*(1-Math.exp(-3*dt));
@@ -163,7 +166,7 @@ export function bootLanding(){
     $('.opening-progress span').style.transform='scaleY('+clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height))+')';
     raf=requestAnimationFrame(update);
   }
-  function suspend(){visible=false;cancelAnimationFrame(raf);app.suspend();clips.forEach(clip=>clip.media.setPlaying(false));}
+  function suspend(){visible=false;cancelAnimationFrame(raf);accordions.finish();app.suspend();clips.forEach(clip=>clip.media.setPlaying(false));}
   function resume(){if(visible)return;visible=true;app.resume();clips.forEach(updateClip);previous=performance.now();lastRender=-100;raf=requestAnimationFrame(update);}
   document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume(),{signal});
   addEventListener('pagehide',suspend,{signal});addEventListener('pageshow',event=>{if(event.persisted)resume();},{signal});
@@ -178,5 +181,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();world?.disposeApp();world?.disposeTrust();clips.forEach(c=>c.media.dispose());};
+  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();world?.disposeApp();world?.disposeTrust();clips.forEach(c=>c.media.dispose());};
 }

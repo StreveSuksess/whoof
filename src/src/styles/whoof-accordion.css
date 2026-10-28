@@ -1,0 +1,15 @@
+/* Native details still work before JS and when motion is unavailable. */
+[data-accordion]>.accordion-panel{display:flow-root}
+[data-accordion]>summary{align-items:center}
+[data-accordion].has-accordion{overflow:hidden}
+[data-accordion].is-transitioning{will-change:height}
+/* Prevent the browser from moving the viewport to keep a lower row anchored. */
+html.is-accordion-moving{overflow-anchor:none}
+[data-accordion]>summary:focus-visible{outline-offset:-4px}
+.accordion-question{min-width:0}
+.accordion-icon{position:relative;display:block;flex:none;width:20px;height:20px;margin-top:.08em}
+.accordion-icon::before,.accordion-icon::after{content:'';position:absolute;left:50%;top:50%;width:14px;height:1px;background:currentColor;transform:translate(-50%,-50%)}
+.accordion-icon::after{transform:translate(-50%,-50%) rotate(90deg);transition:transform .42s cubic-bezier(.25,.8,.25,1),opacity .3s}
+[data-accordion]:not(.has-accordion)[open]>summary .accordion-icon::after,
+[data-accordion].has-accordion[data-expanded=true]>summary .accordion-icon::after{transform:translate(-50%,-50%) rotate(0);opacity:0}
+@media(prefers-reduced-motion:reduce){.accordion-icon::after{transition:none}}
