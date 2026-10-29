@@ -37,6 +37,12 @@ export class AppPhoneScene {
     const lensMaterial=new MeshPhysicalMaterial({color:'#010205',metalness:0,roughness:.2,ior:1.5,specularIntensity:.08});if(look)applyOpeningColorLook(lensMaterial,look);
     const lens=new Mesh(new CircleGeometry(.027,32),lensMaterial);lens.position.set(.175,1.956,.155);lens.renderOrder=4;this.shell.add(lens);
   }
+  async prepare(width:number){
+    // compileAsync submits synchronously; restore shared lighting before waiting.
+    let pending:Promise<unknown>=Promise.resolve();
+    this.lighting.render(this.renderer,width,()=>{pending=this.renderer.compileAsync(this.scene,this.camera);});
+    await pending;
+  }
   render(state:AppSceneState,width:number,height:number,px:number,py:number){
     this.screen.update(state);this.glassFade.value=state.zoom;this.reflection.visible=state.zoom>.001;
     const viewport=width+'/'+height;if(viewport!==this.viewport){this.viewport=viewport;this.css.setSize(width,height);}

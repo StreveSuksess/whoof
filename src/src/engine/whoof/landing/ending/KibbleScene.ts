@@ -1,4 +1,4 @@
-import {Color,DepthTexture,DirectionalLight,DynamicDrawUsage,FogExp2,HalfFloatType,HemisphereLight,InstancedMesh,Mesh,MeshStandardMaterial,Object3D,OrthographicCamera,PCFShadowMap,PerspectiveCamera,PlaneGeometry,PointLight,Scene,ShaderMaterial,UnsignedByteType,Vector2,WebGLRenderTarget,type WebGLRenderer} from 'three';
+import {Color,DepthTexture,DirectionalLight,DynamicDrawUsage,FogExp2,HalfFloatType,HemisphereLight,InstancedMesh,Mesh,MeshStandardMaterial,Object3D,OrthographicCamera,PCFShadowMap,PerspectiveCamera,PlaneGeometry,PointLight,Scene,ShaderMaterial,UnsignedByteType,Vector2,WebGLRenderTarget,type Texture,type WebGLRenderer} from 'three';
 import {createAppEnvironment} from '../app/AppEnvironment';
 import {createKibbleGeometry,createKibbleMaps} from './KibbleGeometry';
 import {KibbleMotion,projectKibblePointer} from './KibbleMotion';
@@ -17,12 +17,12 @@ export class KibbleScene{
   private material=new MeshStandardMaterial({map:this.maps.map,normalMap:this.maps.normalMap,normalScale:new Vector2(.6,.6),roughness:.94,metalness:0});
   private meshes:InstancedMesh[];private dummy=new Object3D();private tint=new Color();
   private key=new DirectionalLight('#fff1dc',2.2);private cursorLight=new PointLight('#f0dfc4',.85,5,2);
-  private environment:WebGLRenderTarget;private colorTarget:WebGLRenderTarget;private blurTarget:WebGLRenderTarget;
+  private environment?:WebGLRenderTarget;private targetLimit=1280;private colorTarget:WebGLRenderTarget;private blurTarget:WebGLRenderTarget;
   private postScene=new Scene();private postCamera=new OrthographicCamera(-1,1,1,-1,0,1);private quad:Mesh;
   private blurMaterial:ShaderMaterial;private displayMaterial:ShaderMaterial;private savedColor=new Color();
   private width=1;private height=1;private worldHeight=2*Math.tan(40*Math.PI/360)*8;private worldWidth=6;private rendered=false;
-  constructor(private renderer:WebGLRenderer){
-    this.environment=createAppEnvironment(renderer);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.08;this.scene.fog=new FogExp2('#0b0d0f',.055);
+  constructor(private renderer:WebGLRenderer,environment?:Texture){
+    if(!environment)this.environment=createAppEnvironment(renderer);this.scene.environment=environment||this.environment!.texture;this.scene.environmentIntensity=.08;this.scene.fog=new FogExp2('#0b0d0f',.055);
     this.camera.position.set(0,0,8);
     this.key.position.set(-3,4,6);this.key.castShadow=true;this.key.shadow.mapSize.set(1024,1024);this.key.shadow.normalBias=.012;this.key.shadow.bias=-.0001;this.key.shadow.radius=2.5;this.key.shadow.camera.near=.2;this.key.shadow.camera.far=22;
     const rim=new DirectionalLight('#dbe4ed',1.5);rim.position.set(3,1,-4);
@@ -40,11 +40,21 @@ export class KibbleScene{
   resize(width:number,height:number){
     this.width=width;this.height=height;this.camera.aspect=width/height;this.camera.updateProjectionMatrix();
     this.worldWidth=this.worldHeight*width/height;this.field.resize(this.worldWidth);
-    const scale=Math.min(1,(width<=600?920:1280)/Math.max(width,height));
+    const scale=Math.min(1,this.targetLimit/Math.max(width,height));
     const w=Math.max(1,Math.round(width*scale)),h=Math.max(1,Math.round(height*scale));
     this.colorTarget.setSize(w,h);this.blurTarget.setSize(w,h);this.blurMaterial.uniforms.resolution.value.set(w,h);
     const range=Math.max(4,this.worldWidth*.85);this.key.shadow.camera.left=-range;this.key.shadow.camera.right=range;this.key.shadow.camera.bottom=-4;this.key.shadow.camera.top=3;this.key.shadow.camera.updateProjectionMatrix();
     this.rendered=false;
+  }
+  setQuality(limit:number){if(this.targetLimit===limit)return;this.targetLimit=limit;this.resize(this.width,this.height);}
+  async prepare(){
+    const shadow=this.renderer.shadowMap.enabled,type=this.renderer.shadowMap.type,material=this.quad.material,pending:Promise<unknown>[]=[];
+    try{
+      this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=PCFShadowMap;pending.push(this.renderer.compileAsync(this.scene,this.camera));
+      this.renderer.shadowMap.enabled=false;
+      for(const m of [this.blurMaterial,this.displayMaterial]){this.quad.material=m;pending.push(this.renderer.compileAsync(this.postScene,this.postCamera));}
+    }finally{this.renderer.shadowMap.enabled=shadow;this.renderer.shadowMap.type=type;this.quad.material=material;}
+    await Promise.all(pending);
   }
   get needsFrame(){return !this.rendered;}
   private writeInstances(){
@@ -77,6 +87,6 @@ export class KibbleScene{
     }
   }
   dispose(){
-    this.geometry.forEach(geometry=>geometry.dispose());this.material.dispose();this.maps.map.dispose();this.maps.normalMap.dispose();this.environment.dispose();this.colorTarget.depthTexture?.dispose();this.colorTarget.dispose();this.blurTarget.dispose();this.blurMaterial.dispose();this.displayMaterial.dispose();this.quad.geometry.dispose();this.key.shadow.map?.dispose();
+    this.geometry.forEach(geometry=>geometry.dispose());this.material.dispose();this.maps.map.dispose();this.maps.normalMap.dispose();this.environment?.dispose();this.colorTarget.depthTexture?.dispose();this.colorTarget.dispose();this.blurTarget.dispose();this.blurMaterial.dispose();this.displayMaterial.dispose();this.quad.geometry.dispose();this.key.shadow.map?.dispose();
   }
 }

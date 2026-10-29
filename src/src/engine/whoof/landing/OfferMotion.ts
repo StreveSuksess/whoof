@@ -8,8 +8,8 @@ export function getSketchProximity(distance:number){return clamp((1.3-distance))
 /** StackScene/PostProfile and the non-convolution Bloom path, unchanged. */
 export const OFFER_SOURCE_FX=Object.freeze({iterations:5,amount:6,radius:.25,threshold:.3,smoothWidth:.75,lumaStrength:0,selectiveStrength:4,saturation:2});
 export function getOfferBloomWeights(){return Array.from({length:5},(_,i)=>{const falloff=(5-i)/5;return (6*(falloff+(1.2-falloff*2)*.25))/Math.pow(2,4-i);});}
-export function getOfferBloomLayout(width:number,height:number){
-  const scale=Math.min(1,1600/Math.max(1,width),1600/Math.max(1,height));
+export function getOfferBloomLayout(width:number,height:number,limit=1600){
+  const scale=Math.min(1,limit/Math.max(1,width),limit/Math.max(1,height));
   const w=Math.max(1,Math.round(width*scale)),h=Math.max(1,Math.round(height*scale));
   let x=Math.ceil(w/2),y=Math.ceil(h/2);
   const levels=Array.from({length:5},()=>{const size={width:x,height:y};x=Math.ceil(x/2);y=Math.ceil(y/2);return size;});

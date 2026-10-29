@@ -1,3 +1,4 @@
+import {PoseFrameCache} from './PoseFrameCache';
 import {HeroPropMotion,type PropKind} from './HeroPropMotion';
 import {collarContact} from './OpeningTransition';
 import {leashImpulse,type LeashContact} from './LeashContact';
@@ -5,7 +6,7 @@ import {leashImpulse,type LeashContact} from './LeashContact';
 type Bounds={x:number;y:number;width:number;height:number};
 type MotionAsset={rect:[number,number,number,number];frames:string[];axis:[number,number];pivot:[number,number];reach:number;segments:[number[],number[]][];radius:number;contacts?:LeashContact[]};
 type Metadata={width:number;height:number;layers:Record<string,Bounds>;motion:Record<PropKind,MotionAsset>};
-type Prop={name:PropKind;canvas:HTMLCanvasElement;context:CanvasRenderingContext2D;motion:HeroPropMotion;frames:(ImageBitmap|undefined)[];loading:boolean;loaded:boolean;drawn:number};
+type Prop={name:PropKind;canvas:HTMLCanvasElement;context:CanvasRenderingContext2D;motion:HeroPropMotion;loaded:boolean;drawn:number};
 const clamp=(n:number,a=0,b=1)=>Math.max(a,Math.min(b,n));
 const root='/whoof/hero-v24/';
 const staticLayers=['background','shadow','collar'];
@@ -20,7 +21,7 @@ export class HeroPlate {
   private meta?:Metadata;
   private format=''; private generation=0;
   private last={x:0,y:0}; private pointerReady=false;
-  private layout=''; private allowSequences=false;
+  private layout=''; private allowSequences=false;private cache?:PoseFrameCache;private cachePlan='';private cachePaused=false;
   moving=false; ready=false;
   constructor(){
     for(const name of ['background','keys','leash','ball','shadow','collar']){
@@ -30,7 +31,7 @@ export class HeroPlate {
       }else{
         const canvas=document.createElement('canvas');canvas.className='hero-prop-pose';canvas.dataset.prop=name;
         this.element.append(canvas);
-        this.props.push({name:name as PropKind,canvas,context:canvas.getContext('2d')!,motion:new HeroPropMotion(name as PropKind),frames:[],loading:false,loaded:false,drawn:NaN});
+        this.props.push({name:name as PropKind,canvas,context:canvas.getContext('2d')!,motion:new HeroPropMotion(name as PropKind),loaded:false,drawn:NaN});
       }
     }
   }
@@ -43,57 +44,57 @@ export class HeroPlate {
     const format=innerWidth/innerHeight<=1?'portrait':'landscape';
     if(format===this.format&&this.ready)return;
     this.format=format;this.ready=false;this.element.classList.remove('has-layers');const generation=++this.generation;
-    for(const p of this.props){p.frames.forEach(f=>f?.close());p.frames=[];p.loaded=p.loading=false;p.drawn=NaN;p.motion.step(0,false);}
+    this.cache?.dispose();this.cache=new PoseFrameCache(src=>this.bitmap(src));this.cachePlan='';this.cachePaused=false;
+    for(const p of this.props){p.loaded=false;p.drawn=NaN;p.motion.step(0,false);}
     const meta=await fetch(`${root}${format}.json`).then(r=>{if(!r.ok)throw new Error('Hero camera metadata unavailable');return r.json() as Promise<Metadata>;});
     if(generation!==this.generation)return;
+    const cache=this.cache,neutral=this.props.map(p=>root+meta.motion[p.name].frames[(meta.motion[p.name].frames.length-1)/2]);
+    cache.request(neutral,neutral);
     await Promise.all([
       ...staticLayers.map(async name=>{const image=new Image();image.src=`${root}${format}-${name}.webp`;await image.decode();if(generation===this.generation)this.images.get(name)!.src=image.src;}),
-      ...this.props.map(async p=>{
-        const asset=meta.motion[p.name],middle=(asset.frames.length-1)/2;
-        const frame=await this.bitmap(root+asset.frames[middle]);
-        if(generation!==this.generation){frame.close();return;}
-        p.frames[middle]=frame;p.canvas.width=frame.width;p.canvas.height=frame.height;
-      })
+      cache.settled()
     ]);
+    if(generation!==this.generation)return;
+    this.props.forEach((p,i)=>{const frame=cache.get(neutral[i]);if(!frame)throw new Error('Hero neutral pose unavailable');p.canvas.width=frame.width;p.canvas.height=frame.height;p.loaded=true;});
     if(generation!==this.generation)return;
     await Promise.all([...this.images.values()].map(image=>image.decode()));
     if(generation!==this.generation)return;
     this.meta=meta;this.ready=true;this.element.classList.add('has-layers');
-    // Fetch the remaining small crops after the first complete frame. Touch/reduced
-    // clients keep only the neutral renders, without decoding an unused sequence.
     this.allowSequences=!matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches;
-    if(this.allowSequences){
-      for(const p of this.props)void this.loadPoses(p,generation);
-    }
+    this.requestPoses(this.allowSequences);
   }
-  private async loadPoses(p:Prop,generation:number){
-    if(p.loading||p.loaded||!this.meta)return;
-    p.loading=true;const files=this.meta.motion[p.name].frames;
-    const pending:(ImageBitmap|undefined)[]=[];
-    try{
-      // A small queue limits simultaneous decodes and memory spikes on first load.
-      let next=0;
-      const results=await Promise.allSettled(Array.from({length:3},async()=>{
-        for(;;){
-          const i=next++;if(i>=files.length||generation!==this.generation)return;
-          if(p.frames[i])continue;
-          pending[i]=await this.bitmap(root+files[i]);
+  private requestPoses(active:boolean){
+    if(!this.meta||!this.cache)return;
+    const pinned:string[]=[],nearby:{key:string;priority:number}[]=[];
+    for(const p of this.props){
+      const files=this.meta.motion[p.name].frames,middle=(files.length-1)/2;
+      const pose=active?(p.motion.q+1)*middle:middle,low=Math.floor(pose);
+      pinned.push(root+files[middle],root+files[low]);if(active)pinned.push(root+files[Math.min(files.length-1,low+1)]);
+      if(active){
+        // Neighbor views are ready before contact; predict in the actual angular
+        // direction without retaining three full decoded movies in memory.
+        const ahead=Math.round(Math.max(-10,Math.min(10,p.motion.velocity*middle*.12)));
+        for(let offset=-4;offset<=4;offset++){
+          const index=Math.max(0,Math.min(files.length-1,low+offset));nearby.push({key:root+files[index],priority:Math.abs(offset)});
         }
-      }));
-      if(results.some(r=>r.status==='rejected'))throw new Error('Optional pose load failed');
-      if(generation!==this.generation){pending.forEach(f=>f?.close());return;}
-      pending.forEach((frame,i)=>{if(frame)p.frames[i]=frame;});p.loaded=true;p.drawn=NaN;p.loading=false;
-    }catch{
-      pending.forEach(f=>f?.close());if(generation===this.generation)p.loading=false;
-      // Complete neutral prop remains visible when an optional pose fails.
+        for(let step=1;step<=Math.abs(ahead);step++){
+          const index=Math.max(0,Math.min(files.length-1,low+Math.sign(ahead)*step));nearby.push({key:root+files[index],priority:step*.7});
+        }
+      }
     }
+    const keys=[...new Set([...pinned,...nearby.sort((a,b)=>a.priority-b.priority).map(item=>item.key)])],plan=keys.join('|')+'/'+active;
+    if(plan!==this.cachePlan){this.cachePlan=plan;this.cache.request(keys,pinned);}
+    if(this.cachePaused===active){this.cachePaused=!active;this.cache.setPaused(!active);}
   }
+  get decodedBytes(){return this.cache?.bytes||0;}
+  suspend(){this.requestPoses(false);}
+  dispose(){this.generation++;this.cache?.dispose();this.props.forEach(p=>{p.canvas.width=p.canvas.height=1;});}
   private draw(p:Prop){
     const middle=(this.meta!.motion[p.name].frames.length-1)/2;
     const pose=p.loaded?(p.motion.q+1)*middle:middle;
     if(Math.abs(pose-p.drawn)<.002)return;
     const low=Math.floor(pose),high=Math.min(middle*2,low+1),fraction=pose-low;
-    const a=p.frames[low],b=p.frames[high];if(!a||(!b&&fraction>0))return;
+    const files=this.meta!.motion[p.name].frames,a=this.cache?.get(root+files[low]),b=this.cache?.get(root+files[high]);if(!a||(!b&&fraction>0))return;
     const c=p.context;c.clearRect(0,0,p.canvas.width,p.canvas.height);
     // Add premultiplied weighted frames. Source-over would double their alpha
     // and expose the surface through the prop during the angle interpolation.
@@ -112,7 +113,6 @@ export class HeroPlate {
     const fallback=this.element.querySelector<HTMLElement>('.hero-beauty')!;fallback.style.opacity=String(this.ready?0:1-handoff);
     this.moving=false;if(!this.ready||!this.meta)return;
     const allowSequences=!reduced&&!coarse;
-    if(allowSequences&&!this.allowSequences)for(const p of this.props)void this.loadPoses(p,this.generation);
     this.allowSequences=allowSequences;
     const w=innerWidth,h=innerHeight,scale=Math.max(w/this.meta.width,h/this.meta.height),ow=this.meta.width*scale,oh=this.meta.height*scale;
     const mouse={x:(px+1)*w/2,y:(py+1)*h/2};
@@ -153,6 +153,7 @@ export class HeroPlate {
       p.motion.step(dt,!reduced&&!coarse&&scroll<.84);
       this.draw(p);this.moving||=p.motion.moving;
     }
+    this.requestPoses(allowSequences&&scroll<.84);
     this.layout=layout;this.last=mouse;
   }
 }

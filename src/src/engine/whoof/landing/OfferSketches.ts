@@ -1,4 +1,4 @@
-import {AdditiveBlending,Color,Mesh,NearestFilter,NoBlending,OrthographicCamera,PlaneGeometry,RepeatWrapping,Scene,ShaderMaterial,TextureLoader,Vector2,Vector3,Vector4,WebGLRenderTarget,type WebGLRenderer} from 'three';
+import {AdditiveBlending,Color,Mesh,NearestFilter,NoBlending,OrthographicCamera,PlaneGeometry,RepeatWrapping,Scene,ShaderMaterial,TextureLoader,Vector2,Vector3,Vector4,WebGLRenderTarget,type Texture,type WebGLRenderer} from 'three';
 import {ease} from '../../core/ease';
 import {getSketchProximity,getOfferBrushRadius,getOfferSketchBreathing} from './OfferMotion';
 import {OfferBloom} from './OfferBloom';
@@ -14,7 +14,7 @@ export class OfferSketches {
   private quadCamera=new OrthographicCamera(-1,1,1,-1,0,2);private quadScene=new Scene();
   private geometry=new PlaneGeometry(2,2);private quad=new Mesh(this.geometry);
   private current=new WebGLRenderTarget(1,1);private previous=new WebGLRenderTarget(1,1);private low=new WebGLRenderTarget(1,1);
-  private post:OfferBloom;private quiet=true;private reveal=1;private noiseOffset=new Vector2();
+  private bloomLimit=1600;private post:OfferBloom;private quiet=true;private reveal=1;private noiseOffset=new Vector2();
   private cards:Card[]=[];private width=1;private height=1;private ready=false;private show=0;private time=0;private remaining=0;private initialized=false;
   private lastPointer=new Vector2();private pointer=new Vector2();private velocity=new Vector2();private from=new Vector4();private to=new Vector4();
   private clearPaint=new ShaderMaterial({vertexShader:fullVertex,fragmentShader:offerPaintClearFragment,blending:NoBlending,depthTest:false,depthWrite:false,toneMapped:false,uniforms:{u_velocityZero:{value:OFFER_PAINT_ZERO}}});
@@ -43,7 +43,15 @@ export class OfferSketches {
     for(const target of [this.current,this.previous,this.low]){this.renderer.setRenderTarget(target);this.renderer.render(this.quadScene,this.quadCamera);}
     this.renderer.setRenderTarget(old);this.velocity.set(0,0);this.from.set(0,0,0,0);this.to.set(0,0,0,0);this.initialized=false;this.remaining=0;
   }
-  private resizePost(){this.post.resize(this.quiet?1:this.renderer.domElement.width,this.quiet?1:this.renderer.domElement.height);}
+  private resizePost(){this.post.resize(this.quiet?1:this.renderer.domElement.width,this.quiet?1:this.renderer.domElement.height,this.bloomLimit);}
+  setQuality(limit:number){if(this.bloomLimit===limit)return;this.bloomLimit=limit;this.resizePost();}
+  async prepare(){
+    const original=this.quad.material,pending:Promise<unknown>[]=[this.renderer.compileAsync(this.scene,this.camera),this.post.prepare()];
+    try{for(const material of [this.clearPaint,this.paint,this.copy]){this.quad.material=material;pending.push(this.renderer.compileAsync(this.quadScene,this.quadCamera));}}
+    finally{this.quad.material=original;}
+    await Promise.all(pending);
+  }
+  dispose(){this.post.dispose();for(const target of [this.current,this.previous,this.low])target.dispose();for(const m of [this.clearPaint,this.paint,this.copy])m.dispose();const textures=new Set<Texture>();this.cards.forEach(card=>{for(const uniform of ['u_texture','u_blueNoiseTexture'])textures.add(card.material.uniforms[uniform].value);card.material.dispose();});textures.forEach(texture=>texture.dispose());this.geometry.dispose();}
   render(){if(this.quiet)this.renderer.render(this.scene,this.camera);else this.post.render(this.scene,this.camera,this.reveal);}
   update(dt:number,x:number,y:number,progress:number,reduced:boolean,coarse:boolean,rawX=x,rawY=y,reveal=1){
     if(!this.ready)return;

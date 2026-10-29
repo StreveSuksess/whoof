@@ -26,11 +26,18 @@ export class OfferBloom {
     }
     this.composite=material(offerBloomComposite,uniforms,{ITERATION:FX.iterations});
   }
-  resize(width:number,height:number){
-    const layout=getOfferBloomLayout(width,height);this.width=layout.width;this.height=layout.height;
+  resize(width:number,height:number,limit=1600){
+    const layout=getOfferBloomLayout(width,height,limit);this.width=layout.width;this.height=layout.height;
     this.layer.setSize(this.width,this.height);this.high.setSize(layout.levels[0].width,layout.levels[0].height);
     layout.levels.forEach((level,i)=>{this.horizontal[i].setSize(level.width,level.height);this.vertical[i].setSize(level.width,level.height);this.blurs[i].uniforms.u_resolution.value.set(level.width,level.height);});
   }
+  async prepare(){
+    const material=this.quad.material,pending:Promise<unknown>[]=[];
+    try{for(const shader of [this.highMaterial,...this.blurs,this.composite]){this.quad.material=shader;pending.push(this.renderer.compileAsync(this.scene,this.camera));}}
+    finally{this.quad.material=material;}
+    await Promise.all(pending);
+  }
+  dispose(){this.layer.dispose();this.high.dispose();this.horizontal.forEach(t=>t.dispose());this.vertical.forEach(t=>t.dispose());this.highMaterial.dispose();this.blurs.forEach(m=>m.dispose());this.composite.dispose();this.geometry.dispose();}
   render(scene:Scene,camera:Camera,opacity=1){
     const renderer=this.renderer;
     this.composite.uniforms.u_opacity.value=opacity;

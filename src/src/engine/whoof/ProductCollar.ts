@@ -1,4 +1,5 @@
-import { Box3, BufferGeometry, CanvasTexture, Color, ExtrudeGeometry, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Path, Quaternion, RepeatWrapping, Shape, SRGBColorSpace, Vector2, Vector3 } from 'three';
+import { Box3, BufferGeometry, CanvasTexture, Color, ExtrudeGeometry, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Path, Quaternion, RepeatWrapping, Shape, SRGBColorSpace, Vector2, Vector3 } from 'three';
+import {CollarDetail,createYarnGeometry} from './CollarDetail';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -98,23 +99,6 @@ function fiberTexture(yarn = false) {
 
 // A continuous yarn loop, with an over/under crossing, rather than rows of beads.
 // Reused by two instanced meshes; visible volume survives macro camera views.
-function yarnLoop(detail: boolean) {
-  const positions: number[] = [], uvs: number[] = [], indices: number[] = [], colors: number[] = [];
-  const steps = detail ? 40 : 16, sides = detail ? 9 : 5, tube = .0043;
-  const center = (a: number) => new Vector3(.0101 * Math.cos(a), .0071 * Math.sin(a), .003 * Math.sin(2 * a));
-  for (let i = 0; i <= steps; i++) {
-    const a = i / steps * TAU, p = center(a), tangent = center(a + .001).sub(p).normalize();
-    const radial = new Vector3(Math.cos(a), Math.sin(a), 0).normalize(), binormal = new Vector3().crossVectors(tangent, radial).normalize();
-    for (let j = 0; j <= sides; j++) {
-      const b = j / sides * TAU, rope = tube * (1 + .19 * Math.cos(b * 3 - a * 6));
-      const v = p.clone().addScaledVector(radial, Math.cos(b) * rope).addScaledVector(binormal, Math.sin(b) * rope);
-      positions.push(v.x, v.y, v.z); uvs.push(i / steps, j / sides);
-      const occlusion = .42 + .58 * (.5 + .5 * Math.sin(a * 2)); colors.push(occlusion, occlusion, occlusion);
-      if (i < steps && j < sides) { const k = i * (sides + 1) + j; indices.push(k, k + 1, k + sides + 1, k + 1, k + sides + 2, k + sides + 1); }
-    }
-  }
-  const g = new BufferGeometry(); g.setAttribute('position', new Float32BufferAttribute(positions, 3)); g.setAttribute('uv', new Float32BufferAttribute(uvs, 2)); g.setAttribute('color', new Float32BufferAttribute(colors, 3)); g.setIndex(indices); g.computeVertexNormals(); return g;
-}
 
 function roundPath(p: Shape | Path, w: number, h: number, r: number) {
   const x = -w / 2, y = -h / 2; r = Math.min(r, w / 2 - .0001, h / 2 - .0001);
@@ -150,7 +134,7 @@ function keeper(mat: MeshStandardMaterial) {
   g.translate(0, 0, -.05); g.rotateY(Math.PI / 2); const smooth = smoothSurface(g); g.dispose(); return new Mesh(smooth, mat);
 }
 
-export async function createProductCollar(detail = false, innerOcclusion = .46) {
+export async function createProductCollar(detail = false, innerOcclusion = .46, adaptive = false) {
   const group = new Group(); group.name = 'Whoof full collar';
   const texture = fiberTexture();
   const textile = new MeshPhysicalMaterial({ color: '#292c2d', map: texture, bumpMap: texture, bumpScale: .0014, roughness: .84, sheen: .6, sheenColor: '#565956', sheenRoughness: .65 });
@@ -162,7 +146,10 @@ export async function createProductCollar(detail = false, innerOcclusion = .46) 
   const rubber = new MeshStandardMaterial({ color: '#060707', roughness: .78 });
   const webbing = new Mesh(makeWebbing(), textile); webbing.name = 'Woven band'; group.add(webbing);
 
-  const rows = 16, cols = 180, total = rows * cols, geometry = yarnLoop(detail);
+  const rows = 16, cols = 180, total = rows * cols, geometry = createYarnGeometry(detail ? 40 : 16, detail ? 9 : 5);
+  const yarns: InstancedMesh[] = [];
+  const shadowGeometry = adaptive ? createYarnGeometry(12, 5) : undefined;
+  const shadowMaterial = adaptive ? new MeshBasicMaterial({colorWrite:false,depthWrite:false}) : undefined;
   const matrix = new Matrix4(), scale = new Vector3(1.4, 1.4, 1.4), color = new Color();
   for (const side of [1, -1]) {
     const yarn = new InstancedMesh(geometry, yarnMaterial, total); yarn.name = side > 0 ? 'Outer interlocked yarn' : 'Inner interlocked yarn';
@@ -171,7 +158,19 @@ export async function createProductCollar(detail = false, innerOcclusion = .46) 
       matrix.compose(bandPoint(a, y, side * (THICK / 2 + .0049)), bandRotation(a), scale); yarn.setMatrixAt(col * rows + row, matrix);
       const shade = .81 + .19 * ((Math.sin(col * 13.3 + row * 7.7) + 1) / 2); color.setRGB(shade, shade, shade); yarn.setColorAt(col * rows + row, color);
     }
-    yarn.instanceMatrix.needsUpdate = true; yarn.computeBoundingSphere(); group.add(yarn);
+    yarn.instanceMatrix.needsUpdate = true; yarn.computeBoundingSphere(); group.add(yarn); yarns.push(yarn);
+    if (shadowGeometry && shadowMaterial) {
+      // ShadowMap uses the color camera's layers too, so a layer-only proxy
+      // would either disappear from shadows or leak into the beauty pass.
+      // Its draw range is enabled only while Three draws the shadow pass.
+      const proxy = new InstancedMesh(shadowGeometry, shadowMaterial, total);
+      proxy.name = 'Yarn shadow proxy'; proxy.userData.shadowProxy = true;
+      proxy.instanceMatrix = yarn.instanceMatrix; proxy.boundingSphere = yarn.boundingSphere?.clone() ?? null;
+      shadowGeometry.setDrawRange(0, 0);
+      proxy.onBeforeShadow = () => shadowGeometry.setDrawRange(0, Infinity);
+      proxy.onAfterShadow = () => shadowGeometry.setDrawRange(0, 0);
+      group.add(proxy);
+    }
   }
 
   const tracker = new Group(); tracker.name = 'Tracker assembly';
@@ -191,7 +190,9 @@ export async function createProductCollar(detail = false, innerOcclusion = .46) 
   for (const a of KEEPERS) {
     const loop = keeper(plastic); loop.name = 'Strap keeper'; loop.position.copy(bandPoint(a)); loop.quaternion.copy(bandRotation(a)); group.add(loop);
   }
-  group.traverse(o => { if (o instanceof Mesh) { o.castShadow = detail || !(o instanceof InstancedMesh); o.receiveShadow = true; } });
+  group.traverse(o => { if (o instanceof Mesh) { o.castShadow = o.userData.shadowProxy || (adaptive ? !(o instanceof InstancedMesh) : detail || !(o instanceof InstancedMesh)); o.receiveShadow = !o.userData.shadowProxy; } });
   const bounds = new Box3().setFromObject(group); if (!Number.isFinite(bounds.max.length())) throw new Error('Invalid collar geometry');
-  return { group, tracker };
+  const detailController = adaptive ? new CollarDetail(yarns) : undefined;
+  if (detailController) { detailController.update(0); geometry.dispose(); }
+  return { group, tracker, detailController };
 }

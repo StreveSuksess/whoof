@@ -8,8 +8,11 @@ export class HeroCard {
   private divider=this.card.querySelector<HTMLElement>('.dashed-rule')!;
   private title=SplitText.create(this.card.querySelector('h1,h2')!,{type:'lines',mask:'lines',autoSplit:false});
   private description=SplitText.create(this.card.querySelector('p')!,{type:'lines',mask:'lines',autoSplit:false});
-  resize(){this.title.split({type:'lines',mask:'lines',autoSplit:false});this.description.split({type:'lines',mask:'lines',autoSplit:false});}
+  private last='';
+  resize(){this.last='';this.title.split({type:'lines',mask:'lines',autoSplit:false});this.description.split({type:'lines',mask:'lines',autoSplit:false});}
+  dispose(){this.title.revert();this.description.revert();}
   render(scroll:number,elapsed:number,ready:boolean,reduced:boolean){
+    const key=[scroll,Math.min(elapsed,2),ready,reduced].join('/');if(key===this.last)return;this.last=key;
     const active=fit(scroll,.03,.61,1,0),time=reduced?3:elapsed;
     this.card.style.visibility=ready&&active>0?'visible':'hidden';
     if(!ready||active<=0)return;

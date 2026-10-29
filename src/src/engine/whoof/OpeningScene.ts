@@ -1,8 +1,10 @@
-import { AgXToneMapping, type Data3DTexture, Euler, Group, Object3D, PerspectiveCamera, Quaternion, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
+import { AgXToneMapping, BufferGeometry, Material, Mesh, type MeshStandardMaterial, type Texture, type Data3DTexture, Euler, Group, Object3D, PerspectiveCamera, Quaternion, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
 import { FrameAnimation } from '../FrameAnimation';
 import { loadBuf } from '../BufLoader';
 import { ease } from '../core/ease';
 import { createProductCollar } from './ProductCollar';
+import type {CollarDetail} from './CollarDetail';
+import {getRenderBudget,type QualityLevel} from './landing/RenderQuality';
 import { matchOpeningMaterials, openingColorLook, openingEnvironment } from './OpeningLighting';
 import {collarLift} from './OpeningTransition';
 import {getStoryState,getStorySpin,getStoryFraming} from './landing/StoryMotion';
@@ -36,7 +38,8 @@ export class OpeningScene {
   private appScene?:AppPhoneScene;private appLights?:AppLighting;private appEnvironment?:WebGLRenderTarget;private appRendered=false;private appUnavailable=false;private appPreparation?:Promise<void>;
   private trustLights?:AppLighting;private trustPreparation?:Promise<void>;private trustRendered=false;private trustUnavailable=false;
   private endingScene?:KibbleScene;private endingPreparation?:Promise<void>;
-  private sketchReveal=0;
+  private disposed=false;private loading?:Promise<void>;
+  private sketchReveal=0;private collarDetail?:CollarDetail;private quality:QualityLevel=2;
   private trustProductPosition=new Vector3();private trustProductScale=new Vector3();private trustProductRotation=new Quaternion();
   private trustCameraPosition=new Vector3();private trustCameraRotation=new Quaternion();
   width=1;height=1;mobile=false;portrait=false;
@@ -47,26 +50,44 @@ export class OpeningScene {
     this.product.add(this.model);this.scene.add(this.product);
 
   }
-  async load(onProgress:(n:number)=>void){
+  load(onProgress:(n:number)=>void){return this.loading??=this.loadContent(onProgress);}
+  private async loadContent(onProgress:(n:number)=>void){
     onProgress(18);
     await Promise.all([
       // The captured table already blocks lower-hemisphere light. Do not apply
       // the review studio's stronger inner-band occlusion on top of that.
-      Promise.all([createProductCollar(true,.78),openingColorLook()]).then(([c,look])=>{this.colorLook=look;matchOpeningMaterials(c.group,look);this.model.add(c.group);onProgress(74);}),
+      Promise.all([createProductCollar(true,.78,true),openingColorLook()]).then(([c,look])=>{this.collarDetail=c.detailController;this.colorLook=look;matchOpeningMaterials(c.group,look);this.model.add(c.group);onProgress(74);}),
       openingEnvironment(this.renderer).then(target=>{this.studioEnvironment=target;this.scene.environment=target.texture;}),
       import('./landing/StoryLighting').then(({StoryLighting})=>{this.storyLights=new StoryLighting(this.scene);}),
       loadBuf('/models/hero_camera.buf').then(g=>{this.cameraTrack.setTarget(this.sourceCamera);this.cameraTrack.setGeometry(g);this.cameraTrack.applyTransform(0);this.originCamera.copy(this.sourceCamera.quaternion);}),
       loadBuf('/models/coaster_hero_animation.buf').then(g=>{this.productTrack.setTarget(this.sourceProduct);this.productTrack.setGeometry(g);this.productTrack.applyTransform(0);this.originProduct.copy(this.sourceProduct.quaternion).invert();})
-    ]);onProgress(100);
+    ]);
+    await this.renderer.compileAsync(this.scene,this.camera);onProgress(100);
   }
   resize(width:number,height:number){
     this.width=width;this.height=height;this.mobile=width<=600;this.portrait=width/height<=1;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,this.mobile?1.5:1.8));this.renderer.setSize(width,height);
+    this.renderer.setPixelRatio(getRenderBudget(width,height,window.devicePixelRatio,this.quality).ratio);this.renderer.setSize(width,height);
+    const budget=getRenderBudget(width,height,window.devicePixelRatio,this.quality);
+    this.offerSketches?.setQuality(budget.bloomLimit);this.endingScene?.setQuality(budget.endingLimit);
     this.offerSketches?.resize(width,height);
     this.endingScene?.resize(width,height);
   }
+  setQuality(level:QualityLevel){
+    if(this.quality===level)return;this.quality=level;this.resize(this.width,this.height);
+  }
+  private drawProduct(){
+    const pixels=2.12*this.product.scale.x*this.camera.projectionMatrix.elements[5]*this.height*this.renderer.getPixelRatio()/(2*this.camera.position.distanceTo(this.product.position));
+    this.collarDetail?.update(pixels);
+    this.renderer.render(this.scene,this.camera);
+  }
+  private environmentPreparation?:Promise<WebGLRenderTarget>;
+  private prepareEnvironment(){
+    return this.environmentPreparation??=import('./landing/app/AppEnvironment').then(({createAppEnvironment})=>this.appEnvironment=createAppEnvironment(this.renderer));
+  }
   prepareEnding(){
-    if(!this.endingPreparation)this.endingPreparation=import('./landing/ending/KibbleScene').then(({KibbleScene})=>{this.endingScene=new KibbleScene(this.renderer);this.endingScene.resize(this.width,this.height);}).catch(error=>console.warn('Whoof ending unavailable; final action remains available.',error));
+    if(!this.endingPreparation)this.endingPreparation=Promise.all([import('./landing/ending/KibbleScene'),this.prepareEnvironment()]).then(async([{KibbleScene},environment])=>{
+      const scene=new KibbleScene(this.renderer,environment.texture);scene.setQuality(getRenderBudget(this.width,this.height,window.devicePixelRatio,this.quality).endingLimit);scene.resize(this.width,this.height);await scene.prepare();this.endingScene=scene;
+    }).catch(error=>console.warn('Whoof ending unavailable; final action remains available.',error));
     return this.endingPreparation;
   }
   get endingReady(){return !!this.endingScene;}
@@ -74,8 +95,16 @@ export class OpeningScene {
   renderEnding(dt:number,px:number,py:number,progress:number,reduced:boolean,coarse:boolean,pointer:boolean){this.endingScene?.render(dt,px,py,progress,reduced,coarse,pointer);}
   disposeEnding(){this.endingScene?.dispose();}
   prepareApp(){
-    if(!this.appPreparation)this.appPreparation=Promise.all([import('./landing/app/AppPhoneScene'),import('./landing/app/AppLighting'),import('./landing/app/AppEnvironment')]).then(([{AppPhoneScene},{AppLighting},{createAppEnvironment}])=>{this.appEnvironment=createAppEnvironment(this.renderer);this.appScene=new AppPhoneScene(this.renderer,this.appEnvironment.texture,this.colorLook);this.appLights=new AppLighting(this.scene,true,this.appEnvironment.texture);}).catch(error=>{this.appUnavailable=true;console.warn('Whoof app scene unavailable; native examples remain available.',error);});
+    if(!this.appPreparation)this.appPreparation=Promise.all([import('./landing/app/AppPhoneScene'),import('./landing/app/AppLighting'),this.prepareEnvironment()]).then(async([{AppPhoneScene},{AppLighting},environment])=>{
+      const phone=new AppPhoneScene(this.renderer,environment.texture,this.colorLook);this.appLights=new AppLighting(this.scene,true,environment.texture);
+      await Promise.all([phone.prepare(this.width),this.warmProduct(this.appLights)]);this.appScene=phone;
+    }).catch(error=>{this.appUnavailable=true;console.warn('Whoof app scene unavailable; native examples remain available.',error);});
     return this.appPreparation;
+  }
+  private async warmProduct(lighting:AppLighting){
+    let pending:Promise<unknown>=Promise.resolve();
+    lighting.render(this.renderer,this.width,()=>{pending=this.renderer.compileAsync(this.scene,this.camera);},'warmup');
+    await pending;
   }
   get appFailed(){return this.appUnavailable;}
   get appReady(){return !!this.appScene;}
@@ -90,11 +119,11 @@ export class OpeningScene {
     this.product.scale.setScalar(diameter*2*Math.tan(32*Math.PI/360)*Math.hypot(9.4,5.6)/(this.height*2.12));
     this.camera.position.set(0,10.255,5.6);this.camera.lookAt(0,.855,0);this.camera.fov=32;
     this.camera.setViewOffset(this.width,this.height,this.width*.5-state.collarX,this.height*.5-state.collarY,this.width,this.height);
-    this.renderer.autoClear=false;this.renderer.clearDepth();this.appLights?.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,state.t].join('/'));this.renderer.autoClear=true;
+    this.renderer.autoClear=false;this.renderer.clearDepth();this.appLights?.render(this.renderer,this.width,()=>this.drawProduct(),[this.height,state.t].join('/'));this.renderer.autoClear=true;
   }
-  disposeApp(){this.appScene?.dispose();this.appLights?.dispose();this.appEnvironment?.dispose();}
+  disposeApp(){this.appScene?.dispose();this.appLights?.dispose();}
   prepareOffer(){
-    if(!this.offerPreparation)this.offerPreparation=import('./landing/OfferSketches').then(async({OfferSketches})=>{this.offerSketches=new OfferSketches(this.renderer);await this.offerSketches.load();this.offerSketches.resize(this.width,this.height);}).catch(error=>console.warn('Whoof sketchbook unavailable; offer and product remain available.',error));
+    if(!this.offerPreparation)this.offerPreparation=import('./landing/OfferSketches').then(async({OfferSketches})=>{this.offerSketches=new OfferSketches(this.renderer);await this.offerSketches.load();this.offerSketches.setQuality(getRenderBudget(this.width,this.height,window.devicePixelRatio,this.quality).bloomLimit);this.offerSketches.resize(this.width,this.height);await this.offerSketches.prepare();}).catch(error=>console.warn('Whoof sketchbook unavailable; offer and product remain available.',error));
     return this.offerPreparation;
   }
   get offerReady(){return this.offerSketches?.isReady||false;}
@@ -106,7 +135,7 @@ export class OpeningScene {
     this.renderer.autoClear=true;this.offerSketches?.update(dt,px,py,reduced?1:progress,reduced,coarse,rawX,rawY);
     this.renderer.setRenderTarget(null);this.renderer.clear();this.renderer.autoClear=false;
     if(this.offerSketches?.isReady)this.offerSketches.render();
-    this.renderer.clearDepth();this.renderer.render(this.scene,this.camera);this.renderer.autoClear=true;
+    this.renderer.clearDepth();this.drawProduct();this.renderer.autoClear=true;
   }
   private applyOfferPose(state:ReturnType<typeof getOfferState>,px:number,py:number,reduced:boolean,exitOffset=0){
     this.product.quaternion.setFromEuler(new Euler(-.40+(reduced?0:py)*.045,state.yaw+(reduced?0:px)*.045,-.14));
@@ -140,10 +169,10 @@ export class OpeningScene {
     this.camera.setViewOffset(fullW+(this.width-fullW)*lift,fullH+(this.height-fullH)*lift,
       (fullW-this.width)/2*(1-lift)+(this.width*.5-centerX)*lift,
       ((fullH-this.height)/2-shift*fullH)*(1-lift)-this.height*.01*lift,this.width,this.height);
-    this.renderer.render(this.scene,this.camera);
+    this.drawProduct();
   }
   prepareTrust(){
-    if(!this.trustPreparation)this.trustPreparation=import('./landing/app/AppLighting').then(({AppLighting})=>{this.trustLights=new AppLighting(this.scene,true);this.trustLights.key.intensity=.85;}).catch(error=>{this.trustUnavailable=true;console.warn('Whoof trust scene unavailable; native content remains available.',error);});
+    if(!this.trustPreparation)this.trustPreparation=import('./landing/app/AppLighting').then(async({AppLighting})=>{this.trustLights=new AppLighting(this.scene,true);this.trustLights.key.intensity=.85;await this.warmProduct(this.trustLights);}).catch(error=>{this.trustUnavailable=true;console.warn('Whoof trust scene unavailable; native content remains available.',error);});
     return this.trustPreparation;
   }
   get trustFailed(){return this.trustUnavailable;}
@@ -153,8 +182,8 @@ export class OpeningScene {
     this.storyLights?.setStrength(0);
     this.applyTrustPose(state,virtual,px,py,reduced);
     this.renderer.autoClear=true;
-    if(this.trustLights){this.trustLights.key.intensity=.85;this.trustLights.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'));this.trustRendered=true;}
-    else this.renderer.render(this.scene,this.camera);
+    if(this.trustLights){this.trustLights.key.intensity=.85;this.trustLights.render(this.renderer,this.width,()=>this.drawProduct(),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'));this.trustRendered=true;}
+    else this.drawProduct();
   }
   private applyTrustPose(state:TrustSceneState,virtual:number,px:number,py:number,reduced:boolean){
     this.applyWearPose(virtual,px,py,reduced);
@@ -202,13 +231,25 @@ export class OpeningScene {
     this.renderer.clearDepth();
     if(this.trustLights){
       this.trustLights.key.intensity=.85*(1-blend);
-      this.trustLights.render(this.renderer,this.width,()=>this.renderer.render(this.scene,this.camera),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'),.85+(this.scene.environmentIntensity-.85)*blend);this.trustRendered=true;
-    }else this.renderer.render(this.scene,this.camera);
+      this.trustLights.render(this.renderer,this.width,()=>this.drawProduct(),[this.height,...this.product.position.toArray(),...this.product.quaternion.toArray(),...this.product.scale.toArray()].join('/'),.85+(this.scene.environmentIntensity-.85)*blend);this.trustRendered=true;
+    }else this.drawProduct();
     this.renderer.autoClear=true;
   }
   disposeTrust(){this.trustLights?.dispose();}
   render(scroll:number,px:number,py:number,reduced:boolean){
-    this.storyLights?.setStrength(0);this.applyWearPose(scroll,px,py,reduced);this.renderer.render(this.scene,this.camera);
+    this.storyLights?.setStrength(0);this.applyWearPose(scroll,px,py,reduced);this.drawProduct();
+  }
+  dispose(){
+    if(this.disposed)return;this.disposed=true;
+    // Pending preparation can allocate after unmount; release only once it settles.
+    void Promise.allSettled([this.loading,this.appPreparation,this.trustPreparation,this.offerPreparation,this.endingPreparation]).then(()=>this.release());
+  }
+  private release(){
+    this.disposeApp();this.disposeTrust();this.disposeEnding();
+    this.appEnvironment?.dispose();this.studioEnvironment?.dispose();this.colorLook?.dispose();this.collarDetail?.dispose();this.offerSketches?.dispose();
+    const geometries=new Set<BufferGeometry>(),materials=new Set<Material>(),textures=new Set<Texture>();
+    this.model.traverse(o=>{if(!(o instanceof Mesh))return;geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material]){materials.add(m);const surface=m as MeshStandardMaterial;for(const texture of [surface.map,surface.bumpMap])if(texture)textures.add(texture);}});
+    geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());this.renderer.dispose();
   }
   private applyWearPose(scroll:number,px:number,py:number,reduced:boolean){
     const leave=collarLift(scroll),p=clamp((scroll-.45)/3);

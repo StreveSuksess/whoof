@@ -34,7 +34,7 @@ export async function openingColorLook() {
 export function matchOpeningMaterials(group: Group, colorLook: Data3DTexture) {
   const configured = new Set<MeshStandardMaterial>();
   group.traverse(object => {
-    if (!(object instanceof Mesh)) return;
+    if (!(object instanceof Mesh) || object.userData.shadowProxy) return;
     const material = object.material as MeshStandardMaterial;
     // The offline assembly has no artificial per-loop albedo stripes.
     if (object instanceof InstancedMesh) object.instanceColor = null;

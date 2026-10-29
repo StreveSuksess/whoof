@@ -1,5 +1,6 @@
+import {RenderQuality} from './RenderQuality';
 import {ease} from '../../core/ease';
-import {OpeningScene} from '../OpeningScene';
+import type {OpeningScene} from '../OpeningScene';
 import {HeroPlate} from '../HeroPlate';
 import {HeroCard} from '../HeroCard';
 import {GalleryVideo} from '../life/GalleryVideo';
@@ -26,7 +27,7 @@ export function bootLanding(){
   document.body.classList.add('is-ready');
   const root=$('.landing-v27'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
   const headerMotion=new HeaderMotion();
-  const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root);
+  const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root),quality=new RenderQuality();
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
   const owners=new OwnerPosters($('#owners'));
   const offer=new OfferStage($('#order'));
@@ -44,7 +45,7 @@ export function bootLanding(){
   let world:OpeningScene|undefined,worldRequested=false,worldFailed=false,worldReady=false,lastRender=-100,raf=0;
   let height=innerHeight,width=innerWidth,storyEnd=2,scroll=scrollY/innerHeight;
   let targetX=0,targetY=0,mouseX=0,mouseY=0,moved=false,visible=!document.hidden,previous=performance.now(),started=performance.now(),leftHero=false;
-  let initialHashPending=true;
+  let initialHashPending=true,disposed=false;
   let headerTop=28;
   let headerCheckScroll=-1,headerCheckActual=-1,headerBlocked=false;
   const listenerAbort=new AbortController(),signal=listenerAbort.signal;
@@ -70,8 +71,9 @@ export function bootLanding(){
   async function loadWorld(){
     if(worldRequested)return;worldRequested=true;
     try{
-      world=new OpeningScene($('#opening-canvas'));world.resize(width,height);
-      await world.load(()=>{});worldReady=true;lastRender=-100;
+      const {OpeningScene}=await import('../OpeningScene');
+      if(disposed)return;world=new OpeningScene($('#opening-canvas'));world.resize(width,height);
+      await world.load(()=>{});if(disposed){world.dispose();return;}worldReady=true;lastRender=-100;
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
@@ -95,7 +97,7 @@ export function bootLanding(){
   reduced.addEventListener('change',()=>{clips.forEach(updateClip);resize();lastRender=-100;},{signal});
   function update(now:number){
     if(!visible)return;
-    const dt=Math.min(.05,(now-previous)/1000);previous=now;
+    const frameMs=now-previous,dt=Math.min(.05,frameMs/1000);previous=now;
     if(accordions.update()){type.measure();measure();}
     const actual=scrollY/height;
     scroll+=(actual-scroll)*(reduced.matches?1:1-Math.exp(-9*dt));if(Math.abs(actual-scroll)<.0003)scroll=actual;
@@ -138,6 +140,7 @@ export function bootLanding(){
     if(worldReady&&Math.abs(ending.distance)<height*2.5)void world?.prepareEnding();
     if(!renderWorld)lastRender=-100;
     const needsFrame=inEnding?(!reduced.matches||Math.abs(sceneScroll-lastRender)>.00005||world?.endingNeedsFrame):(Math.abs(sceneScroll-lastRender)>.00005||Math.abs(targetX-mouseX)>.0001||Math.abs(targetY-mouseY)>.0001||inOffer&&world?.offerNeedsFrame||inApp&&world?.appNeedsFrame||inTrust&&world?.trustNeedsFrame||inPassage&&(world?.trustNeedsFrame||passage.blend>0&&world?.offerNeedsFrame));
+    if(quality.sample(frameMs,!!(world&&worldReady&&!worldFailed&&renderWorld&&needsFrame))){world?.setQuality(quality.level);lastRender=-100;}
     if(world&&worldReady&&!worldFailed&&renderWorld&&needsFrame){
       if(inPassage)world.renderProductPassage(trust.state,trust.wearVirtual,passage.local,mouseX,mouseY,dt,reduced.matches,coarse.matches,targetX,targetY,passage.exitOffset);
       else if(inEnding)world.renderEnding(dt,targetX,targetY,ending.progress,reduced.matches,coarse.matches,moved);
@@ -181,7 +184,7 @@ export function bootLanding(){
     $('.opening-progress span').style.transform='scaleY('+clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height))+')';
     raf=requestAnimationFrame(update);
   }
-  function suspend(){visible=false;cancelAnimationFrame(raf);accordions.finish();app.suspend();clips.forEach(clip=>clip.media.setPlaying(false));}
+  function suspend(){visible=false;cancelAnimationFrame(raf);accordions.finish();app.suspend();plate.suspend();quality.reset();clips.forEach(clip=>clip.media.setPlaying(false));}
   function resume(){if(visible)return;visible=true;app.resume();clips.forEach(updateClip);previous=performance.now();lastRender=-100;raf=requestAnimationFrame(update);}
   document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume(),{signal});
   addEventListener('pagehide',suspend,{signal});addEventListener('pageshow',event=>{if(event.persisted)resume();},{signal});
@@ -196,5 +199,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();world?.disposeApp();world?.disposeTrust();world?.disposeEnding();clips.forEach(c=>c.media.dispose());};
+  return ()=>{disposed=true;clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();clips.forEach(c=>c.media.dispose());};
 }
