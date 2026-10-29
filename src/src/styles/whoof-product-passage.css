@@ -9,5 +9,5 @@
 .has-product-world .trust-native-product{visibility:hidden}
 .has-product-passage .source-offer{background:transparent}
 .has-product-passage .offer-stage{z-index:4;background:transparent}
-.has-product-passage .offer-ghosts,.has-product-passage .offer-fallback{display:none}
+.has-product-passage .offer-ghosts,.has-product-world .offer-fallback{display:none}
 .has-product-passage .offer-picker,.has-product-passage .offer-panel{opacity:var(--offer-ui,1)}

@@ -12,7 +12,7 @@ const posters=[
     <div class="owners-rail">
       {posters.map(p=><article class:list={['owner-poster','owner-poster-'+p.id,{'owner-interlude':!p.motive}]} data-owner-poster data-motive={p.motive||undefined} style={'--poster-ratio:'+p.ratio} aria-hidden={!p.motive||undefined}>
         <div class="owner-poster-clipper"><div class="owner-poster-inner">
-          <img class="owner-poster-image" src={'/whoof/'+(p.folder||'owners-v33')+'/'+p.image+'.webp'} width="1536" height="1024" alt={p.alt||''} loading="lazy" decoding="async"/>
+          <img class="owner-poster-image" src={'/whoof/'+(p.folder||'owners-v33')+'/'+p.image+'.webp'} srcset={'/whoof/'+(p.folder||'owners-v33')+'/'+p.image+'-768.webp 768w, /whoof/'+(p.folder||'owners-v33')+'/'+p.image+'.webp 1536w'} sizes="(max-width:600px) calc(100vw - 40px), 100vw" width="1536" height="1024" alt={p.alt||''} loading="lazy" decoding="async"/>
           <div class="owner-poster-shade" aria-hidden="true"></div>
           {p.id==='puppy'&&<h2 id="owners-title" class="owner-poster-context">Почему владельцы<br/>заинтересовались Whoof</h2>}
           {p.motive?<><h3 class="owner-poster-title">{p.title![0]}<br/>{p.title![1]}</h3><p class="owner-poster-copy">{p.copy}</p></>:<p class="owner-poster-word">{p.word}</p>}

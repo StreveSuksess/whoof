@@ -6,10 +6,10 @@ export class AppScreen {
   readonly element=document.createElement('div');
   readonly width=1440;readonly height=3105;
   private key='';private day:SVGGElement;private week:SVGGElement;private dayClip:SVGRectElement;private weekClip:SVGRectElement;private selection:SVGRectElement;private cursor:SVGGElement;private time:SVGTextElement;private heading:SVGTextElement;private chrome:SVGElement[];
-  constructor(){
+  constructor(prefix='whoof-day'){
     this.element.className='app-vector-screen';
     Object.assign(this.element.style,{width:this.width+'px',height:this.height+'px',overflow:'hidden',borderRadius:'162px',backfaceVisibility:'hidden',pointerEvents:'none'});
-    this.element.innerHTML=renderAppScreenSvg();
+    this.element.innerHTML=renderAppScreenSvg(prefix);
     const svg=this.element.querySelector('svg')!;svg.setAttribute('aria-hidden','true');svg.style.width='100%';svg.style.height='100%';svg.style.display='block';
     const find=<T extends SVGElement>(name:string)=>this.element.querySelector<T>(`[data-art-${name}]`)!;
     this.day=find('day');this.week=find('week');this.dayClip=find('day-clip');this.weekClip=find('week-clip');this.selection=find('selection');this.cursor=find('cursor');this.time=find('time');this.heading=find('heading');this.chrome=[...this.element.querySelectorAll<SVGElement>('[data-art-chrome]')];

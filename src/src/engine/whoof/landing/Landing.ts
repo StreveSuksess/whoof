@@ -18,14 +18,18 @@ import {HeaderMotion,crossesHeader} from './HeaderMotion';
 import {Accordions} from './Accordions';
 import {KibbleStage} from './ending/KibbleStage';
 import {ProductPassageStage} from './ProductPassageStage';
+import {getSceneViewport,updateSceneViewport} from './SceneViewport';
+import {advanceSceneScroll} from './ScrollTransport';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
 
 export function bootLanding(){
+  updateSceneViewport();
   document.documentElement.classList.remove('no-js');
   document.body.classList.add('is-ready');
   const root=$('.landing-v27'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
+  root.classList.add('world-pending');
   const headerMotion=new HeaderMotion();
   const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root),quality=new RenderQuality();
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
@@ -43,14 +47,14 @@ export function bootLanding(){
   const clips=[...root.querySelectorAll<HTMLVideoElement>('[data-inline-video]')].map(element=>({media:new GalleryVideo(element),onscreen:false}));
   const themeRanges:{top:number;bottom:number;tone:string}[]=[];
   let world:OpeningScene|undefined,worldRequested=false,worldFailed=false,worldReady=false,lastRender=-100,raf=0;
-  let height=innerHeight,width=innerWidth,storyEnd=2,scroll=scrollY/innerHeight;
+  let {height,width}=getSceneViewport(),storyEnd=2,scroll=scrollY/height;
   let targetX=0,targetY=0,mouseX=0,mouseY=0,moved=false,visible=!document.hidden,previous=performance.now(),started=performance.now(),leftHero=false;
-  let initialHashPending=true,disposed=false;
+  let initialHashPending=true,disposed=false,warmTimer=0;
   let headerTop=28;
   let headerCheckScroll=-1,headerCheckActual=-1,headerBlocked=false;
   const listenerAbort=new AbortController(),signal=listenerAbort.signal;
   function measure(){
-    height=innerHeight;width=innerWidth;
+    ({height,width}=getSceneViewport());
     headerTop=parseFloat(getComputedStyle(header).top)||0;
     headerCheckActual=-1;
     ending.measure();
@@ -73,16 +77,30 @@ export function bootLanding(){
     try{
       const {OpeningScene}=await import('../OpeningScene');
       if(disposed)return;world=new OpeningScene($('#opening-canvas'));world.resize(width,height);
-      await world.load(()=>{});if(disposed){world.dispose();return;}worldReady=true;lastRender=-100;
+      await world.load(()=>{});if(disposed){world.dispose();return;}worldReady=true;root.classList.remove('world-pending');lastRender=-100;
+      const readyWorld=world;
+      warmTimer=window.setTimeout(()=>{
+        if(disposed||worldFailed||reduced.matches||document.hidden)return;
+        // Warm the next physical scene before a swipe arrives; do not allocate
+        // every later effect in parallel while the phone is still loading.
+        void readyWorld.prepareApp().then(()=>{if(!disposed&&!worldFailed)void readyWorld.prepareTrust();});
+      },250);
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
     }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
-  function resize(){height=innerHeight;width=innerWidth;owners.resize();app.resize();how.resize();trust.resize();ending.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();headerMotion.reset(scrollY);world?.resize(width,height);void plate.resize().catch(()=>{});lastRender=-100;}
+  function resize(preserve=false){
+    const position=preserve?sections.map(element=>({element,top:element.getBoundingClientRect().top+scrollY,size:element.offsetHeight})).find(s=>scrollY>=s.top&&scrollY<s.top+s.size):undefined;
+    const fraction=position?clamp((scrollY-position.top)/position.size):0;
+    ({height,width}=getSceneViewport());owners.resize();app.resize();how.resize();trust.resize();ending.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();
+    if(position){const top=position.element.getBoundingClientRect().top+scrollY+fraction*position.element.offsetHeight;if(Math.abs(top-scrollY)>1)window.scrollTo({top,behavior:'instant'});}
+    scroll=Math.max(0,scrollY/height);headerMotion.reset(scrollY);world?.resize(width,height);plate.setActive(scroll<2.1,width<=900||coarse.matches);void plate.resize().catch(()=>{});lastRender=-100;
+  }
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
+  const warmMedia=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){clips.find(c=>c.media.element===entry.target)?.media.prepare();warmMedia.unobserve(entry.target);}}),{rootMargin:`${height*3}px 0px`});
   const observer=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{const clip=clips.find(c=>c.media.element===entry.target);if(clip){clip.onscreen=entry.isIntersecting&&entry.intersectionRatio>.15;updateClip(clip);}});
   },{threshold:[0,.15,.5]});
-  clips.forEach(clip=>observer.observe(clip.media.element));
+  clips.forEach(clip=>{observer.observe(clip.media.element);warmMedia.observe(clip.media.element);});
   root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(anchor=>anchor.addEventListener('click',event=>{
     const top=anchorTop(anchor.hash);if(top===undefined)return;
     event.preventDefault();initialHashPending=false;
@@ -92,23 +110,31 @@ export function bootLanding(){
     window.scrollTo({top,behavior:direct?'instant':'smooth'});
   },{signal}));
   addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;moved=true;targetX=event.clientX/width*2-1;targetY=event.clientY/height*2-1;},{passive:true,signal});
-  addEventListener('resize',resize,{passive:true,signal});
-  for(const name of ['wheel','pointerdown','keydown'])addEventListener(name,()=>{initialHashPending=false;},{once:true,passive:true,signal});
+  let resizeFrame=0;
+  addEventListener('resize',()=>{
+    // Do not reset SplitText, section lengths, GPU targets or bitmap generations
+    // for each address-bar animation frame on a phone.
+    if(!updateSceneViewport())return;
+    cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>resize(true));
+  },{passive:true,signal});
+  // A native scroll event can also be the browser's initial fragment restore.
+  // Cancel on intent (including legacy touch), never on that automatic event.
+  for(const name of ['wheel','pointerdown','touchstart','touchmove','keydown'])addEventListener(name,()=>{initialHashPending=false;},{once:true,passive:true,signal});
   reduced.addEventListener('change',()=>{clips.forEach(updateClip);resize();lastRender=-100;},{signal});
   function update(now:number){
     if(!visible)return;
     const frameMs=now-previous,dt=Math.min(.05,frameMs/1000);previous=now;
     if(accordions.update()){type.measure();measure();}
     const actual=scrollY/height;
-    scroll+=(actual-scroll)*(reduced.matches?1:1-Math.exp(-9*dt));if(Math.abs(actual-scroll)<.0003)scroll=actual;
+    scroll=advanceSceneScroll(scroll,actual,dt,reduced.matches||coarse.matches||width<=900);
     mouseX+=(targetX-mouseX)*(1-Math.exp(-3*dt));mouseY+=(targetY-mouseY)*(1-Math.exp(-3*dt));
     const inHero=scroll<1.05;
     card.render(scroll,(now-started)/1000,true,reduced.matches);
     storyText.render(scroll,reduced.matches);
     storyRows.render(scroll*height,height,reduced.matches);
     owners.render(scroll*height,reduced.matches);
-    if((worldFailed||world?.appFailed)&&app.useFallback())resize();
-    if((worldFailed||world?.trustFailed)&&trust.useFallback())resize();
+    if((worldFailed||world?.appFailed)&&app.useFallback())resize(true);
+    if((worldFailed||world?.trustFailed)&&trust.useFallback())resize(true);
     app.render(scroll*height,reduced.matches);
     how.render(scroll*height,reduced.matches);
     trust.render(scroll*height,reduced.matches);
@@ -116,7 +142,8 @@ export function bootLanding(){
     ending.render(scrollY);
     passage.render(scroll*height,reduced.matches||trust.static||worldFailed);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
-    if(inHero){plate.render(worldReady?scroll:Math.min(scroll,.08),targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
+    plate.setActive(actual<2.1,width<=900||coarse.matches);
+    if(inHero){plate.render(scroll,targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
     const inEnding=ending.active,inPassage=passage.active&&!inEnding,inTrust=trust.active&&!inEnding&&!inPassage,inOffer=offer.active&&!inTrust&&!inEnding&&!inPassage,inApp=app.active&&!inOffer&&!inTrust&&!inEnding&&!inPassage;
     const heroWorld=getOwnerEntryState((scroll-storyEnd)*height,height).worldVisible?1:0;
@@ -188,16 +215,16 @@ export function bootLanding(){
   function resume(){if(visible)return;visible=true;app.resume();clips.forEach(updateClip);previous=performance.now();lastRender=-100;raf=requestAnimationFrame(update);}
   document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume(),{signal});
   addEventListener('pagehide',suspend,{signal});addEventListener('pageshow',event=>{if(event.persisted)resume();},{signal});
-  resize();void document.fonts.ready.then(resize);
+  resize();void document.fonts.ready.then(()=>{if(!disposed)resize(true);});
   // Source-style rails set their height in JS. Reconcile bookmarked sections
   // after fonts/load and native scroll restoration; yield to any user navigation.
   const pageLoaded=document.readyState==='complete'?Promise.resolve():new Promise<void>(resolve=>addEventListener('load',()=>resolve(),{once:true,signal}));
   void Promise.all([document.fonts.ready,pageLoaded]).then(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    if(!initialHashPending||!location.hash)return;
+    if(disposed||!initialHashPending||!location.hash)return;
     const top=anchorTop(location.hash);if(top===undefined)return;
     scroll=top/height;window.scrollTo({top,behavior:'instant'});initialHashPending=false;
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
   raf=requestAnimationFrame(update);
-  return ()=>{disposed=true;clearTimeout(prepareTimer);suspend();listenerAbort.abort();observer.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();clips.forEach(c=>c.media.dispose());};
+  return ()=>{disposed=true;clearTimeout(prepareTimer);clearTimeout(warmTimer);cancelAnimationFrame(resizeFrame);suspend();listenerAbort.abort();observer.disconnect();warmMedia.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();root.classList.remove('world-pending');clips.forEach(c=>c.media.dispose());};
 }

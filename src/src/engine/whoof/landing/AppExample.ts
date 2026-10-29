@@ -1,23 +1,29 @@
+import {getSceneViewport} from './SceneViewport';
 import {SplitText} from 'gsap/SplitText';
 import {GalleryVideo} from '../life/GalleryVideo';
 import {APP_TRAVEL_UNITS,getAppAuthoredTime,getAppScrollTime,getAppSceneState,getAppViewportClip,getAppTitleReveal,getAppPairCaptionProgress,range,type AppSceneState} from './app/AppMotion';
 import {ease} from '../../core/ease';
+import {AppScreen} from './app/AppScreen';
 type Caption={element:HTMLElement;title:SplitText;copy:HTMLElement};
 /** Owns native captions/media; phone rendering stays in the shared world. */
 export class AppExample {
   private atmosphere:HTMLElement;private nextTitle:HTMLElement;private nextLayer:HTMLElement;private nextSplit:SplitText;private titleManaged=false;private nextKey='';private host:HTMLElement;private stage:HTMLElement;private captions:Caption[];private film:HTMLElement;private media:GalleryVideo;private play:HTMLButtonElement;
+  private preview:HTMLElement;private previewScreen=new AppScreen('whoof-preview');
   private top=0;private size=1;private height=1;private width=1;private fallback=false;private static=false;private visible=true;private filmWanted=false;private last='';private attached?:HTMLCanvasElement;private original?:HTMLElement;private abort=new AbortController();
   active=false;progress=0;distance=Infinity;state:AppSceneState=getAppSceneState(-1000,1,1);headerTone='dark';
   constructor(private root:HTMLElement){
     this.nextTitle=document.getElementById('how-title')!;this.nextLayer=this.nextTitle.closest('[data-app-next-title]')!;this.nextSplit=SplitText.create(this.nextTitle,{type:'lines',mask:'lines'});this.atmosphere=root.querySelector('.app-atmosphere')!;this.host=root.querySelector('[data-app-world]')!;this.stage=root.querySelector('.app-stage')!;this.film=root.querySelector('.app-life-film')!;this.play=root.querySelector('.app-film-play')!;
     this.media=new GalleryVideo(root.querySelector('[data-app-film]')!);
+    this.preview=root.querySelector('.app-ready-preview')!;
+    Object.assign(this.previewScreen.element.style,{width:'100%',height:'auto',borderRadius:'0'});
+    const previewSvg=this.previewScreen.element.querySelector('svg')!;previewSvg.setAttribute('viewBox','0 475 1024 768');previewSvg.setAttribute('height','768');previewSvg.style.height='auto';this.preview.append(this.previewScreen.element);
     this.captions=[...root.querySelectorAll<HTMLElement>('[data-app-caption]')].map(element=>({element,title:SplitText.create(element.querySelector('h3')!,{type:'lines,words,chars',mask:'lines'}),copy:element.querySelector('p')!}));
     this.root.classList.add('has-app-stage');
     this.play.addEventListener('click',()=>{this.media.retry();this.media.setPlaying(true);this.play.hidden=!this.media.blocked;},{signal:this.abort.signal});
     this.stage.addEventListener('keydown',event=>{if(event.target!==this.stage||this.static||!['ArrowDown','ArrowUp'].includes(event.key))return;event.preventDefault();const stops=[0,1.9,3.3,4.3,5.9].map(getAppScrollTime),local=(scrollY-this.top)/this.height;const index=stops.reduce((a,n,i)=>Math.abs(n-local)<Math.abs(stops[a]-local)?i:a,0);const next=Math.max(0,Math.min(4,index+(event.key==='ArrowDown'?1:-1)));window.scrollTo({top:this.top+stops[next]*this.height,behavior:'smooth'});},{signal:this.abort.signal});
   }
   resize(){
-    this.height=innerHeight;this.width=innerWidth;this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.height=getSceneViewport().height;this.width=getSceneViewport().width;this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.root.classList.toggle('app-static',this.static);this.root.dataset.tone='dark';this.root.style.height=this.static?'':APP_TRAVEL_UNITS*this.height+'px';this.last='';
     const managed=!this.static;if(managed!==this.titleManaged){this.titleManaged=managed;this.nextLayer.parentElement!.classList.toggle('has-app-handoff',managed);this.nextLayer.style.visibility=managed?'hidden':'';this.nextLayer.style.clipPath='';this.nextTitle.style.opacity=managed?'1':'';this.nextTitle.style.transform='';this.nextKey='';}
     // Static reading must restore native markup, not clear SplitText's glyph
@@ -33,8 +39,10 @@ export class AppExample {
   render(scroll:number,reduced:boolean){
     this.distance=scroll-this.top;this.progress=this.distance/this.height;this.state=getAppSceneState(this.distance,this.height,this.width,reduced);
     const s=this.state;
+    if(this.distance> -this.height*3&&this.distance<this.size)this.media.prepare();
     const actualT=getAppAuthoredTime((scrollY-this.top)/this.height);
     const boundary=getAppViewportClip(this.top,this.size,scrollY,this.height),clip=`inset(${boundary.top}px 0 ${boundary.bottom}px 0)`;
+    const visibleBoundary=getAppViewportClip(this.top,this.size,scrollY,innerHeight),visibleClip=`inset(${visibleBoundary.top}px 0 ${visibleBoundary.bottom}px 0)`;
     const reveal=this.titleManaged?getAppTitleReveal(actualT,s.t):0;
     const nextKey=this.titleManaged?[reveal.toFixed(5),clip].join('/'):'native';
     if(nextKey!==this.nextKey){
@@ -46,9 +54,10 @@ export class AppExample {
     if(this.static){if(this.last==='static')return;this.last='static';this.resetStatic();return;}
     if(!this.active){if(this.last!=='inactive'){this.host.style.visibility='hidden';this.atmosphere.style.visibility='hidden';this.captions.forEach(c=>{c.element.style.visibility='hidden';c.element.setAttribute('aria-hidden','true');});this.film.style.visibility='hidden';this.last='inactive';}return;}
     const key=[s.t.toFixed(4),scrollY,this.visible].join('/');if(key===this.last)return;this.last=key;
+    if(!this.attached)this.previewScreen.update(s);this.preview.style.opacity=String(s.opacity*(1-s.context));
     this.root.style.setProperty('--app-paper',String(s.paper));this.root.style.setProperty('--app-caption-y',(this.height*(this.width<=600?.13:.15+.08*s.zoom))+'px');
     this.root.style.setProperty('--app-ink',s.paper>.45?'#26282b':'#f4f1eb');this.host.style.opacity=String(s.opacity);this.host.style.visibility=this.active?'visible':'hidden';this.atmosphere.style.visibility=this.active?'visible':'hidden';this.atmosphere.style.opacity=String(s.opacity);
-    this.host.style.clipPath=clip;this.atmosphere.style.clipPath=clip;
+    this.host.style.clipPath=visibleClip;this.atmosphere.style.clipPath=visibleClip;
     this.captions.forEach((c,index)=>{const weight=index===3?Math.min(s.captionWeights[index],getAppPairCaptionProgress(actualT)):s.captionWeights[index],show=ease.cubicOut(Math.min(1,weight*1.5));c.element.style.visibility=weight>.001?'visible':'hidden';c.element.setAttribute('aria-hidden',String(weight<.1));c.element.style.opacity=String(Math.min(1,weight*2));c.title.chars.forEach((char,i)=>{const p=range(show,i/Math.max(1,c.title.chars.length-1)*.3,1);(char as HTMLElement).style.transform=`translate3d(0,${(1-ease.cubicOut(p))*112}%,0)`;(char as HTMLElement).style.opacity=String(p);});c.copy.style.opacity=String(range(show,.28,.85));c.copy.style.transform=`translate3d(0,${(1-show)*18}px,0)`;});
     this.film.style.opacity=String(s.context);this.film.style.visibility=s.context>.001?'visible':'hidden';this.film.style.transform=`translate3d(${(1-ease.cubicOut(s.context))*-80}px,${(1-s.context)*30}px,0) rotate(${(1-s.context)*-6}deg)`;
   }
@@ -58,5 +67,5 @@ export class AppExample {
   }
   suspend(){this.visible=false;this.filmWanted=false;this.media.setPlaying(false);}
   resume(){this.visible=true;this.last='';}
-  dispose(){this.active=false;this.setCanvas(undefined);this.abort.abort();this.media.dispose();this.captions.forEach(c=>c.title.revert());this.nextSplit.revert();this.nextLayer.parentElement!.classList.remove('has-app-handoff');this.nextLayer.style.visibility='';this.nextLayer.style.clipPath='';this.nextTitle.style.opacity='';this.nextTitle.style.transform='';this.root.classList.remove('has-app-stage','app-static','has-app-world');this.root.style.height='';}
+  dispose(){this.active=false;this.setCanvas(undefined);this.abort.abort();this.media.dispose();this.previewScreen.dispose();this.captions.forEach(c=>c.title.revert());this.nextSplit.revert();this.nextLayer.parentElement!.classList.remove('has-app-handoff');this.nextLayer.style.visibility='';this.nextLayer.style.clipPath='';this.nextTitle.style.opacity='';this.nextTitle.style.transform='';this.root.classList.remove('has-app-stage','app-static','has-app-world');this.root.style.height='';}
 }

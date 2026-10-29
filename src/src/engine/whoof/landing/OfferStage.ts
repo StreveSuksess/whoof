@@ -1,3 +1,4 @@
+import {getSceneViewport} from './SceneViewport';
 import {SplitText} from 'gsap/SplitText';
 import {ease} from '../../core/ease';
 import {getOfferState,nextOfferTab} from './OfferMotion';
@@ -26,7 +27,7 @@ export class OfferStage {
     this.panels.forEach((panel,i)=>{panel.element.hidden=i!==index;panel.ratio=initial?1:0;});
   }
   resize(){
-    this.height=innerHeight;this.mobile=innerWidth<=600;this.top=this.product.getBoundingClientRect().top+scrollY;this.size=this.product.offsetHeight;this.previous='';
+    this.height=getSceneViewport().height;this.mobile=getSceneViewport().width<=600;this.top=this.product.getBoundingClientRect().top+scrollY;this.size=this.product.offsetHeight;this.previous='';
     this.panels.forEach(panel=>{panel.title.split({type:'words,chars'});panel.copy.split({type:'words,chars'});panel.ratio=1;});
   }
   render(scroll:number,dt:number,reduced:boolean){

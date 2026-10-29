@@ -1,8 +1,8 @@
 /* A single day-to-device passage, sharing the physical product renderer. */
-.app-day-scene{position:relative;background:#111315;color:#f4f1eb;--app-paper:0;--app-ink:#f4f1eb;--app-caption-y:15svh}
+.app-day-scene{position:relative;background:#111315;color:#f4f1eb;--app-paper:0;--app-ink:#f4f1eb;--app-caption-y:calc(var(--scene-vh, 1svh)*15)}
 .app-world-host{position:fixed;inset:0;z-index:3;pointer-events:none;visibility:hidden}
 .app-world-host canvas{position:relative;z-index:1;display:block;width:100%;height:100%;transition:none!important}
-.app-stage{position:relative;min-height:100svh;padding:120px var(--section-pad) 80px;outline-offset:-8px}
+.app-stage{position:relative;min-height:calc(var(--scene-vh, 1svh)*100);padding:120px var(--section-pad) 80px;outline-offset:-8px}
 .app-atmosphere{display:none;position:fixed;inset:0;z-index:2;visibility:hidden;background:radial-gradient(ellipse 52% 64% at 66% 50%,#84868a24,transparent 80%),radial-gradient(ellipse 58% 62% at 15% 75%,#68646320,transparent 80%),#111315;pointer-events:none}
 .app-atmosphere:after{content:'';position:absolute;inset:0;background:#f7f7f5;opacity:var(--app-paper)}
 .app-caption{position:relative;z-index:4;margin:0 0 70px;max-width:600px}
@@ -10,6 +10,9 @@
 .app-caption p{font-size:clamp(16px,1.35vw,21px);line-height:1.4;letter-spacing:-.025em;margin:26px 0 0;max-width:36ch;color:inherit;opacity:.65}
 .app-caption h3>div{padding-bottom:.16em;margin-bottom:-.16em}
 .app-static-media{display:block;width:min(500px,100%);height:auto;margin:45px 0;background:#f7f7f5}
+.app-ready-preview{display:none;position:absolute;left:48%;top:26%;width:48%;pointer-events:none}
+.app-ready-preview svg{display:block;width:100%;height:auto}
+.has-app-stage:not(.app-static):not(.has-app-world) .app-ready-preview{display:block}
 .app-life-film{position:relative;z-index:4;margin:35px 0 70px;width:min(370px,100%)}
 .app-life-film video{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
 .app-life-film figcaption{font-size:12px;line-height:1.35;margin:14px 0 0;color:#c9c8c3}
@@ -20,14 +23,14 @@
 .app-shortcuts a{padding:12px 0;display:flex;align-items:center;gap:22px;border-bottom:1px solid #f4f1eb30;transition:color .25s}
 .app-shortcuts a:hover{color:#fff}
 .has-app-stage:not(.app-static) .app-shortcuts{position:absolute;bottom:26px;left:5.5%}
-.has-app-stage:not(.app-static) .app-stage{position:sticky;top:0;height:100svh;min-height:0;padding:0;z-index:4}
+.has-app-stage:not(.app-static) .app-stage{position:sticky;top:0;height:calc(var(--scene-vh, 1svh)*100);min-height:0;padding:0;z-index:4}
 .has-app-stage:not(.app-static) .app-caption{position:absolute;left:5.5%;top:var(--app-caption-y);width:43%;max-width:650px;margin:0;visibility:hidden;color:var(--app-ink)}
 .has-app-stage:not(.app-static) .app-static-media,.has-app-stage:not(.app-static) .app-static-note{display:none}
-.has-app-stage:not(.app-static) .app-caption-context{top:14svh}
-.has-app-stage:not(.app-static) .app-caption-handoff{position:fixed;top:14svh;left:58%;width:36%;max-width:none;text-align:left}
+.has-app-stage:not(.app-static) .app-caption-context{top:calc(var(--scene-vh, 1svh)*14)}
+.has-app-stage:not(.app-static) .app-caption-handoff{position:fixed;top:calc(var(--scene-vh, 1svh)*14);left:58%;width:36%;max-width:none;text-align:left}
 .has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0;margin-right:0;font-size:18px}
-.has-app-stage:not(.app-static) .app-life-film{position:absolute;left:5.5%;top:44svh;width:min(29vw,30svh);margin:0;opacity:0;visibility:hidden;will-change:transform}
-.connection-intro{position:relative;min-height:100svh;padding-top:clamp(90px,11svh,145px)}
+.has-app-stage:not(.app-static) .app-life-film{position:absolute;left:5.5%;top:calc(var(--scene-vh, 1svh)*44);width:min(29vw,calc(var(--scene-vh, 1svh)*30));margin:0;opacity:0;visibility:hidden;will-change:transform}
+.connection-intro{position:relative;min-height:calc(var(--scene-vh, 1svh)*100);padding-top:clamp(90px,calc(var(--scene-vh, 1svh)*11),145px)}
 .connection-title-stage>.section-kicker,.connection-title-stage>h2{position:relative;z-index:4}
 .connection-title-stage>h2{margin-top:28px;max-width:12ch;font-size:clamp(42px,5vw,72px)}
 .how-it-works{padding-top:0!important}
@@ -44,23 +47,24 @@
  .has-app-stage:not(.app-static) .app-caption-handoff{left:58%;width:36%}
 }
 @media(max-width:600px){
+ .app-ready-preview{left:0;top:36%;width:100%}
  .app-stage{padding:110px 24px 50px}
  .app-caption h3{font-size:clamp(33px,8.2vw,43px);letter-spacing:-.055em}
  .app-caption p{font-size:14px;margin-top:18px;line-height:1.4}
- .has-app-stage:not(.app-static) .app-caption{left:24px;top:13svh;width:calc(100% - 48px);max-width:none}
- .has-app-stage:not(.app-static) .app-caption-context{top:13svh}
+ .has-app-stage:not(.app-static) .app-caption{left:24px;top:calc(var(--scene-vh, 1svh)*13);width:calc(100% - 48px);max-width:none}
+ .has-app-stage:not(.app-static) .app-caption-context{top:calc(var(--scene-vh, 1svh)*13)}
  .has-app-stage:not(.app-static) .app-caption-context h3{font-size:33px}
- .has-app-stage:not(.app-static) .app-caption-handoff{left:24px;top:16svh;width:calc(100% - 48px);text-align:left}
+ .has-app-stage:not(.app-static) .app-caption-handoff{left:24px;top:calc(var(--scene-vh, 1svh)*16);width:calc(100% - 48px);text-align:left}
  .has-app-stage:not(.app-static) .app-caption-handoff p{margin-left:0}
- .has-app-stage:not(.app-static) .app-life-film{left:24px;top:47svh;width:31vw}
+ .has-app-stage:not(.app-static) .app-life-film{left:24px;top:calc(var(--scene-vh, 1svh)*47);width:31vw}
  .app-life-film figcaption{font-size:10px;max-width:14ch;margin-top:10px}
  .has-app-stage:not(.app-static) .app-shortcuts{left:24px;bottom:16px;font-size:11px;gap:26px}
  .connection-title-stage>h2{margin-top:55px;font-size:42px}
 }
 @media(max-height:600px) and (min-width:601px){
  .app-caption h3{font-size:40px}.app-caption p{font-size:14px;margin-top:16px}
- .has-app-stage:not(.app-static) .app-caption-context{top:18svh}
- .has-app-stage:not(.app-static) .app-life-film{left:42%;top:28svh;width:24svh}
+ .has-app-stage:not(.app-static) .app-caption-context{top:calc(var(--scene-vh, 1svh)*18)}
+ .has-app-stage:not(.app-static) .app-life-film{left:42%;top:calc(var(--scene-vh, 1svh)*28);width:calc(var(--scene-vh, 1svh)*24)}
 }
 
 .has-app-stage:not(.app-static)>.app-atmosphere{display:block}
@@ -73,7 +77,7 @@
 .app-stage:focus{outline:none}.app-stage:focus-visible{outline:1px dashed #a4a5a680;outline-offset:-10px}
 
 .has-app-handoff .connection-title-stage{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
-.has-app-handoff .connection-title-stage>h2{position:absolute;left:var(--section-pad);top:14svh;width:calc(100% - var(--section-pad)*2);max-width:none;margin:0;text-align:center;z-index:4;pointer-events:none}
+.has-app-handoff .connection-title-stage>h2{position:absolute;left:var(--section-pad);top:calc(var(--scene-vh, 1svh)*14);width:calc(100% - var(--section-pad)*2);max-width:none;margin:0;text-align:center;z-index:4;pointer-events:none}
 
 .has-app-handoff .connection-title-stage>.section-kicker{display:none}
 .connection-title-stage h2>div{padding-bottom:.16em;margin-bottom:-.16em}

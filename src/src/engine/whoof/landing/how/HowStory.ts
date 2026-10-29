@@ -1,3 +1,4 @@
+import {getSceneViewport} from '../SceneViewport';
 import {SplitText} from 'gsap/SplitText';
 import {ease} from '../../../core/ease';
 import {fit} from '../../../core/math';
@@ -27,12 +28,12 @@ export class HowStory {
   }
   resize(){
     this.static=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.root.classList.toggle('how-static',this.static);this.root.style.height=this.static?'':HOW_SCROLL_UNITS*innerHeight+'px';
-    this.top=this.root.getBoundingClientRect().top+scrollY;this.height=innerHeight;
+    this.root.classList.toggle('how-static',this.static);this.root.style.height=this.static?'':HOW_SCROLL_UNITS*getSceneViewport().height+'px';
+    this.top=this.root.getBoundingClientRect().top+scrollY;this.height=getSceneViewport().height;
     this.width=this.frame.getBoundingClientRect().width;
     const thumb=this.root.querySelector<HTMLElement>('.how-thumb')!;
     this.thumbStep=thumb.getBoundingClientRect().width+parseFloat(getComputedStyle(this.thumbs[0]).gap||'0');
-    this.fromX=(innerWidth-this.word.offsetWidth)/2;this.fromY=this.height*.47-this.word.offsetHeight/2;
+    this.fromX=(getSceneViewport().width-this.word.offsetWidth)/2;this.fromY=this.height*.47-this.word.offsetHeight/2;
     this.toX=this.anchor.offsetLeft;this.toY=this.anchor.offsetTop;
     this.scale=parseFloat(getComputedStyle(this.anchor).fontSize)/parseFloat(getComputedStyle(this.word).fontSize);
     this.splits.flat().forEach(s=>s.split(lineOptions));this.last='';
@@ -47,8 +48,8 @@ export class HowStory {
     if(this.static||reduced)return;
     // Actual native sticky bounds gate the eased transport, including fast reverse scroll.
     const actual=(scrollY-this.top)/this.height;
+    if(!this.prepared&&actual> -4){this.prepared=true;this.root.querySelectorAll<HTMLImageElement>('.how-photo').forEach(image=>{image.loading='eager';});}
     if(actual< -1.1||actual>HOW_SCROLL_UNITS+.1){this.last='';return;}
-    if(!this.prepared){this.prepared=true;this.root.querySelectorAll<HTMLImageElement>('.how-photo').forEach(image=>{image.loading='eager';});}
     const t=(scroll-this.top)/this.height;
     const key=t.toFixed(5);if(key===this.last)return;this.last=key;
     const s=getHowState(t);this.active=s.active;
@@ -56,7 +57,7 @@ export class HowStory {
     this.frame.style.clipPath=`inset(${(1-s.reveal)*50}% 0)`;
     this.frame.style.visibility=s.reveal>.001?'visible':'hidden';
     this.frame.inert=s.reveal<.95;
-    const x=mix(this.fromX,this.toX,s.titleShrink)+(1-s.titleSlide)*innerWidth,y=mix(this.fromY,this.toY,s.titleShrink);
+    const x=mix(this.fromX,this.toX,s.titleShrink)+(1-s.titleSlide)*getSceneViewport().width,y=mix(this.fromY,this.toY,s.titleShrink);
     this.word.style.transform=`translate3d(${x}px,${y}px,0) scale(${mix(1,this.scale,s.titleShrink)})`;
     this.kicker.style.transform=`translate3d(${mix(this.fromX,this.toX,s.titleShrink)}px,${y-mix(32,23,s.titleShrink)}px,0)`;
     this.glows.forEach((glow,i)=>{const r=s.pulse*190;glow.style.maskImage=`radial-gradient(ellipse at center,#000 ${Math.max(0,r-48)}%,transparent ${Math.max(.01,r)}%)`;glow.style.opacity=String(s.glow*(i===0?.9:.65));});

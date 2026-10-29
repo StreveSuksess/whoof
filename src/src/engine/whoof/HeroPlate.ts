@@ -1,3 +1,4 @@
+import {getSceneViewport} from './landing/SceneViewport';
 import {PoseFrameCache} from './PoseFrameCache';
 import {HeroPropMotion,type PropKind} from './HeroPropMotion';
 import {collarContact} from './OpeningTransition';
@@ -22,6 +23,7 @@ export class HeroPlate {
   private format=''; private generation=0;
   private last={x:0,y:0}; private pointerReady=false;
   private layout=''; private allowSequences=false;private cache?:PoseFrameCache;private cachePlan='';private cachePaused=false;
+  private active=true;
   moving=false; ready=false;
   constructor(){
     for(const name of ['background','keys','leash','ball','shadow','collar']){
@@ -40,8 +42,9 @@ export class HeroPlate {
     return createImageBitmap(await response.blob());
   }
   async resize(){
+    if(!this.active)return;
     this.layout='';this.pointerReady=false;
-    const format=innerWidth/innerHeight<=1?'portrait':'landscape';
+    const format=getSceneViewport().width/getSceneViewport().height<=1?'portrait':'landscape';
     if(format===this.format&&this.ready)return;
     this.format=format;this.ready=false;this.element.classList.remove('has-layers');const generation=++this.generation;
     this.cache?.dispose();this.cache=new PoseFrameCache(src=>this.bitmap(src));this.cachePlan='';this.cachePaused=false;
@@ -87,6 +90,17 @@ export class HeroPlate {
     if(this.cachePaused===active){this.cachePaused=!active;this.cache.setPaused(!active);}
   }
   get decodedBytes(){return this.cache?.bytes||0;}
+  setActive(active:boolean,release=false){
+    if(active===this.active)return;this.active=active;
+    if(active)void this.resize().catch(()=>{});
+    else if(release){
+      // Phone scenes do not need three full tabletop layers and neutral prop
+      // buffers resident while rendering the App/price. The original beauty
+      // remains available until these cached images decode on the way back.
+      this.generation++;this.cache?.dispose();this.cache=undefined;this.meta=undefined;this.ready=false;this.format='';this.layout='';this.element.classList.remove('has-layers');
+      this.images.forEach(image=>image.removeAttribute('src'));this.props.forEach(p=>{p.loaded=false;p.drawn=NaN;p.canvas.width=p.canvas.height=1;});
+    }else this.suspend();
+  }
   suspend(){this.requestPoses(false);}
   dispose(){this.generation++;this.cache?.dispose();this.props.forEach(p=>{p.canvas.width=p.canvas.height=1;});}
   private draw(p:Prop){
@@ -114,7 +128,7 @@ export class HeroPlate {
     this.moving=false;if(!this.ready||!this.meta)return;
     const allowSequences=!reduced&&!coarse;
     this.allowSequences=allowSequences;
-    const w=innerWidth,h=innerHeight,scale=Math.max(w/this.meta.width,h/this.meta.height),ow=this.meta.width*scale,oh=this.meta.height*scale;
+    const w=getSceneViewport().width,h=getSceneViewport().height,scale=Math.max(w/this.meta.width,h/this.meta.height),ow=this.meta.width*scale,oh=this.meta.height*scale;
     const mouse={x:(px+1)*w/2,y:(py+1)*h/2};
     if(!this.pointerReady||!pointerActive){this.last=mouse;this.pointerReady=pointerActive;}
     // Entering the window or teleporting focus is not an impact on an object.

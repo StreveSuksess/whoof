@@ -1,3 +1,4 @@
+import {getSceneViewport} from './landing/SceneViewport';
 import { SplitText } from 'gsap/SplitText';
 import { ease } from '../core/ease';
 import { fit } from '../core/math';
@@ -16,12 +17,12 @@ export class HeroCard {
     const active=fit(scroll,.03,.61,1,0),time=reduced?3:elapsed;
     this.card.style.visibility=ready&&active>0?'visible':'hidden';
     if(!ready||active<=0)return;
-    const shift=reduced?0:fit(time,.5,1,-Math.min(innerWidth*.03125,40),0,ease.cubicOut);
+    const shift=reduced?0:fit(time,.5,1,-Math.min(getSceneViewport().width*.03125,40),0,ease.cubicOut);
     this.card.style.transform=`translate3d(${shift}px,0,0)`;
     // Original blurBox has two ends that enter at different times; radius is 8% of viewport.
     const a=fit(active*1.5,0,1,0,1)*fit(time,.5,1.5,0,1);
     const b=fit(active*1.5,.5,1.5,0,1)*fit(time,1,2,0,1);
-    this.card.style.setProperty('--glass-blur',`${Math.min(100,innerHeight*.08)*Math.max(a,b)}px`);
+    this.card.style.setProperty('--glass-blur',`${Math.min(100,getSceneViewport().height*.08)*Math.max(a,b)}px`);
     this.card.style.setProperty('--glass-a',String(.15*a));
     this.card.style.setProperty('--glass-b',String(.15*b));
     this.card.style.setProperty('--glass-outline',String(.17*a));

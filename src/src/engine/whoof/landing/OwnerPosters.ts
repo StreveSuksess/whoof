@@ -1,3 +1,4 @@
+import {getSceneViewport} from './SceneViewport';
 import {getOwnerPosterState,type PosterBounds} from './OwnerPosterMotion';
 type Poster={element:HTMLElement;clipper:HTMLElement;image:HTMLImageElement;inner:HTMLElement};
 
@@ -8,7 +9,7 @@ export class OwnerPosters {
   private posters:Poster[];
   private bounds:PosterBounds[]=[];
   private top=0;private width=1;private height=1;private movable=0;private mobile=false;
-  private previous='';private reduced=false;
+  private previous='';private reduced=false;private prepared=false;
   private signal=new AbortController();
   constructor(private root:HTMLElement){
     this.stage=root.querySelector<HTMLElement>('.owners-stage')!;this.rail=root.querySelector<HTMLElement>('.owners-rail')!;
@@ -26,8 +27,8 @@ export class OwnerPosters {
   }
   resize(){
     this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.root.classList.toggle('owners-static',this.reduced);
-    this.height=innerHeight;this.mobile=innerWidth<=600;
-    this.width=this.mobile?this.rail.clientWidth:innerWidth;
+    this.height=getSceneViewport().height;this.mobile=getSceneViewport().width<=600;
+    this.width=this.mobile?this.rail.clientWidth:getSceneViewport().width;
     this.rail.style.transform='none';
     this.posters.forEach(p=>{p.element.style.transform='none';p.element.style.visibility='visible';p.inner.style.opacity='1';p.clipper.style.width='100%';p.image.style.transform='none';});
     this.bounds=this.posters.map(p=>({left:p.element.offsetLeft,width:p.element.offsetWidth}));
@@ -38,6 +39,7 @@ export class OwnerPosters {
   render(scroll:number,reduced:boolean){
     if(reduced)return;
     const local=scroll-this.top;
+    if(!this.prepared&&local> -this.height*4){this.prepared=true;this.posters.forEach(p=>{p.image.loading='eager';});}
     const state=getOwnerPosterState(local,this.height,this.width,this.movable,this.bounds,this.mobile);
     const key=[state.offset.toFixed(2),state.clip.toFixed(4),state.backdrop.toFixed(4),this.mobile].join('/');
     if(key===this.previous)return;this.previous=key;
@@ -48,7 +50,6 @@ export class OwnerPosters {
       p.element.style.visibility=panel.visible?'visible':'hidden';p.inner.style.opacity=String(panel.opacity);
       p.element.style.transform=this.mobile?`translate3d(${panel.x}px,0,0)`:'none';
       p.image.style.transform=this.mobile?'none':`translate3d(${panel.imageX}px,0,0)`;
-      if(Math.abs(index-state.active)<=2)p.image.loading='eager';
     });
   }
   dispose(){this.signal.abort();this.root.classList.remove('has-owner-posters','owners-static');this.root.style.height='';this.root.style.removeProperty('--owner-cover');}

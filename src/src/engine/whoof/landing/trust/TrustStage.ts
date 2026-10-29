@@ -1,3 +1,4 @@
+import {getSceneViewport} from '../SceneViewport';
 import {SplitText} from 'gsap/SplitText';
 import {ease} from '../../../core/ease';
 import {getTrustState,getTrustClip,TRUST_SCROLL_UNITS,type TrustSceneState} from './TrustMotion';
@@ -20,8 +21,8 @@ export class TrustStage {
   resize(){
     this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.root.classList.toggle('trust-static',this.static);
-    this.root.style.height=this.static?'':TRUST_SCROLL_UNITS*innerHeight+'px';
-    const bounds=this.root.getBoundingClientRect();this.top=bounds.top+scrollY;this.end=bounds.bottom+scrollY;this.height=innerHeight;this.width=innerWidth;this.previous='';
+    this.root.style.height=this.static?'':TRUST_SCROLL_UNITS*getSceneViewport().height+'px';
+    const bounds=this.root.getBoundingClientRect();this.top=bounds.top+scrollY;this.end=bounds.bottom+scrollY;this.height=getSceneViewport().height;this.width=getSceneViewport().width;this.previous='';
     this.titleSplit.split(options);this.episodes.forEach(e=>e.splits.forEach(s=>s.split(options)));
     if(this.static){this.setCanvas(undefined);this.reset();}
   }
@@ -31,7 +32,7 @@ export class TrustStage {
     const actual=scrollY-this.top;
     this.active=!this.static&&!reduced&&actual>-this.height&&actual<this.end-this.top;
     const boundary=getTrustClip(this.top,this.end-this.top,scrollY,this.height);
-    const clip=`inset(${boundary.top}px 0 ${boundary.bottom}px 0)`;
+    const visibleBoundary=getTrustClip(this.top,this.end-this.top,scrollY,innerHeight),clip=`inset(${visibleBoundary.top}px 0 ${visibleBoundary.bottom}px 0)`;
     this.host.style.clipPath=clip;this.host.style.visibility=this.active?'visible':'hidden';
     if(this.static||reduced)return;
     const nav=this.height<=650&&this.width/this.height>1.2?62:this.width<=600?78:100;
