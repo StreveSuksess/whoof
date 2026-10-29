@@ -20,14 +20,17 @@ import {KibbleStage} from './ending/KibbleStage';
 import {ProductPassageStage} from './ProductPassageStage';
 import {getSceneViewport,updateSceneViewport} from './SceneViewport';
 import {advanceSceneScroll} from './ScrollTransport';
+import {EntryLoader} from './loading/EntryLoader';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
 
 export function bootLanding(){
+  // If the main bundle missed the early escape deadline, leave that visit in
+  // native reading mode. Late enhancement must not move an already-reading user.
+  if(document.querySelector<HTMLElement>('[data-entry-loader]')?.dataset.nativeOnly==='true')return ()=>{};
   updateSceneViewport();
   document.documentElement.classList.remove('no-js');
-  document.body.classList.add('is-ready');
   const root=$('.landing-v27'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
   root.classList.add('world-pending');
   const headerMotion=new HeaderMotion();
@@ -50,9 +53,23 @@ export function bootLanding(){
   let {height,width}=getSceneViewport(),storyEnd=2,scroll=scrollY/height;
   let targetX=0,targetY=0,mouseX=0,mouseY=0,moved=false,visible=!document.hidden,previous=performance.now(),started=performance.now(),leftHero=false;
   let initialHashPending=true,disposed=false,warmTimer=0;
+  let heroPhotoSettled=false,plateFailed=false,entryAppRequested=false;
   let headerTop=28;
   let headerCheckScroll=-1,headerCheckActual=-1,headerBlocked=false;
   const listenerAbort=new AbortController(),signal=listenerAbort.signal;
+  const entry=new EntryLoader(root,now=>{started=now;previous=now;});
+  plate.setPreparing(entry.active);
+  const photo=$<HTMLImageElement>('.hero-beauty img');
+  void photo.decode().catch(()=>{}).then(()=>{heroPhotoSettled=true;});
+  void document.fonts.ready.then(()=>entry.set('fonts',1),()=>entry.set('fonts',1));
+  function prepareEntryApp(){
+    if(entryAppRequested||!worldReady||!world||disposed||worldFailed||document.hidden)return;
+    if(reduced.matches){entry.set('app',1);return;}
+    entryAppRequested=true;const readyWorld=world;
+    void readyWorld.prepareApp().then(()=>{
+      entry.set('app',1);if(!disposed&&!worldFailed)void readyWorld.prepareTrust();
+    },()=>entry.set('app',1));
+  }
   function measure(){
     ({height,width}=getSceneViewport());
     headerTop=parseFloat(getComputedStyle(header).top)||0;
@@ -74,26 +91,26 @@ export function bootLanding(){
   }
   async function loadWorld(){
     if(worldRequested)return;worldRequested=true;
+    entry.set('world',.02);
     try{
       const {OpeningScene}=await import('../OpeningScene');
       if(disposed)return;world=new OpeningScene($('#opening-canvas'));world.resize(width,height);
-      await world.load(()=>{});if(disposed){world.dispose();return;}worldReady=true;root.classList.remove('world-pending');lastRender=-100;
-      const readyWorld=world;
+      await world.load(value=>entry.set('world',value/100));if(disposed){world.dispose();return;}worldReady=true;root.classList.remove('world-pending');lastRender=-100;
       warmTimer=window.setTimeout(()=>{
         if(disposed||worldFailed||reduced.matches||document.hidden)return;
         // Warm the next physical scene before a swipe arrives; do not allocate
         // every later effect in parallel while the phone is still loading.
-        void readyWorld.prepareApp().then(()=>{if(!disposed&&!worldFailed)void readyWorld.prepareTrust();});
+        prepareEntryApp();
       },250);
       world.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();worldFailed=true;document.body.classList.add('no-webgl');},{signal});
-    }catch(error){worldFailed=true;document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
+    }catch(error){worldFailed=true;entry.set('world',1);entry.set('app',1);document.body.classList.add('no-webgl');console.warn('Whoof 3D unavailable; content and rendered scene remain available.',error);}
   }
   function resize(preserve=false){
     const position=preserve?sections.map(element=>({element,top:element.getBoundingClientRect().top+scrollY,size:element.offsetHeight})).find(s=>scrollY>=s.top&&scrollY<s.top+s.size):undefined;
     const fraction=position?clamp((scrollY-position.top)/position.size):0;
     ({height,width}=getSceneViewport());owners.resize();app.resize();how.resize();trust.resize();ending.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();
     if(position){const top=position.element.getBoundingClientRect().top+scrollY+fraction*position.element.offsetHeight;if(Math.abs(top-scrollY)>1)window.scrollTo({top,behavior:'instant'});}
-    scroll=Math.max(0,scrollY/height);headerMotion.reset(scrollY);world?.resize(width,height);plate.setActive(scroll<2.1,width<=900||coarse.matches);void plate.resize().catch(()=>{});lastRender=-100;
+    scroll=Math.max(0,scrollY/height);headerMotion.reset(scrollY);world?.resize(width,height);plate.setActive(scroll<2.1,width<=900||coarse.matches);void plate.resize().catch(()=>{plateFailed=true;});lastRender=-100;
   }
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const warmMedia=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){clips.find(c=>c.media.element===entry.target)?.media.prepare();warmMedia.unobserve(entry.target);}}),{rootMargin:`${height*3}px 0px`});
@@ -124,6 +141,12 @@ export function bootLanding(){
   function update(now:number){
     if(!visible)return;
     const frameMs=now-previous,dt=Math.min(.05,frameMs/1000);previous=now;
+    if(entry.active){
+      entry.set('hero',plate.ready||scrollY>=height*2.1||plateFailed&&heroPhotoSettled?1:heroPhotoSettled?.3:0);
+      if(reduced.matches){entry.set('world',1);entry.set('app',1);}else prepareEntryApp();
+      entry.update(now,reduced.matches);
+    }
+    plate.setPreparing(entry.active);
     if(accordions.update()){type.measure();measure();}
     const actual=scrollY/height;
     scroll=advanceSceneScroll(scroll,actual,dt,reduced.matches||coarse.matches||width<=900);
@@ -143,7 +166,7 @@ export function bootLanding(){
     passage.render(scroll*height,reduced.matches||trust.static||worldFailed);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
     plate.setActive(actual<2.1,width<=900||coarse.matches);
-    if(inHero){plate.render(scroll,targetX,targetY,dt,reduced.matches,coarse.matches,moved);leftHero=false;}
+    if(inHero){plate.render(scroll,targetX,targetY,dt,reduced.matches||entry.active,coarse.matches,moved&&!entry.active);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
     const inEnding=ending.active,inPassage=passage.active&&!inEnding,inTrust=trust.active&&!inEnding&&!inPassage,inOffer=offer.active&&!inTrust&&!inEnding&&!inPassage,inApp=app.active&&!inOffer&&!inTrust&&!inEnding&&!inPassage;
     const heroWorld=getOwnerEntryState((scroll-storyEnd)*height,height).worldVisible?1:0;
@@ -224,7 +247,7 @@ export function bootLanding(){
     const top=anchorTop(location.hash);if(top===undefined)return;
     scroll=top/height;window.scrollTo({top,behavior:'instant'});initialHashPending=false;
   })));
-  const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},200);
+  const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},entry.active?0:200);
   raf=requestAnimationFrame(update);
-  return ()=>{disposed=true;clearTimeout(prepareTimer);clearTimeout(warmTimer);cancelAnimationFrame(resizeFrame);suspend();listenerAbort.abort();observer.disconnect();warmMedia.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();root.classList.remove('world-pending');clips.forEach(c=>c.media.dispose());};
+  return ()=>{disposed=true;clearTimeout(prepareTimer);clearTimeout(warmTimer);cancelAnimationFrame(resizeFrame);suspend();entry.dispose();listenerAbort.abort();observer.disconnect();warmMedia.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();root.classList.remove('world-pending');clips.forEach(c=>c.media.dispose());};
 }

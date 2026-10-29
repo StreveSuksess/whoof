@@ -23,7 +23,7 @@ export class HeroPlate {
   private format=''; private generation=0;
   private last={x:0,y:0}; private pointerReady=false;
   private layout=''; private allowSequences=false;private cache?:PoseFrameCache;private cachePlan='';private cachePaused=false;
-  private active=true;
+  private active=true;private preparing=false;
   moving=false; ready=false;
   constructor(){
     for(const name of ['background','keys','leash','ball','shadow','collar']){
@@ -63,7 +63,7 @@ export class HeroPlate {
     await Promise.all([...this.images.values()].map(image=>image.decode()));
     if(generation!==this.generation)return;
     this.meta=meta;this.ready=true;this.element.classList.add('has-layers');
-    this.allowSequences=!matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches;
+    this.allowSequences=!this.preparing&&!matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches;
     this.requestPoses(this.allowSequences);
   }
   private requestPoses(active:boolean){
@@ -90,6 +90,7 @@ export class HeroPlate {
     if(this.cachePaused===active){this.cachePaused=!active;this.cache.setPaused(!active);}
   }
   get decodedBytes(){return this.cache?.bytes||0;}
+  setPreparing(preparing:boolean){if(this.preparing===preparing)return;this.preparing=preparing;if(preparing)this.requestPoses(false);}
   setActive(active:boolean,release=false){
     if(active===this.active)return;this.active=active;
     if(active)void this.resize().catch(()=>{});
@@ -126,7 +127,7 @@ export class HeroPlate {
     shadow.style.filter=contact>0&&contact<1?`blur(${(1-contact)*8}px)`:'none';
     const fallback=this.element.querySelector<HTMLElement>('.hero-beauty')!;fallback.style.opacity=String(this.ready?0:1-handoff);
     this.moving=false;if(!this.ready||!this.meta)return;
-    const allowSequences=!reduced&&!coarse;
+    const allowSequences=!this.preparing&&!reduced&&!coarse;
     this.allowSequences=allowSequences;
     const w=getSceneViewport().width,h=getSceneViewport().height,scale=Math.max(w/this.meta.width,h/this.meta.height),ow=this.meta.width*scale,oh=this.meta.height*scale;
     const mouse={x:(px+1)*w/2,y:(py+1)*h/2};

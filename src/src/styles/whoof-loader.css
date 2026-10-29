@@ -1,0 +1,21 @@
+/* Oryzo's technical aperture language, redrawn around the collar. */
+.entry-loader{display:none;position:fixed;inset:0;z-index:1000;color:#f1eee6;font-family:Inter,Arial,sans-serif;isolation:isolate;overflow:hidden}
+.has-entry-loader .entry-loader{display:block}
+html.has-entry-loader{overflow:hidden!important;overscroll-behavior:none}
+.has-entry-loader .landing-v27{visibility:hidden}
+.has-entry-loader.entry-revealing .landing-v27{visibility:visible}
+.entry-curtain{position:absolute;inset:0;background:radial-gradient(ellipse 65% 82% at 42% 36%,#373a3638,transparent 73%),radial-gradient(ellipse at 80% 110%,#796e5014,transparent 65%),#121615}
+.entry-brand{position:absolute;top:var(--hero-pad,32px);left:var(--hero-pad,40px);z-index:2}
+.entry-brand img{display:block;width:clamp(150px,16vw,230px);height:auto;filter:brightness(0) invert(.94)}
+.entry-figure{position:absolute;inset:0;pointer-events:none}
+.entry-static{position:absolute;left:50%;top:49%;width:calc(min(23svh,30vw)*4.15385);height:auto;transform:translate(-50%,-50%)}
+.entry-figure canvas{display:block;position:absolute;inset:0;width:100%;height:100%;opacity:0}
+.entry-has-canvas canvas{opacity:1}.entry-has-canvas .entry-static{display:none}
+.entry-footer{position:absolute;z-index:2;left:var(--hero-pad,40px);right:var(--hero-pad,40px);bottom:var(--hero-pad,32px);display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.025em}
+[data-entry-percent]{font-size:16px;font-variant-numeric:tabular-nums;letter-spacing:-.035em;min-width:4ch;text-align:right}
+[data-entry-percent]>span{font-size:10px;margin-left:5px;opacity:.45}
+.entry-continue{position:absolute;z-index:3;left:50%;bottom:var(--hero-pad,32px);transform:translateX(-50%);padding:8px 0;background:transparent;color:inherit;border:0;border-bottom:1px solid #f1eee63d;font:500 11px Inter,Arial,sans-serif;cursor:pointer}
+.entry-continue>span{margin-left:22px}.entry-continue[hidden]{display:none}
+.entry-continue:focus-visible{outline:1px solid currentColor;outline-offset:8px}
+.entry-loader[hidden]{display:none!important}
+@media(max-width:600px){.entry-brand{left:22px;top:24px}.entry-brand img{width:150px}.entry-footer{left:22px;right:22px;bottom:24px;font-size:9px}.entry-continue{bottom:70px;font-size:12px}.entry-static{width:calc(min(20.5svh,30vw)*4.15385)}}

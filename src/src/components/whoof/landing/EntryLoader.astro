@@ -1,0 +1,28 @@
+<div class="entry-loader" data-entry-loader role="status" aria-label="Подготавливаем Whoof">
+  <div class="entry-curtain" data-entry-curtain></div>
+  <div class="entry-brand"><img src="/whoof/wordmark.svg" width="214" height="44" alt="Whoof"/></div>
+  <div class="entry-figure" aria-hidden="true">
+    <svg class="entry-static" viewBox="0 0 800 600" fill="none"><g transform="translate(400 300) rotate(-17)"><g stroke="currentColor" opacity=".16"><path d="M-260-260V260M260-260V260M-340-192H340M-340 192H340M0-270V270" stroke-dasharray="2 5"/><ellipse rx="260" ry="192"/><ellipse rx="235" ry="167"/><path d="M-260 0V27C-260 133-144 219 0 219S260 133 260 27V0"/></g><ellipse rx="260" ry="192" stroke="currentColor" stroke-opacity=".65" stroke-dasharray="2 5"/><rect x="-49" y="175" width="98" height="31" rx="15.5" stroke="currentColor" stroke-opacity=".65"/><rect x="-31" y="183" width="62" height="15" rx="7.5" stroke="currentColor" stroke-opacity=".3"/></g></svg>
+    <canvas data-entry-canvas></canvas>
+  </div>
+  <div class="entry-footer"><span>Знакомимся с Whoof</span><span data-entry-percent aria-hidden="true">00<span>%</span></span></div>
+  <button class="entry-continue" type="button" data-entry-continue hidden>Перейти к сайту <span aria-hidden="true">↗</span></button>
+</div>
+<script is:inline>
+  (()=>{
+    const html=document.documentElement,loader=document.querySelector('[data-entry-loader]'),button=loader.querySelector('[data-entry-continue]');
+    loader.dataset.started=String(performance.now());loader.dataset.state='loading';html.classList.add('has-entry-loader');
+    const release=reason=>{
+      if(loader.dataset.state==='done'||loader.dataset.state==='bypassed')return;
+      loader.dataset.state='bypassed';loader.dataset.reason=reason;loader.hidden=true;
+      if(!loader.dataset.controlled)loader.dataset.nativeOnly='true';
+      html.classList.remove('has-entry-loader','entry-revealing');document.body.classList.add('is-ready');
+      const content=document.querySelector('.landing-v27');if(content){content.inert=false;content.removeAttribute('aria-busy');}
+      clearTimeout(deadline);clearTimeout(continueTimer);dispatchEvent(new Event('whoof-entry-bypass'));
+    };
+    const continueTimer=setTimeout(()=>{button.hidden=false;},3000);
+    const deadline=setTimeout(()=>release('timeout'),8000);
+    button.addEventListener('click',()=>release('skip'));
+    addEventListener('whoof-entry-complete',()=>{clearTimeout(deadline);clearTimeout(continueTimer);},{once:true});
+  })();
+</script>

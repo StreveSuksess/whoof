@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {build} from '../../src/node_modules/esbuild/lib/main.js';
+import {resolve} from 'node:path';
+const r=await build({entryPoints:[resolve(import.meta.dirname,'../../src/src/engine/whoof/landing/loading/LoadingGate.ts')],bundle:true,write:false,platform:'node',format:'esm'});
+const {LoadingGate}=await import('data:text/javascript;base64,'+Buffer.from(r.outputFiles[0].text).toString('base64'));
+const gate=new LoadingGate(0);
+gate.set('world',.74);const before=gate.progress;gate.set('world',.18);assert.equal(gate.progress,before,'late progress cannot move backwards');
+gate.set('fonts',1);gate.set('hero',1);gate.set('world',1);
+assert.equal(gate.tick(1).phase,'loading','App preparation is part of the initial readiness gate');
+gate.set('app',1);assert.equal(gate.progress,1);
+assert.equal(gate.tick(1.1).phase,'revealing');assert.equal(gate.tick(1.8).phase,'done');
+const warm=new LoadingGate(0);for(const key of ['fonts','hero','world','app'])warm.set(key,1);
+assert.equal(warm.tick(.1).phase,'loading');assert.equal(warm.tick(.45).phase,'revealing');
+const slow=new LoadingGate(0);slow.set('fonts',1);assert.equal(slow.tick(7.9).phase,'loading');assert.equal(slow.tick(8).reason,'timeout');assert.equal(slow.tick(8.7).phase,'done');assert.ok(slow.progress<1,'timeout does not invent completed downloads');
+const skip=new LoadingGate(0);skip.skip();assert.equal(skip.tick(.2).reason,'skip');assert.equal(skip.tick(.9).phase,'done');
+const reduce=new LoadingGate(0);for(const key of ['fonts','hero','world','app'])reduce.set(key,1);assert.equal(reduce.tick(.02,true).phase,'done','reduced motion has no minimum delay or curtain travel');
+console.log('Entry loader: monotone weighted milestones, next-scene readiness, warm minimum, truthful timeout, skip and reduced release passed.');
