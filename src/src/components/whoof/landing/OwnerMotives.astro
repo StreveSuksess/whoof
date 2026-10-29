@@ -8,13 +8,13 @@ const posters=[
 ];
 ---
 <section id="owners" class="owner-posters" data-block="3" data-tone="dark" aria-labelledby="owners-title">
-  <h2 id="owners-title" class="sr-only">Кому ещё интересен Whoof?</h2>
   <div class="owners-stage" tabindex="0" role="region" aria-label="Мотивы владельцев из интервью о предзаказе" aria-keyshortcuts="ArrowLeft ArrowRight">
     <div class="owners-rail">
       {posters.map(p=><article class:list={['owner-poster','owner-poster-'+p.id,{'owner-interlude':!p.motive}]} data-owner-poster data-motive={p.motive||undefined} style={'--poster-ratio:'+p.ratio} aria-hidden={!p.motive||undefined}>
         <div class="owner-poster-clipper"><div class="owner-poster-inner">
           <img class="owner-poster-image" src={'/whoof/'+(p.folder||'owners-v33')+'/'+p.image+'.webp'} width="1536" height="1024" alt={p.alt||''} loading="lazy" decoding="async"/>
           <div class="owner-poster-shade" aria-hidden="true"></div>
+          {p.id==='puppy'&&<h2 id="owners-title" class="owner-poster-context">Почему владельцы<br/>заинтересовались Whoof</h2>}
           {p.motive?<><h3 class="owner-poster-title">{p.title![0]}<br/>{p.title![1]}</h3><p class="owner-poster-copy">{p.copy}</p></>:<p class="owner-poster-word">{p.word}</p>}
         </div></div>
       </article>)}

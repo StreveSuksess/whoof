@@ -1,6 +1,6 @@
 import {SplitText} from 'gsap/SplitText';
 import {GalleryVideo} from '../life/GalleryVideo';
-import {APP_SCROLL_UNITS,getAppSceneState,getAppViewportClip,getAppTitleReveal,getAppPairCaptionProgress,range,type AppSceneState} from './app/AppMotion';
+import {APP_TRAVEL_UNITS,getAppAuthoredTime,getAppScrollTime,getAppSceneState,getAppViewportClip,getAppTitleReveal,getAppPairCaptionProgress,range,type AppSceneState} from './app/AppMotion';
 import {ease} from '../../core/ease';
 type Caption={element:HTMLElement;title:SplitText;copy:HTMLElement};
 /** Owns native captions/media; phone rendering stays in the shared world. */
@@ -14,11 +14,11 @@ export class AppExample {
     this.captions=[...root.querySelectorAll<HTMLElement>('[data-app-caption]')].map(element=>({element,title:SplitText.create(element.querySelector('h3')!,{type:'lines,words,chars',mask:'lines'}),copy:element.querySelector('p')!}));
     this.root.classList.add('has-app-stage');
     this.play.addEventListener('click',()=>{this.media.retry();this.media.setPlaying(true);this.play.hidden=!this.media.blocked;},{signal:this.abort.signal});
-    this.stage.addEventListener('keydown',event=>{if(event.target!==this.stage||this.static||!['ArrowDown','ArrowUp'].includes(event.key))return;event.preventDefault();const stops=[0,1.9,3.3,4.3,5.9],local=(scrollY-this.top)/this.height;const index=stops.reduce((a,n,i)=>Math.abs(n-local)<Math.abs(stops[a]-local)?i:a,0);const next=Math.max(0,Math.min(4,index+(event.key==='ArrowDown'?1:-1)));window.scrollTo({top:this.top+stops[next]*this.height,behavior:'smooth'});},{signal:this.abort.signal});
+    this.stage.addEventListener('keydown',event=>{if(event.target!==this.stage||this.static||!['ArrowDown','ArrowUp'].includes(event.key))return;event.preventDefault();const stops=[0,1.9,3.3,4.3,5.9].map(getAppScrollTime),local=(scrollY-this.top)/this.height;const index=stops.reduce((a,n,i)=>Math.abs(n-local)<Math.abs(stops[a]-local)?i:a,0);const next=Math.max(0,Math.min(4,index+(event.key==='ArrowDown'?1:-1)));window.scrollTo({top:this.top+stops[next]*this.height,behavior:'smooth'});},{signal:this.abort.signal});
   }
   resize(){
     this.height=innerHeight;this.width=innerWidth;this.static=this.fallback||matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.root.classList.toggle('app-static',this.static);this.root.dataset.tone='dark';this.root.style.height=this.static?'':APP_SCROLL_UNITS*this.height+'px';this.last='';
+    this.root.classList.toggle('app-static',this.static);this.root.dataset.tone='dark';this.root.style.height=this.static?'':APP_TRAVEL_UNITS*this.height+'px';this.last='';
     const managed=!this.static;if(managed!==this.titleManaged){this.titleManaged=managed;this.nextLayer.parentElement!.classList.toggle('has-app-handoff',managed);this.nextLayer.style.visibility=managed?'hidden':'';this.nextLayer.style.clipPath='';this.nextTitle.style.opacity=managed?'1':'';this.nextTitle.style.transform='';this.nextKey='';}
     // Static reading must restore native markup, not clear SplitText's glyph
     // styles: its generated divs depend on display:inline-block to stay inline.
@@ -33,7 +33,7 @@ export class AppExample {
   render(scroll:number,reduced:boolean){
     this.distance=scroll-this.top;this.progress=this.distance/this.height;this.state=getAppSceneState(this.distance,this.height,this.width,reduced);
     const s=this.state;
-    const actualT=(scrollY-this.top)/this.height;
+    const actualT=getAppAuthoredTime((scrollY-this.top)/this.height);
     const boundary=getAppViewportClip(this.top,this.size,scrollY,this.height),clip=`inset(${boundary.top}px 0 ${boundary.bottom}px 0)`;
     const reveal=this.titleManaged?getAppTitleReveal(actualT,s.t):0;
     const nextKey=this.titleManaged?[reveal.toFixed(5),clip].join('/'):'native';

@@ -18,7 +18,7 @@ export class AppScreen {
     const s=getAppArtworkState(scene.day,scene.graph,scene.compare,scene.zoom),key=JSON.stringify(s);if(key===this.key)return;this.key=key;
     this.dayClip.setAttribute('width',String(s.dayWidth));this.weekClip.setAttribute('width',String(s.weekWidth));this.selection.setAttribute('x',String(s.selectionX));this.cursor.setAttribute('transform',`translate(${s.cursorX} 0)`);this.time.textContent=s.time;
     this.day.setAttribute('opacity',String(s.dayOpacity));this.week.setAttribute('opacity',String(s.weekOpacity));this.chrome.forEach(node=>node.setAttribute('opacity',String(s.chromeOpacity)));
-    this.heading.textContent=s.weekOpacity>.5?'История движения':'Ритм дня';
+    this.heading.textContent=s.weekOpacity>.5?'Сравнить дни':'День на примере';
   }
   dispose(){this.element.remove();}
 }

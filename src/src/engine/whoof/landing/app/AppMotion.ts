@@ -1,6 +1,21 @@
 import {ease} from '../../../core/ease';
 import {getAppObjectPose} from './AppPose';
 export const APP_SCROLL_UNITS=7;
+export const APP_TRAVEL_UNITS=6;
+// Compress the existing choreography, retaining its full following-section tail.
+export function getAppAuthoredTime(physical:number){
+  if(physical<=0)return physical;
+  if(physical>=APP_TRAVEL_UNITS)return APP_SCROLL_UNITS+physical-APP_TRAVEL_UNITS;
+  const p=physical/APP_TRAVEL_UNITS;
+  return physical+(APP_SCROLL_UNITS-APP_TRAVEL_UNITS)*p*p*p*(10+p*(-15+6*p));
+}
+export function getAppScrollTime(authored:number){
+  if(authored<=0)return authored;
+  if(authored>=APP_SCROLL_UNITS)return APP_TRAVEL_UNITS+authored-APP_SCROLL_UNITS;
+  let lo=0,hi=APP_TRAVEL_UNITS;
+  for(let i=0;i<42;i++){const mid=(lo+hi)/2;if(getAppAuthoredTime(mid)<authored)lo=mid;else hi=mid;}
+  return (lo+hi)/2;
+}
 export const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 export const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
 const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
@@ -14,7 +29,7 @@ export const getAppTitleProgress=(t:number)=>range(t,6.35,6.75)*(1-range(t,APP_S
 export const getAppTitleReveal=(actualT:number,sceneT:number)=>Math.min(getAppTitleProgress(actualT),getAppTitleProgress(sceneT));
 /** One deterministic camera/screen timeline; no elapsed-time dependent poses. */
 export function getAppSceneState(local:number,height:number,width:number,reduced=false){
-  const t=local/height,mobile=width<=600;
+  const t=getAppAuthoredTime(local/height),mobile=width<=600;
   const day=reduced?1:range(t,.05,1.05),zoom=reduced?1:ease.cubicInOut(range(t,.85,2.1));
   const compare=reduced?0:ease.cubicInOut(range(t,2.4,2.95)),graph=reduced?1:range(t,2.55,3.2);
   const context=reduced?0:ease.cubicInOut(range(t,3.7,4.05))*(1-ease.cubicInOut(range(t,4.65,4.95)));

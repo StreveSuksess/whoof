@@ -1,4 +1,4 @@
-import {DAY_TREND} from './AppData';
+import {EXAMPLE_DAY,REFERENCE_DAY} from './AppComparison';
 
 export const SCREEN_WIDTH=1024,SCREEN_HEIGHT=2208;
 export const DAY_PLOT={left:84,right:940,baseline:1090,span:856};
@@ -8,13 +8,7 @@ const fmt=(value:number)=>Number(value.toFixed(3));
 
 // Art-directed demonstration, not a record or classifier output. Each fin is
 // a ten-minute interval; height illustrates relative movement, never steps/GPS.
-export const DAY_ACTIVITY=Array.from({length:144},(_,i)=>{
-  const hour=(i+.5)/6;
-  const peak=(centre:number,width:number,power:number)=>power*Math.exp(-.5*((hour-centre)/width)**2);
-  const envelope=.025+peak(7.7,.75,.80)+peak(8.75,.32,.34)+peak(12.7,.56,.36)+peak(17.9,.95,.73)+peak(20.5,.4,.19);
-  const grain=.73+.18*Math.sin(i*2.17)+.09*Math.cos(i*.71);
-  return bounded(envelope*grain);
-});
+export const DAY_ACTIVITY=EXAMPLE_DAY;
 
 export function getAppArtworkState(day:number,graph:number,compare:number,zoom:number){
   const d=bounded(day),minutes=Math.min(1439,Math.floor(d*1440));
@@ -48,14 +42,19 @@ function dayMarkup(prefix:string){
   </g>`;
 }
 function weekMarkup(prefix:string){
-  const {paper,muted,blue}=APP_PALETTE,step=DAY_PLOT.span/14;
+  // The legacy week slot now contains a two-day comparison of the same dog.
+  const {paper,muted,blue}=APP_PALETTE,step=DAY_PLOT.span/144;
+  const reference=REFERENCE_DAY.map((value,i)=>`${fmt(84+(i+.5)*step)} ${fmt(1090-14-value*420)}`).join('L');
+  const morningStart=fmt(84+DAY_PLOT.span*7/24),morningWidth=fmt(DAY_PLOT.span*3/24);
   return `<g data-art-week opacity="0">
     <defs><clipPath id="${prefix}-week"><rect data-art-week-clip x="84" y="630" width="856" height="500"/></clipPath></defs>
-    ${text('14',940,600,118,'text-anchor="end" font-weight="400" letter-spacing="-7"')}${text('ДНЕЙ В ИСТОРИИ',936,648,23,`text-anchor="end" fill="${muted}" letter-spacing="2"`)}
-    <path d="M84 1122H940M84 906H940M84 690H940" stroke="${paper}" stroke-opacity=".10"/>
-    <g clip-path="url(#${prefix}-week)">${DAY_TREND.map((value,i)=>{const x=fmt(84+i*step+14),h=fmt(value*400);return `<rect x="${x}" y="${1090-h}" width="30" height="${h}" rx="3" fill="${i===13?blue:paper}" opacity="${i===13?1:.34+i*.035}"/>`;}).join('')}</g>
-    ${text('11 апреля',84,1198,27,`fill="${muted}"`)}${text('24 апреля',940,1198,27,`text-anchor="end" fill="${muted}"`)}
-    <g data-art-chrome>${text('Одна собака. Разные дни.',84,1350,34,`fill="${paper}"`)}${text('Сравнение с её собственной историей',84,1410,28,`fill="${muted}"`)}</g>
+    ${text('07–10',940,600,105,'text-anchor="end" font-weight="400" letter-spacing="-6"')}${text('РАЗНИЦА — УТРОМ',936,648,23,`text-anchor="end" fill="${muted}" letter-spacing="2"`)}
+    <rect x="${morningStart}" y="680" width="${morningWidth}" height="410" rx="8" fill="${blue}" opacity=".10"/>
+    <path d="M84 1122H940" stroke="${paper}" stroke-opacity=".16"/>
+    <g clip-path="url(#${prefix}-week)"><path d="M${reference}" fill="none" stroke="${paper}" stroke-opacity=".55" stroke-width="3"/>
+      ${DAY_ACTIVITY.map((value,i)=>{const h=fmt(14+value*420);return `<rect x="${fmt(84+i*step)}" y="${fmt(1090-h)}" width="3.6" height="${h}" rx="1.8" fill="${i>=42&&i<60?blue:paper}" opacity="${i>=42&&i<60?1:.58}"/>`;}).join('')}</g>
+    ${[0,6,12,18,24].map((hour,i)=>text(String(hour).padStart(2,'0'),84+i*214,1198,27,`text-anchor="${i===0?'start':i===4?'end':'middle'}" fill="${muted}"`)).join('')}
+    <g data-art-chrome><path d="M84 1295h35" stroke="${paper}" stroke-opacity=".55" stroke-width="3"/>${text('Вчера',136,1305,31,`fill="${muted}"`)}<path d="M565 1295h35" stroke="${blue}" stroke-width="4"/>${text('Сегодня',617,1305,31,`fill="${paper}"`)}${text('Утро изменилось. Вечер — почти нет.',84,1410,31,`fill="${paper}"`)}</g>
   </g>`;
 }
 function graphic(prefix:string){return dayMarkup(prefix)+weekMarkup(prefix);}
@@ -68,12 +67,12 @@ export function renderAppScreenSvg(prefix='whoof-day'){
       <rect x="371" y="51" width="282" height="65" rx="32" fill="#08090b"/><circle cx="605" cy="83" r="12" fill="#202b3c"/>
       ${text('WHOOF',84,258,52,'font-weight="500" letter-spacing="-2"')}${text('Джека',940,258,31,`text-anchor="end" fill="${muted}"`)}
       <path d="M84 306H940" stroke="${paper}" stroke-opacity=".16"/>
-      ${text('Ритм дня',84,407,67,'data-art-heading letter-spacing="-3"')}
+      ${text('День на примере',84,407,67,'data-art-heading letter-spacing="-3"')}
     </g>
     ${graphic(prefix)}
     <g data-art-chrome><path d="M84 1510H940" stroke="${paper}" stroke-opacity=".16"/>
-      ${text('48',84,1660,114,'letter-spacing="-6"')}${text('%',218,1657,49,`fill="${muted}"`)}${text('Движение',84,1723,30,`fill="${muted}"`)}
-      ${text('52',565,1660,114,'letter-spacing="-6"')}${text('%',699,1657,49,`fill="${muted}"`)}${text('Спокойные периоды',565,1723,30,`fill="${muted}"`)}
+      ${text('Утро',84,1625,55,'letter-spacing="-2"')}${text('Меньше движения',84,1695,29,`fill="${muted}"`)}
+      ${text('Вечер',565,1625,55,'letter-spacing="-2"')}${text('Без изменений',565,1695,29,`fill="${muted}"`)}
       ${text('После синхронизации',512,1906,29,`text-anchor="middle" fill="${muted}"`)}
       <path d="M84 2030H940" stroke="${paper}" stroke-opacity=".16"/>
       ${['Сегодня','История','Профиль'].map((value,i)=>text(value,184+i*328,2103,30,`text-anchor="middle" fill="${i===0?blue:muted}"`)).join('')}
@@ -84,7 +83,7 @@ export function renderAppScreenSvg(prefix='whoof-day'){
 /** Same vectors as the moving screen; static/native-reading derivatives. */
 export function renderAppArtwork(mode:'day'|'week',fullScreen=false){
   let svg=renderAppScreenSvg(`whoof-static-${mode}`);
-  if(mode==='week')svg=svg.replace('<g data-art-day="">','<g data-art-day="" opacity="0">').replace('<g data-art-week="" opacity="0">','<g data-art-week="" opacity="1">').replace('data-art-heading="" letter-spacing="-3">Ритм дня','data-art-heading="" letter-spacing="-3">История движения');
+  if(mode==='week')svg=svg.replace('<g data-art-day="">','<g data-art-day="" opacity="0">').replace('<g data-art-week="" opacity="0">','<g data-art-week="" opacity="1">').replace('data-art-heading="" letter-spacing="-3">День на примере','data-art-heading="" letter-spacing="-3">Сравнить дни');
   if(!fullScreen){
     svg=svg.replace('width="1024" height="2208" viewBox="0 0 1024 2208"','width="1024" height="768" viewBox="0 475 1024 768"');
     svg=svg.replaceAll('data-art-chrome','opacity="0" data-art-chrome');

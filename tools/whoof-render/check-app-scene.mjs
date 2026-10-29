@@ -4,7 +4,9 @@ import {resolve} from 'node:path';
 import {build} from '../../src/node_modules/esbuild/lib/main.js';
 const repo=resolve(import.meta.dirname,'../..');
 const result=await build({entryPoints:[resolve(repo,'src/src/engine/whoof/landing/app/AppMotion.ts')],bundle:true,write:false,platform:'node',format:'esm'});
-const {getAppSceneState,getAppViewportClip,getAppTitleProgress,getAppTitleReveal,getAppPairCaptionProgress,APP_SCROLL_UNITS}=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
+const {getAppSceneState:physicalSceneState,getAppScrollTime,getAppViewportClip,getAppTitleProgress,getAppTitleReveal,getAppPairCaptionProgress,APP_SCROLL_UNITS}=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
+// Exercise preserved authored choreography; physical retiming has its own guard.
+const getAppSceneState=(local,height,width,reduced=false)=>physicalSceneState(getAppScrollTime(local/height)*height,height,width,reduced);
 assert.equal(APP_SCROLL_UNITS,7);
 for(const [w,h] of [[1440,900],[1020,1194],[390,844],[844,390]]){
  let previous;
@@ -79,7 +81,7 @@ for(const svg of [renderAppScreenSvg(),...['day','week'].flatMap(mode=>[renderAp
  assert.ok(svg.includes('aria-label="Концепт интерфейса Whoof: демонстрационная история движений за день"'),'source context remains in accessible metadata');
  assert.ok(!/<text\b[^>]*>(Концепт интерфейса|Демонстрационные данные)<\/text>/.test(svg),'selected visual labels are removed');
 }
-assert.ok(renderAppArtwork('week',true).includes('data-art-week="" opacity="1"'));assert.ok(renderAppArtwork('week',true).includes('>История движения</text>'));
+assert.ok(renderAppArtwork('week',true).includes('data-art-week="" opacity="1"'));assert.ok(renderAppArtwork('week',true).includes('>Сравнить дни</text>'));
 console.log('App vectors: 144 chronological intervals, midnight/end labels, finite/reversible clipping, unique resolved IDs and shared static derivatives passed.');
 
 // Geometry normals and render-state isolation guard the physical pair.
@@ -95,7 +97,7 @@ console.log('App physical pair: finite unit sidewall normals, manufactured bound
 
 if(process.argv.includes('--built')){
  const html=readFileSync(resolve(repo,'src/dist/index.html'),'utf8');
- for(const text of ['data-app-world','data-app-caption','data-app-film','Концепт интерфейса','После синхронизации'])assert.ok(html.includes(text),text);
+ for(const text of ['data-app-world','data-app-caption','data-app-film','Разберём день','После синхронизации'])assert.ok(html.includes(text),text);
  assert.ok(!html.includes('data-app-tab'),'old numbered tabs removed');
  assert.ok(!html.includes('class="app-poster"'),'early flat phone removed');
  assert.ok(html.includes('data-app-next-title'),'single managed title stage retains native heading');

@@ -1,8 +1,12 @@
 ---
 import Accordion from './Accordion.astro';
 const plans=[
- {id:'year',tab:'1 год',title:'Первый год с Whoof.',description:'Трекер, ремешок и приложение. Год подписки уже в комплекте.',price:'14 990',term:'12 месяцев подписки',extra:'Доставка по России'},
- {id:'two-years',tab:'2 года',title:'Больше времени вместе.',description:'Тот же Whoof. Два года подписки, чтобы знакомиться с его ритмом день за днём.',price:'19 990',term:'24 месяца подписки',extra:'Консультация и бонусы*'},
+ {id:'year',checkout:'one-year',tab:'1 год',title:'Первый год с Whoof.',description:'Трекер, ремешок и приложение. Первый год расширенного сервиса — в комплекте.',price:'14 990',term:'12 месяцев ВУФ+',extra:'Доставка по России'},
+ {id:'two-years',checkout:'two-years',tab:'2 года',title:'Ещё год — вместе.',description:'Тот же трекер и сервис. Второй год подписки добавляет 5 000 ₽ к стоимости комплекта.',price:'19 990',term:'24 месяца ВУФ+',extra:'Консультация и бонусы*'},
+];
+const features=[
+ ['Активность и периоды покоя',true],['Дневник и история прогулок',true],['Карта дня и динамика',true],
+ ['Расширенная аналитика',false],['Рекомендации и AI-ассистент',false],['Отчёт для ветеринарного специалиста',false],
 ];
 ---
 <section id="order" class="source-offer" data-block="8" data-tone="dark" aria-labelledby="order-title">
@@ -18,13 +22,18 @@ const plans=[
       </div>
       {plans.map((plan,index)=><div class="offer-panel" id={'offer-panel-'+plan.id} role="tabpanel" aria-labelledby={'offer-tab-'+plan.id} data-offer-panel hidden={index!==0}>
         <div class="offer-summary"><h3>{plan.title}</h3><p data-offer-description>{plan.description}</p><div class="offer-amount">{plan.price}<span>₽</span></div></div>
-        <div class="offer-inclusions"><ul><li>Устройство и приложение</li><li>{plan.term}</li><li>{plan.extra}</li></ul><a class="offer-checkout" href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">К предзаказу <span aria-hidden="true">↗</span></a><p>{index===0?'Цена и условия оформления — на whoof.ru.':'* Условия консультации и бонусов — при оформлении.'}</p></div>
+        <div class="offer-inclusions"><ul><li>Устройство, ремешок и приложение</li><li><a href="#order-service" aria-label={'Что входит в '+plan.term}>{plan.term} <span aria-hidden="true">↘</span></a></li><li>{plan.extra}</li></ul><a class="offer-checkout" href={'https://whoof.ru/checkout.html?plan='+plan.checkout} target="_blank" rel="noopener noreferrer" aria-label={'Предзаказ Whoof на '+plan.tab+' за '+plan.price+' рублей'}>К предзаказу <span aria-hidden="true">↗</span></a><p>{index===0?'Выбранный комплект сохранится при оформлении.':'* Формат консультации и состав бонусов уточняются до оплаты. Доставка по России включена.'}</p></div>
       </div>)}
     </div>
   </div>
   <div class="offer-conditions">
-    <div class="offer-preorder"><h3>Сейчас — предзаказ.</h3><p>Доставка по России включена. Перед оплатой уточните дату отправки, совместимость телефона и доступные функции приложения.</p></div>
-    <Accordion id="order-subscription" title="Подписка и возможности после её окончания"><p>Устройство остаётся вашим. Текущая стоимость продления — 6 000 ₽ в год. Расширенные сервисы работают при продлении подписки. Цена будущего продления может измениться.</p><p>Базовые показатели, история прогулок и динамика заявлены без подписки. Их фактический состав зависит от версии приложения и действующих условий — проверьте его при оформлении.</p><a href="https://whoof.ru/#preorder" target="_blank" rel="noopener noreferrer">Состав подписки на whoof.ru ↗</a></Accordion>
-    <Accordion id="order-shipping" title="Отправка, гарантия и возврат"><p>В FAQ Whoof указаны гарантия 1 год с получения и возврат исправного устройства в течение 7 дней с соблюдением условий. Аппаратная часть и сервисы имеют отдельные условия возврата.</p><p>Актуальная цена, состав комплекта, сроки и условия оплаты — на whoof.ru.</p><a href="https://whoof.ru/legal.html?legal=offer" target="_blank" rel="noopener noreferrer">Условия продажи ↗</a><a href="mailto:tech@whoof.ru?subject=Вопрос%20о%20предзаказе%20Whoof">Уточнить перед заказом ↗</a></Accordion>
+    <dl class="offer-device-facts" aria-label="Устройство в повседневности"><div><dt>≈ 8 г</dt><dd>трекер без ремешка</dd></div><div><dt>42 × 22 × 12 мм</dt><dd>размер корпуса</dd></div><div><dt>до 7 дней</dt><dd>между зарядками, зависит от использования</dd></div><div><dt>Отдельный поводок</dt><dd>крепится к вашему ошейнику или шлейке</dd></div></dl>
+    <div id="order-service" class="offer-service">
+      <div class="offer-service-intro"><h3>Трекер — ваш.<br/>Сервис — на выбор.</h3><p>В комплекте уже есть год или два ВУФ+. После этого можно продлить расширенные возможности. Сейчас — 6 000 ₽ в год.</p><p>Дополнительный год в двухлетнем комплекте стоит 5 000 ₽. Это тот же сервис на больший срок.</p></div>
+      <div class="offer-service-matrix"><table><caption>Опубликованный состав сервиса</caption><thead><tr><th scope="col">Возможности</th><th scope="col">База</th><th scope="col">ВУФ+</th></tr></thead><tbody>{features.map(([feature,base])=><tr><th scope="row">{feature}</th><td aria-label={base?'Включено':'Не включено'}>{base?'✓':'—'}</td><td aria-label="Включено">✓</td></tr>)}</tbody></table><p>Функции вводятся поэтапно. Доступный набор фиксируется до оплаты. Базовые возможности после подписки зависят от версии приложения — это условие п. 21.3 оферты.</p></div>
+    </div>
+    <div class="offer-preorder"><h3>Вы оформляете<br/>предзаказ.</h3><div><p>Доставка по России включена. Подтверждённая дата отправки и версии iOS/Android пока не опубликованы.</p><p>До оплаты запросите дату, ссылку на актуальное приложение и список работающих функций для вашего телефона.</p><a href="mailto:tech@whoof.ru?subject=Готовность%20Whoof%20к%20предзаказу">Узнать готовность Whoof <span aria-hidden="true">↗</span></a></div></div>
+    <Accordion id="order-subscription" title="Что происходит после года или двух"><p>Устройство остаётся вашим. Если не покупать новую подписку, платные возможности ВУФ+ перестают работать. Новый трекер для продления не нужен.</p><p>Стоимость следующей подписки определяется на дату продления; текущие 6 000 ₽ в год не фиксируют будущую цену. Для оплаченного 24-месячного периода оферта исключает автоматическое продление. Гарантированный минимум базы для вашей версии приложения и условия годового комплекта уточняются до оплаты.</p><a href="https://whoof.ru/legal.html?legal=offer" target="_blank" rel="noopener noreferrer">Подписка и её окончание · п. 20–21 ↗</a></Accordion>
+    <Accordion id="order-shipping" title="Комплект, зарядка, гарантия и возврат"><p>В комплект входят трекер с ремешком, приложение и выбранный срок ВУФ+. Способ крепления и комплект зарядных аксессуаров уточняются при заказе. Зарядка занимает ориентировочно 1,5–2 часа.</p><p>Гарантия — 1 год с получения. Исправное устройство можно вернуть в течение 7 дней после передачи при соблюдении условий сохранности и комплектации. Возврат устройства и отказ от цифровых услуг рассчитываются отдельно по условиям оферты.</p><a href="https://whoof.ru/legal.html?legal=offer" target="_blank" rel="noopener noreferrer">Условия продажи и возврата ↗</a><a href="mailto:tech@whoof.ru?subject=Вопрос%20о%20комплекте%20Whoof">Вопрос о комплекте ↗</a></Accordion>
   </div>
 </section>

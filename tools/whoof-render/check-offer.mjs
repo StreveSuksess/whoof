@@ -24,7 +24,9 @@ assert.equal(getOfferBrushRadius(100,1000,250),25);assert.equal(getOfferBrushRad
 for(let t=0;t<60;t+=.1){const b=getOfferSketchBreathing(t,.3);assert.ok(Math.abs(b.rotation)<=.1&&b.scale>=.9&&b.scale<=1.1);assert.deepEqual(getOfferSketchBreathing(t,.3,true),{rotation:0,scale:1});}
 const html=readFileSync(resolve(app,'dist/index.html'),'utf8');
 assert.equal((html.match(/data-offer-tab/g)||[]).length,2);assert.equal((html.match(/data-offer-panel/g)||[]).length,2);
-for(const text of ['14 990','19 990','6 000','Сейчас — предзаказ.','Устройство остаётся вашим.'])assert.ok(html.includes(text),text);
+for(const text of ['14 990','19 990','6 000','предзаказ.','Устройство остаётся вашим.'])assert.ok(html.includes(text),text);
+for(const plan of ['one-year','two-years'])assert.ok(html.includes(`href="https://whoof.ru/checkout.html?plan=${plan}"`),'term reaches matching verified checkout');
+assert.ok(html.includes('Опубликованный состав сервиса')&&html.includes('п. 21.3 оферты'),'base/paid difference retains the version limitation');
 assert.ok(html.includes('role="tablist"')&&html.includes('aria-controls="offer-panel-two-years"'));
 assert.ok(!html.includes('class="offer-options"'),'old price grid replaced');
 for(const name of ['collar','walk','rest','day'])assert.ok(existsSync(resolve(app,`public/whoof/offer-v37/${name}.webp`)));

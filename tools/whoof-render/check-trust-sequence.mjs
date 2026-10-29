@@ -29,7 +29,7 @@ if(process.argv.includes('--built')){
  const html=readFileSync(resolve(app,'dist/index.html'),'utf8');
  const trust=html.slice(html.indexOf('id="trust"'),html.indexOf('id="order"'));
  assert.equal((trust.match(/data-trust-episode=/g)||[]).length,3);
- for(const term of ['План проверки','Результаты проверки точности ещё не опубликованы','Консультации специалистов','ООО «ВУФ»'])assert.ok(trust.includes(term),term);
+ for(const term of ['План проверки','Опубликованных результатов проверки точности Whoof пока нет','Консультации специалистов','Мария Гусарова','не подтверждает точность алгоритма','ООО «ВУФ»'])assert.ok(trust.includes(term),term);
  assert.ok(!trust.includes('<video')&&!trust.includes('accuracy'),'no unrelated marketing film presented as validation');
  assert.ok(html.includes('id="how-steps"')&&!html.includes('id="life"')&&!html.includes('id="wearing"'));
  assert.ok(!readFileSync(resolve(app,'src/engine/whoof/landing/trust/TrustStage.ts'),'utf8').includes("getElementById('details')"),'Trust no longer depends on removed screens');
