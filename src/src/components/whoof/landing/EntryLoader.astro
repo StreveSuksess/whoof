@@ -1,11 +1,21 @@
-<div class="entry-loader" data-entry-loader role="status" aria-label="Подготавливаем Whoof">
+<div class="entry-loader" data-entry-loader role="status" aria-label="Загружаем Whoof">
   <div class="entry-curtain" data-entry-curtain></div>
-  <div class="entry-brand"><img src="/whoof/wordmark.svg" width="214" height="44" alt="Whoof"/></div>
-  <div class="entry-figure" aria-hidden="true">
-    <svg class="entry-static" viewBox="0 0 800 600" fill="none"><g transform="translate(400 300) rotate(-17)"><g stroke="currentColor" opacity=".16"><path d="M-260-260V260M260-260V260M-340-192H340M-340 192H340M0-270V270" stroke-dasharray="2 5"/><ellipse rx="260" ry="192"/><ellipse rx="235" ry="167"/><path d="M-260 0V27C-260 133-144 219 0 219S260 133 260 27V0"/></g><ellipse rx="260" ry="192" stroke="currentColor" stroke-opacity=".65" stroke-dasharray="2 5"/><rect x="-49" y="175" width="98" height="31" rx="15.5" stroke="currentColor" stroke-opacity=".65"/><rect x="-31" y="183" width="62" height="15" rx="7.5" stroke="currentColor" stroke-opacity=".3"/></g></svg>
-    <canvas data-entry-canvas></canvas>
+  <div class="entry-identity" data-entry-identity>
+    <svg class="entry-symbol" viewBox="-4 -4 303 326" aria-hidden="true">
+      <defs>
+        <!-- Exact Whoof brand mark, including both original cutouts. -->
+        <path id="whoof-entry-mark" d="M60.8289 76.0977C104.38 -55.8374 223.505 8.20558 209.415 85.0636C234.606 79.5118 284.987 58.1617 293.954 85.0636C298.739 99.4195 275.595 152.951 261.931 178.567C289.599 304.609 199.166 299.4 150.491 281.04C56.9852 382.232 -49.3271 247.737 24.9637 164.478C-17.05 106.068 31.3679 81.2204 60.8289 76.0977ZM179.691 43.9093C171.936 43.2712 164.472 57.0429 163.022 74.669C161.572 92.2949 166.684 107.101 174.439 107.739C182.195 108.377 189.658 94.6057 191.108 76.9796C192.558 59.3536 187.447 44.5477 179.691 43.9093ZM272.837 76.8536C265.087 76.1493 258.399 80.0387 257.899 85.5411C257.399 91.0434 263.276 96.075 271.026 96.7794C278.776 97.4836 285.463 93.5941 285.964 88.0919C286.464 82.5895 280.586 77.5579 272.837 76.8536Z"/>
+        <clipPath id="whoof-entry-clip" clipPathUnits="userSpaceOnUse"><use href="#whoof-entry-mark"/></clipPath>
+        <linearGradient id="whoof-entry-ink" x1="0" y1="0" x2="0" y2="318" gradientUnits="userSpaceOnUse"><stop stop-color="#faf9f3"/><stop offset="1" stop-color="#d5d7cc"/></linearGradient>
+      </defs>
+      <use class="entry-empty" href="#whoof-entry-mark"/>
+      <g clip-path="url(#whoof-entry-clip)">
+        <path data-entry-liquid-back fill="#f1eee6" fill-opacity=".24" d="M-12 330H307V340H-12Z"/>
+        <path data-entry-liquid fill="url(#whoof-entry-ink)" d="M-12 330H307V340H-12Z"/>
+        <path data-entry-surface fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1"/>
+      </g>
+    </svg>
   </div>
-  <div class="entry-footer"><span>Знакомимся с Whoof</span><span data-entry-percent aria-hidden="true">00<span>%</span></span></div>
   <button class="entry-continue" type="button" data-entry-continue hidden>Перейти к сайту <span aria-hidden="true">↗</span></button>
 </div>
 <script is:inline>
