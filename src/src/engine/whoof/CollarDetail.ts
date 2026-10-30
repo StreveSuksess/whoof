@@ -1,10 +1,10 @@
 import {BufferGeometry,Float32BufferAttribute,type InstancedMesh,Vector3} from 'three';
 const TAU=Math.PI*2;
 export function chooseYarnDetail(pixels:number,previous=-1){
-  const thresholds=[800,1500];
-  if(previous<0)return pixels<thresholds[0]?0:pixels<thresholds[1]?1:2;
+  const thresholds=[420,800,1500];
+  if(previous<0)return pixels<thresholds[0]?0:pixels<thresholds[1]?1:pixels<thresholds[2]?2:3;
   let level=previous;
-  while(level<2&&pixels>thresholds[level]*1.12)level++;
+  while(level<3&&pixels>thresholds[level]*1.12)level++;
   while(level>0&&pixels<thresholds[level-1]*.88)level--;
   return level;
 }
@@ -27,7 +27,7 @@ export function createYarnGeometry(steps:number,sides:number){
 }
 export class CollarDetail{
   private level=-1;
-  private geometries=[createYarnGeometry(16,6),createYarnGeometry(24,7),createYarnGeometry(40,9)];
+  private geometries=[createYarnGeometry(8,5),createYarnGeometry(16,6),createYarnGeometry(24,7),createYarnGeometry(40,9)];
   constructor(private yarns:InstancedMesh[]){}
   update(projectedPixels:number){
     const level=chooseYarnDetail(projectedPixels,this.level);

@@ -53,5 +53,6 @@ export class AppPhoneScene {
     this.camera.aspect=width/height;this.camera.position.set(0,lookY,distance);this.camera.lookAt(0,lookY,0);this.camera.setViewOffset(width,height,width*.5-state.phoneX,height*.5-state.phoneY,width,height);
     this.renderer.setRenderTarget(null);this.renderer.autoClear=true;if(this.shell.visible)this.lighting.render(this.renderer,width,()=>this.renderer.render(this.scene,this.camera));else this.renderer.render(this.scene,this.camera);this.css.render(this.scene,this.camera);
   }
-  dispose(){this.lighting.dispose();this.css.domElement.remove();this.screen.dispose();this.scene.traverse(object=>{if(object instanceof Mesh){object.geometry.dispose();const materials=Array.isArray(object.material)?object.material:[object.material];materials.forEach(m=>m.dispose());}});}
+  detachVector(){this.css.domElement.remove();}
+  dispose(){this.lighting.dispose();this.detachVector();this.screen.dispose();this.scene.traverse(object=>{if(object instanceof Mesh){object.geometry.dispose();const materials=Array.isArray(object.material)?object.material:[object.material];materials.forEach(m=>m.dispose());}});}
 }

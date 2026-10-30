@@ -23,6 +23,7 @@ import {advanceSceneScroll} from './ScrollTransport';
 import {EntryLoader} from './loading/EntryLoader';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const range=(n:number,a:number,b:number)=>clamp((n-a)/(b-a));
+const HERO_LAYER_END=1.05;
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
 
 export function bootLanding(){
@@ -31,10 +32,10 @@ export function bootLanding(){
   if(document.querySelector<HTMLElement>('[data-entry-loader]')?.dataset.nativeOnly==='true')return ()=>{};
   updateSceneViewport();
   document.documentElement.classList.remove('no-js');
-  const root=$('.landing-v27'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo');
+  const root=$('.landing-v27'),worldRoot=$('.opening-world'),header=$('.opening-header'),logo=$('.opening-logo'),vignette=$('.hero-vignette'),progressBar=$('.opening-progress span');
   root.classList.add('world-pending');
   const headerMotion=new HeaderMotion();
-  const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root),quality=new RenderQuality();
+  const plate=new HeroPlate(),card=new HeroCard(),type=new SectionMotion(root),quality=new RenderQuality(getSceneViewport().width<=900||matchMedia('(pointer: coarse)').matches);
   const storyText=new StoryText(),storyRows=new StoryRows(),atmosphere=$('.situations-atmosphere');
   const owners=new OwnerPosters($('#owners'));
   const offer=new OfferStage($('#order'));
@@ -54,7 +55,8 @@ export function bootLanding(){
   let targetX=0,targetY=0,mouseX=0,mouseY=0,moved=false,visible=!document.hidden,previous=performance.now(),started=performance.now(),leftHero=false;
   let initialHashPending=true,disposed=false,warmTimer=0;
   let heroPhotoSettled=false,plateFailed=false,entryAppRequested=false;
-  let headerTop=28;
+  let headerTop=28,documentHeight=1;
+  let offerWarmQueued=false,offerIdle=0,offerWarmTimer=0;
   let headerCheckScroll=-1,headerCheckActual=-1,headerBlocked=false;
   const listenerAbort=new AbortController(),signal=listenerAbort.signal;
   const entry=new EntryLoader(root,now=>{started=now;previous=now;});
@@ -66,9 +68,27 @@ export function bootLanding(){
     if(entryAppRequested||!worldReady||!world||disposed||worldFailed||document.hidden)return;
     if(reduced.matches){entry.set('app',1);return;}
     entryAppRequested=true;const readyWorld=world;
-    void readyWorld.prepareApp().then(()=>{
-      entry.set('app',1);if(!disposed&&!worldFailed)void readyWorld.prepareTrust();
-    },()=>entry.set('app',1));
+    void readyWorld.prepareApp().then(async()=>{
+      if(disposed||worldFailed)return;
+      await readyWorld.prepareTrust();
+      if(disposed||worldFailed)return;
+      if(width<=900||coarse.matches){
+        await readyWorld.prepareOffer();
+        // Never overwrite a scene after a visitor used the escape/continue.
+        if(!disposed&&!worldFailed&&entry.active){readyWorld.warmFirstFrames();lastRender=-100;}
+      }
+      entry.set('app',1);
+    }).catch(error=>{entry.set('app',1);console.warn('Whoof scene warmup unavailable; normal rendering remains available.',error);});
+  }
+  function warmOffer(){
+    if(offerWarmQueued||entry.active||!worldReady||!world||worldFailed||disposed||reduced.matches)return;
+    offerWarmQueued=true;const readyWorld=world;
+    void readyWorld.prepareTrust().then(()=>{
+      if(disposed||worldFailed||document.hidden)return;
+      const prepare=()=>{if(!disposed&&!worldFailed&&!document.hidden)void readyWorld.prepareOffer();};
+      if(window.requestIdleCallback)offerIdle=window.requestIdleCallback(prepare,{timeout:4000});
+      else offerWarmTimer=window.setTimeout(prepare,900);
+    });
   }
   function measure(){
     ({height,width}=getSceneViewport());
@@ -79,6 +99,7 @@ export function bootLanding(){
     storyEnd=($('#owners').getBoundingClientRect().top+scrollY)/height;
     themeRanges.length=0;
     sections.forEach(section=>{const rect=section.getBoundingClientRect();themeRanges.push({top:rect.top+scrollY,bottom:rect.bottom+scrollY,tone:section.dataset.tone||'light'});});
+    documentHeight=document.documentElement.scrollHeight;
   }
   function anchorTop(hash:string){
     let target:HTMLElement|null;try{target=document.getElementById(decodeURIComponent(hash.slice(1)));}catch{return;}
@@ -94,7 +115,7 @@ export function bootLanding(){
     entry.set('world',.02);
     try{
       const {OpeningScene}=await import('../OpeningScene');
-      if(disposed)return;world=new OpeningScene($('#opening-canvas'));world.resize(width,height);
+      if(disposed)return;world=new OpeningScene($('#opening-canvas'));world.setQuality(quality.level);world.resize(width,height);
       await world.load(value=>entry.set('world',value/100));if(disposed){world.dispose();return;}worldReady=true;root.classList.remove('world-pending');lastRender=-100;
       warmTimer=window.setTimeout(()=>{
         if(disposed||worldFailed||reduced.matches||document.hidden)return;
@@ -110,7 +131,7 @@ export function bootLanding(){
     const fraction=position?clamp((scrollY-position.top)/position.size):0;
     ({height,width}=getSceneViewport());owners.resize();app.resize();how.resize();trust.resize();ending.resize();card.resize();accordions.resize();type.resize();storyText.resize();storyRows.resize();offer.resize();measure();
     if(position){const top=position.element.getBoundingClientRect().top+scrollY+fraction*position.element.offsetHeight;if(Math.abs(top-scrollY)>1)window.scrollTo({top,behavior:'instant'});}
-    scroll=Math.max(0,scrollY/height);headerMotion.reset(scrollY);world?.resize(width,height);plate.setActive(scroll<2.1,width<=900||coarse.matches);void plate.resize().catch(()=>{plateFailed=true;});lastRender=-100;
+    scroll=Math.max(0,scrollY/height);headerMotion.reset(scrollY);world?.resize(width,height);plate.setActive(scroll<HERO_LAYER_END,width<=900||coarse.matches);void plate.resize().catch(()=>{plateFailed=true;});lastRender=-100;
   }
   const updateClip=(clip:typeof clips[number])=>clip.media.setPlaying(clip.onscreen&&visible&&!reduced.matches);
   const warmMedia=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){clips.find(c=>c.media.element===entry.target)?.media.prepare();warmMedia.unobserve(entry.target);}}),{rootMargin:`${height*3}px 0px`});
@@ -142,16 +163,41 @@ export function bootLanding(){
     if(!visible)return;
     const frameMs=now-previous,dt=Math.min(.05,frameMs/1000);previous=now;
     if(entry.active){
-      entry.set('hero',plate.ready||scrollY>=height*2.1||plateFailed&&heroPhotoSettled?1:heroPhotoSettled?.3:0);
+      entry.set('hero',plate.ready||scrollY>=height*HERO_LAYER_END||plateFailed&&heroPhotoSettled?1:heroPhotoSettled?.3:0);
       if(reduced.matches){entry.set('world',1);entry.set('app',1);}else prepareEntryApp();
       entry.update(now,reduced.matches);
     }
-    plate.setPreparing(entry.active);
+    plate.setPreparing(entry.active);warmOffer();
     if(accordions.update()){type.measure();measure();}
     const actual=scrollY/height;
     scroll=advanceSceneScroll(scroll,actual,dt,reduced.matches||coarse.matches||width<=900);
+    // Read native header geometry before this frame's style/scene writes.
+    const focused=header.querySelector(':focus-visible')!==null;
+    const directionHidden=headerMotion.update(scrollY,height,focused);
+    let obstructed=false;
+    if(!directionHidden&&!focused&&actual>.8){
+      if(headerCheckActual!==scrollY||Math.abs(headerCheckScroll-scroll)>.00001){
+        const floor=headerTop+28+20;
+        // Only the native section crossing the header can occlude it. Inactive
+        // fixed stages in distant sections must never suppress navigation.
+        headerBlocked=headerObstacles.some((elements,index)=>{
+          const section=themeRanges[index];
+          if(!section||section.top>scrollY+floor||section.bottom<scrollY)return false;
+          return elements.some(element=>{
+            if(!crossesHeader(element.getBoundingClientRect(),floor,width))return false;
+            for(let node:HTMLElement|null=element;node&&node!==sections[index];node=node.parentElement){
+              const style=getComputedStyle(node);
+              if(style.visibility==='hidden'||Number(style.opacity)<.05)return false;
+            }
+            return true;
+          });
+        });
+        headerCheckActual=scrollY;headerCheckScroll=scroll;
+      }
+      obstructed=headerBlocked;
+    }
     mouseX+=(targetX-mouseX)*(1-Math.exp(-3*dt));mouseY+=(targetY-mouseY)*(1-Math.exp(-3*dt));
-    const inHero=scroll<1.05;
+    const inHero=scroll<HERO_LAYER_END;
     card.render(scroll,(now-started)/1000,true,reduced.matches);
     storyText.render(scroll,reduced.matches);
     storyRows.render(scroll*height,height,reduced.matches);
@@ -165,14 +211,14 @@ export function bootLanding(){
     ending.render(scrollY);
     passage.render(scroll*height,reduced.matches||trust.static||worldFailed);
     atmosphere.style.opacity=String(scroll<storyEnd?getStoryState(scroll,storyEnd).atmosphere:0);
-    plate.setActive(actual<2.1,width<=900||coarse.matches);
+    plate.setActive(actual<HERO_LAYER_END,width<=900||coarse.matches);
     if(inHero){plate.render(scroll,targetX,targetY,dt,reduced.matches||entry.active,coarse.matches,moved&&!entry.active);leftHero=false;}
     else if(!leftHero){plate.render(2,0,0,dt,reduced.matches,coarse.matches,false);leftHero=true;}
     const inEnding=ending.active,inPassage=passage.active&&!inEnding,inTrust=trust.active&&!inEnding&&!inPassage,inOffer=offer.active&&!inTrust&&!inEnding&&!inPassage,inApp=app.active&&!inOffer&&!inTrust&&!inEnding&&!inPassage;
     const heroWorld=getOwnerEntryState((scroll-storyEnd)*height,height).worldVisible?1:0;
     const worldOpacity=inTrust||inEnding||inPassage?0:heroWorld;
     worldRoot.style.opacity=String(worldOpacity);worldRoot.style.visibility=worldOpacity>.001?'visible':'hidden';
-    $('.hero-vignette').style.opacity=String(1-range(scroll,0,.8));
+    vignette.style.opacity=String(1-range(scroll,0,.8));
     const sceneScroll=inPassage?5000+passage.local/height:inEnding?4000+ending.progress:inTrust?3000+trust.state.t:inApp?2000+app.progress:inOffer?1000+offer.progress:scroll;
     const canvasOpacity=worldReady?(inApp||inOffer||inTrust||inEnding||inPassage?1:range(scroll,.08,.32)*(width<=600?1-range(scroll,1.25,1.8):1)):0;
     // Detach the prior host before attaching another one, including far anchors.
@@ -206,32 +252,8 @@ export function bootLanding(){
     document.documentElement.dataset.headerTone=tone;
     header.classList.toggle('is-scrolled',actual>.8);
     type.render(scroll*height,height,reduced.matches);
-    const focused=header.querySelector(':focus-visible')!==null;
-    const directionHidden=headerMotion.update(scrollY,height,focused);
-    let obstructed=false;
-    if(!directionHidden&&!focused&&actual>.8){
-      if(headerCheckActual!==scrollY||Math.abs(headerCheckScroll-scroll)>.00001){
-        const floor=headerTop+28+20;
-        // Only the native section crossing the header can occlude it. Inactive
-        // fixed stages in distant sections must never suppress navigation.
-        headerBlocked=headerObstacles.some((elements,index)=>{
-          const section=themeRanges[index];
-          if(!section||section.top>scrollY+floor||section.bottom<scrollY)return false;
-          return elements.some(element=>{
-            if(!crossesHeader(element.getBoundingClientRect(),floor,width))return false;
-            for(let node:HTMLElement|null=element;node&&node!==sections[index];node=node.parentElement){
-              const style=getComputedStyle(node);
-              if(style.visibility==='hidden'||Number(style.opacity)<.05)return false;
-            }
-            return true;
-          });
-        });
-        headerCheckActual=scrollY;headerCheckScroll=scroll;
-      }
-      obstructed=headerBlocked;
-    }
     header.classList.toggle('is-hidden',directionHidden||obstructed);
-    $('.opening-progress span').style.transform='scaleY('+clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height))+')';
+    progressBar.style.transform='scaleY('+clamp(scrollY/Math.max(1,documentHeight-height))+')';
     raf=requestAnimationFrame(update);
   }
   function suspend(){visible=false;cancelAnimationFrame(raf);accordions.finish();app.suspend();plate.suspend();quality.reset();clips.forEach(clip=>clip.media.setPlaying(false));}
@@ -249,5 +271,5 @@ export function bootLanding(){
   })));
   const prepareTimer=window.setTimeout(()=>{if(!document.hidden)void loadWorld();},entry.active?0:200);
   raf=requestAnimationFrame(update);
-  return ()=>{disposed=true;clearTimeout(prepareTimer);clearTimeout(warmTimer);cancelAnimationFrame(resizeFrame);suspend();entry.dispose();listenerAbort.abort();observer.disconnect();warmMedia.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();root.classList.remove('world-pending');clips.forEach(c=>c.media.dispose());};
+  return ()=>{disposed=true;clearTimeout(prepareTimer);clearTimeout(warmTimer);clearTimeout(offerWarmTimer);if(offerIdle)window.cancelIdleCallback?.(offerIdle);cancelAnimationFrame(resizeFrame);suspend();entry.dispose();listenerAbort.abort();observer.disconnect();warmMedia.disconnect();accordions.dispose();type.dispose();storyText.dispose();storyRows.dispose();owners.dispose();offer.dispose();app.dispose();how.dispose();trust.dispose();ending.dispose();passage.dispose();plate.dispose();card.dispose();world?.dispose();root.classList.remove('world-pending');clips.forEach(c=>c.media.dispose());};
 }

@@ -31,6 +31,7 @@ export class OfferSketches {
     this.ready=true;this.resize(this.width,this.height);
   }
   get isReady(){return this.ready;}
+  resetIntro(){this.show=this.time=this.remaining=0;this.initialized=false;this.velocity.set(0,0);this.lastPointer.set(0,0);}
   get needsFrame(){return this.ready&&(!this.quiet||this.show<1||this.remaining>0);}
   resize(width:number,height:number){
     this.width=width;this.height=height;this.resizePost();const scale=Math.min(.25,480/width,300/height),w=Math.max(1,Math.round(width*scale)),h=Math.max(1,Math.round(height*scale));

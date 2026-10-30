@@ -13,9 +13,9 @@ import type {OfferSketches} from './landing/OfferSketches';
 import {getOfferState} from './landing/OfferMotion';
 import {getProductPassageState} from './landing/ProductPassageMotion';
 import type {AppPhoneScene} from './landing/app/AppPhoneScene';
-import type {AppSceneState} from './landing/app/AppMotion';
+import {getAppSceneState,type AppSceneState} from './landing/app/AppMotion';
 import type {AppLighting} from './landing/app/AppLighting';
-import type {TrustSceneState} from './landing/trust/TrustMotion';
+import {getTrustState,type TrustSceneState} from './landing/trust/TrustMotion';
 import type {KibbleScene} from './landing/ending/KibbleScene';
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
@@ -109,6 +109,20 @@ export class OpeningScene {
   get appFailed(){return this.appUnavailable;}
   get appReady(){return !!this.appScene;}
   get appNeedsFrame(){return !!this.appScene&&!this.appRendered;}
+  /** compileAsync alone does not exercise the first real draw/state changes. */
+  warmFirstFrames(){
+    const h=this.height,w=this.width;
+    try{
+      this.renderOpening(.65,0,0,false,2);
+      this.renderApp(getAppSceneState(h*5.1,h,w),0,0);
+      this.renderTrust(getTrustState(h*2,h,w),1,0,0,false);
+      this.renderProductPassage(getTrustState(h*4.1,h,w),.3,0,0,0,1/60,false,true);
+    }finally{
+      this.appScene?.detachVector();this.appRendered=false;this.trustRendered=false;
+      this.offerSketches?.resetIntro();this.sketchReveal=0;
+      this.renderOpening(0,0,0,false,2);
+    }
+  }
   renderApp(state:AppSceneState,px:number,py:number){
     this.appScene?.render(state,this.width,this.height,px,py);this.appRendered=!!this.appScene;
     if(state.collarVisible<.001)return;

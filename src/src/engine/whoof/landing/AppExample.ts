@@ -4,7 +4,7 @@ import {GalleryVideo} from '../life/GalleryVideo';
 import {APP_TRAVEL_UNITS,getAppAuthoredTime,getAppScrollTime,getAppSceneState,getAppViewportClip,getAppTitleReveal,getAppPairCaptionProgress,range,type AppSceneState} from './app/AppMotion';
 import {ease} from '../../core/ease';
 import {AppScreen} from './app/AppScreen';
-type Caption={element:HTMLElement;title:SplitText;copy:HTMLElement};
+type Caption={element:HTMLElement;title:SplitText;copy:HTMLElement;weight?:number};
 /** Owns native captions/media; phone rendering stays in the shared world. */
 export class AppExample {
   private atmosphere:HTMLElement;private nextTitle:HTMLElement;private nextLayer:HTMLElement;private nextSplit:SplitText;private titleManaged=false;private nextKey='';private host:HTMLElement;private stage:HTMLElement;private captions:Caption[];private film:HTMLElement;private media:GalleryVideo;private play:HTMLButtonElement;
@@ -30,11 +30,11 @@ export class AppExample {
     // styles: its generated divs depend on display:inline-block to stay inline.
     if(this.static){this.nextSplit.revert();this.captions.forEach(c=>c.title.revert());this.resetStatic();}
     else{this.nextSplit.split({type:'lines',mask:'lines'});this.captions.forEach(c=>c.title.split({type:'lines,words,chars',mask:'lines'}));}
-    this.nextKey='';
+    this.nextKey='';this.captions.forEach(c=>c.weight=undefined);
     this.media.element.controls=this.static;if(this.static){this.media.setPlaying(false);this.filmWanted=false;}
     const bounds=this.root.getBoundingClientRect();this.size=bounds.height;this.top=bounds.top+scrollY;
   }
-  private resetStatic(){this.captions.forEach(c=>{c.element.removeAttribute('aria-hidden');c.element.style.cssText='';c.copy.style.cssText='';});this.film.style.cssText='';}
+  private resetStatic(){this.captions.forEach(c=>{c.weight=undefined;c.element.removeAttribute('aria-hidden');c.element.style.cssText='';c.copy.style.cssText='';});this.film.style.cssText='';}
   useFallback(){if(this.fallback)return false;this.fallback=true;return true;}
   render(scroll:number,reduced:boolean){
     this.distance=scroll-this.top;this.progress=this.distance/this.height;this.state=getAppSceneState(this.distance,this.height,this.width,reduced);
@@ -52,13 +52,13 @@ export class AppExample {
     this.active=!this.static&&s.opacity>.001;this.headerTone=s.paper>.45?'light':'dark';
     const wanted=!this.static&&this.visible&&s.context>.05&&this.active;if(wanted!==this.filmWanted){this.filmWanted=wanted;this.media.setPlaying(wanted);}this.play.hidden=this.static||!this.media.blocked;
     if(this.static){if(this.last==='static')return;this.last='static';this.resetStatic();return;}
-    if(!this.active){if(this.last!=='inactive'){this.host.style.visibility='hidden';this.atmosphere.style.visibility='hidden';this.captions.forEach(c=>{c.element.style.visibility='hidden';c.element.setAttribute('aria-hidden','true');});this.film.style.visibility='hidden';this.last='inactive';}return;}
+    if(!this.active){if(this.last!=='inactive'){this.host.style.visibility='hidden';this.atmosphere.style.visibility='hidden';this.captions.forEach(c=>{c.weight=undefined;c.element.style.visibility='hidden';c.element.setAttribute('aria-hidden','true');});this.film.style.visibility='hidden';this.last='inactive';}return;}
     const key=[s.t.toFixed(4),scrollY,this.visible].join('/');if(key===this.last)return;this.last=key;
     if(!this.attached)this.previewScreen.update(s);this.preview.style.opacity=String(s.opacity*(1-s.context));
     this.root.style.setProperty('--app-paper',String(s.paper));this.root.style.setProperty('--app-caption-y',(this.height*(this.width<=600?.13:.15+.08*s.zoom))+'px');
     this.root.style.setProperty('--app-ink',s.paper>.45?'#26282b':'#f4f1eb');this.host.style.opacity=String(s.opacity);this.host.style.visibility=this.active?'visible':'hidden';this.atmosphere.style.visibility=this.active?'visible':'hidden';this.atmosphere.style.opacity=String(s.opacity);
     this.host.style.clipPath=visibleClip;this.atmosphere.style.clipPath=visibleClip;
-    this.captions.forEach((c,index)=>{const weight=index===3?Math.min(s.captionWeights[index],getAppPairCaptionProgress(actualT)):s.captionWeights[index],show=ease.cubicOut(Math.min(1,weight*1.5));c.element.style.visibility=weight>.001?'visible':'hidden';c.element.setAttribute('aria-hidden',String(weight<.1));c.element.style.opacity=String(Math.min(1,weight*2));c.title.chars.forEach((char,i)=>{const p=range(show,i/Math.max(1,c.title.chars.length-1)*.3,1);(char as HTMLElement).style.transform=`translate3d(0,${(1-ease.cubicOut(p))*112}%,0)`;(char as HTMLElement).style.opacity=String(p);});c.copy.style.opacity=String(range(show,.28,.85));c.copy.style.transform=`translate3d(0,${(1-show)*18}px,0)`;});
+    this.captions.forEach((c,index)=>{const weight=index===3?Math.min(s.captionWeights[index],getAppPairCaptionProgress(actualT)):s.captionWeights[index];if(c.weight===weight)return;c.weight=weight;const show=ease.cubicOut(Math.min(1,weight*1.5));c.element.style.visibility=weight>.001?'visible':'hidden';c.element.setAttribute('aria-hidden',String(weight<.1));c.element.style.opacity=String(Math.min(1,weight*2));c.title.chars.forEach((char,i)=>{const p=range(show,i/Math.max(1,c.title.chars.length-1)*.3,1);(char as HTMLElement).style.transform=`translate3d(0,${(1-ease.cubicOut(p))*112}%,0)`;(char as HTMLElement).style.opacity=String(p);});c.copy.style.opacity=String(range(show,.28,.85));c.copy.style.transform=`translate3d(0,${(1-show)*18}px,0)`;});
     this.film.style.opacity=String(s.context);this.film.style.visibility=s.context>.001?'visible':'hidden';this.film.style.transform=`translate3d(${(1-ease.cubicOut(s.context))*-80}px,${(1-s.context)*30}px,0) rotate(${(1-s.context)*-6}deg)`;
   }
   setCanvas(canvas:HTMLCanvasElement|undefined,ready=false){
