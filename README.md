@@ -1,3 +1,47 @@
+# Whoof
+
+Приватный репозиторий исходников лендинга Whoof: Astro, TypeScript и Three.js.
+Текущая версия сайта — v60; история разработки и контрольные теги v26–v60 сохранены.
+
+## Запуск
+
+Нужен Node.js 22 или новее. Из корня репозитория:
+
+```sh
+npm --prefix src ci
+npm --prefix src run dev -- --host 127.0.0.1 --port 4321
+```
+
+Для проверки готовой сборки:
+
+```sh
+npm --prefix src run build
+npm --prefix src run preview -- --host 127.0.0.1 --port 4321
+```
+
+Откройте http://localhost:4321. Результат сборки находится в `src/dist/`.
+Для локального запуска секреты и подключение к серверу не нужны.
+
+## Где что находится
+
+- `src/src/components/whoof/` — компоненты лендинга.
+- `src/src/engine/whoof/` — сцены, модели, свет и анимация.
+- `src/public/whoof/` — ресурсы Whoof.
+- `tools/whoof-render/` — инструменты подготовки ресурсов и проверки сцен.
+- `docs/landing-cleanup/` — проверки и записи о версиях и публикации.
+- `mirror/`, `port/`, исходные инструкции ниже — сохранённая основа Oryzo.
+
+В репозитории сохранены исходники, ресурсы, инструменты и история разработки.
+Установленные зависимости, результаты сборки, локальные ключи и временные файлы не загружаются.
+Готовые сборки для сервера хранятся отдельно: [whoof-landing-dist](https://github.com/StreveSuksess/whoof-landing-dist).
+
+Проект основан на [boyang-hu/oryzo-rebuild](https://github.com/boyang-hu/oryzo-rebuild).
+Исходные сведения об авторстве и ограничениях использования материалов сохранены ниже.
+
+---
+
+## Original project documentation
+
 # oryzo-rebuild
 
 对 [oryzo.ai](https://oryzo.ai/)(Lusion 出品的创意营销单页,一个恶搞"AI 软木杯垫"的虚构产品站)的 **1:1 工程化复刻**。

@@ -6,3 +6,17 @@ DEPLOY.md
 scripts/deploy.sh
 scripts/deploy-cf.sh
 .wrangler/
+
+# Local credentials and generated working files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.yarnrc.yml
+tmp/
+output/
+*.log
